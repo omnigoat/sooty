@@ -21,7 +21,12 @@ namespace parsing {
 		
 	struct parser
 	{
+	// gotta make this private somehow
 		detail::parser_backend_ptr backend_;
+	
+	public:
+		//parser if_;
+		parser() {}
 		parser(const detail::parser_backend_ptr& backend) : backend_(backend) {}
 		
 		parser operator | (const parser& rhs) {
@@ -51,17 +56,34 @@ namespace parsing {
 			
 			return parser(new_lhs);
 		}
+		
+		parser if_(const parser& rhs) const
+		{
+			detail::parser_backend_ptr new_lhs = sooty::common::detail::clone_tree(backend_);
+			detail::parser_backend_ptr new_rhs = sooty::common::detail::clone_tree(rhs.backend_);
+			
+			sooty::common::detail::append_success(new_rhs, new_lhs);
+			return parser(new_rhs);
+		}
+		
 	};
 	
 	
 	inline parser match(size_t id) {
 		return parser( detail::parser_backend_ptr(new detail::parser_backend(detail::parser_backend::type::matcher, id, id, id)) );
 	}
+	
+	inline parser match_insert(size_t id, size_t nid) {
+		return parser( detail::parser_backend_ptr(new detail::parser_backend(detail::parser_backend::type::matcher, id, id, nid)) );
+	}
 
 	inline parser discard(size_t id) {
 		return parser( detail::parser_backend_ptr(new detail::parser_backend(detail::parser_backend::type::matcher, id, id, 0)) );
 	}
 	
+	inline parser insert(size_t id) {
+		return parser( detail::parser_backend_ptr(new detail::parser_backend(detail::parser_backend::type::inserter, 0, 0, id)) );
+	}
 	
 	parsemes_t parse(parser& parser, lexing::lexemes::const_iterator begin, lexing::lexemes::const_iterator end);
 	

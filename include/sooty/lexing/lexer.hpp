@@ -44,6 +44,10 @@ namespace lexing {
 			return lexer(new_lhs);
 		}
 		
+		lexer operator + () const {
+			return *this >> **this;
+		}
+		
 		lexer operator [](semantic_action action) const {
 			static char _ = 0;
 			detail::base_lexer_ptr marker(new detail::base_lexer(detail::base_lexer::lexer_type::marker, _, _));

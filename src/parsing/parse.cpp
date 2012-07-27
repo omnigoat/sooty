@@ -31,9 +31,7 @@ sooty::parsing::parsemes_t sooty::parsing::parse(parser& parser, lexemes::const_
 			((current_parser->type_ == detail::parser_backend::type::matcher &&
 			current_parser->match_from <= begin->id() && begin->id() <= current_parser->match_to))
 			||
-			(current_parser->type_ == parser_backend::type::diver)
-			||
-			(current_parser->type_ == parser_backend::type::surfacer)
+			(current_parser->type_ != parser_backend::type::matcher)
 			;
 		
 		if (success)
@@ -44,11 +42,14 @@ sooty::parsing::parsemes_t sooty::parsing::parse(parser& parser, lexemes::const_
 			else if (current_parser->type_ == parser_backend::type::surfacer) {
 				ancestry_scope_stack.pop();
 			}
-			else if (current_parser->to_insert != 0) {
-				parseme p(current_parent, current_parser->to_insert, &*begin);
-				//p.set_parent(current_container.owner());
-				current_container.push_back(p);
-				++begin;
+			else {
+				if (current_parser->to_insert != 0) {
+					parseme p(current_parent, current_parser->to_insert, &*begin);
+					current_container.push_back(p);
+				}
+				
+				if (current_parser->type_ == parser_backend::type::matcher)
+					++begin;
 			}
 			current_parser = current_parser->on_success;
 		}

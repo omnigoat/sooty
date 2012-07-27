@@ -24,16 +24,16 @@ namespace detail {
 			
 			if (valid_edge(lhs->on_success)) {
 				if (!overwrote_edge(lhs->on_success, rhs))
-					append_success_impl(visited, node_of(lhs->on_success), rhs);
+					append_success_impl<Node, Edge>(visited, node_of(lhs->on_success), rhs);
 			}
 			else
 				lhs->on_success = rhs;
 			
 			if (valid_edge(lhs->on_failure) && !overwrote_edge(lhs->on_failure, rhs))
-				append_success_impl(visited, node_of(lhs->on_failure), rhs);
+				append_success_impl<Node, Edge>(visited, node_of(lhs->on_failure), rhs);
 			
 			if (valid_edge(lhs->on_invalid) && !overwrote_edge(lhs->on_invalid, rhs))
-				append_success_impl(visited, node_of(lhs->on_invalid), rhs);
+				append_success_impl<Node, Edge>(visited, node_of(lhs->on_invalid), rhs);
 		}
 	}
 

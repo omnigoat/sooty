@@ -22,11 +22,11 @@ namespace detail {
 			enum Enum {
 				matcher,
 				diver,
-				surfacer
+				surfacer,
+				inserter
 			};
 		};
 		
-		//var type as in { matcher, diver, surfacer }
 		type::Enum type_;
 		size_t match_from, match_to;
 		size_t to_insert;

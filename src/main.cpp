@@ -165,47 +165,75 @@ int main()
 	
 	std::string whoo = "whoo";
 	
-	lexemes test_lexemes;
-
+	//lexemes test_lexemes;
+	struct lexid {
+		enum Enum {
+			variable,
+			integer,
+			lparam,
+			rparam,
+			plus,
+			dash,
+			fwdslash,
+			star
+		};
+	};
 	
+	lexemes the_lexemes;
 	{
-		lexer giraffe = string_("giraffe");
-		lexer zebra = string_("zebra");
-		lexer identifier = in_range('a', 'z') >> *in_range('a', 'z');
-		lexer whitespace = char_(' ');
-		//lexer 
-		lexer test
-			= *(giraffe[boost::bind(make_lexeme, boost::ref(test_lexemes), 6, _1)]
-			| identifier[boost::bind(make_lexeme, boost::ref(test_lexemes), 7, _1)]
-			| zebra[boost::bind(make_lexeme, boost::ref(test_lexemes), 8, _1)]
-			| whitespace)
+		lexer combination
+			= +(+in_range('a', 'z')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::variable, _1)]
+			| +in_range('0', '9')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::integer, _1)]
+			| char_('(')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::lparam, _1)]
+			| char_(')')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::rparam, _1)]
+			| char_('+')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::plus, _1)]
+			| char_('-')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::dash, _1)]
+			| char_('/')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::fwdslash, _1)]
+			| char_('*')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::star, _1)]
+			| char_(' '))
 			;
 		
-		std::string test_string = "giraffe elephant zebra";
-		lex_results_t results = lex(test, test_string.begin(), test_string.end());
 		
-		std::string result_string = make_string(results.begin, results.end);
-		
-		sooty::parsing::parsemes_t resultant_parsemes = parse(p, test_lexemes.begin(), test_lexemes.end());
-		
-		//using sooty::_1;
-		
-		walker wtest = +eq(4) >> eq(7);
-		
-		walker w =
-			_p1 = eq(6) [
-				_p2 = eq(7),
-				*eq(8)
-			]
-			.rewrite [
-				sooty::transforming::mk(23) [
-					sooty::transforming::mk(40),
-					_p2
-				]
-			]
+		std::string test_string = "4 + 5";
+		lex_results_t results = lex(combination, test_string.begin(), test_string.end());
+	}
+	
+	
+	struct parsid {
+		enum Enum {
+			addition = 1,
+			subtraction,
+			multiplication,
+			division,
+			number
+		};
+	};
+	
+	parsemes_t parsemes;
+	{
+		parser
+			expression,
+			additive_expression,
+			multiplicative_expression
 			;
 		
-		walk(resultant_parsemes, w);
+		multiplicative_expression = 
+			match_insert(lexid::integer, parsid::number);
+		
+		additive_expression =
+			insert(parsid::addition) [
+				multiplicative_expression >>
+				discard(lexid::plus) >>
+				multiplicative_expression
+			]
+			|
+			multiplicative_expression
+			;
+		
+		
+		
+		sooty::parsing::parsemes_t
+			result = sooty::parsing::parse(additive_expression, the_lexemes.begin(), the_lexemes.end());
 	}
 	
 }
