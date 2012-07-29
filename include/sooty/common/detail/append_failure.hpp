@@ -18,13 +18,6 @@ namespace detail {
 	template <typename Node, typename Edge>
 	inline void append_failure_impl(std::set<Node>& visited, const Node& lhs, const Edge& rhs)
 	{
-		// skippable nodes never fail
-		if (skippable(lhs))
-			if (valid_edge(lhs->on_success))
-				return append_failure_impl(visited, node_of(lhs->on_success), rhs);
-			else
-				return;
-		
 		if (visited.find(lhs) != visited.end())
 			return;
 		visited.insert(lhs);

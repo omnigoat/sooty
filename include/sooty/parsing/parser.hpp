@@ -45,7 +45,6 @@ namespace parsing {
 		parser operator | (const parser& rhs) {
 			detail::abstract_parser_backend_ptr new_lhs = sooty::common::detail::clone_tree(backend_);
 			sooty::common::detail::fold(new_lhs, sooty::common::detail::clone_tree(rhs.backend_));
-			//sooty::common::detail::append_failure(new_lhs, rhs.backend_);
 			return parser(new_lhs);
 		}
 		

@@ -12,6 +12,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 //=====================================================================
+#include <sooty/common/detail/append_success.hpp>
+#include <sooty/common/detail/append_failure.hpp>
 #include <sooty/lexing/input_iterator.hpp>
 //=====================================================================
 namespace sooty {
@@ -120,12 +122,9 @@ namespace detail {
 	void append_failure(const base_lexer_ptr& lhs, const base_lexer_ptr& rhs);
 	void append_failure_impl(std::set<base_lexer_ptr>& visited, const base_lexer_ptr& lhs, const base_lexer_ptr& rhs);
 
-	void fold(const base_lexer_ptr& lhs, const base_lexer_ptr& rhs);
-	void fold_impl(std::set<base_lexer_ptr> visited_nodes, const base_lexer_ptr& lhs, const base_lexer_ptr& rhs);
-
 	inline void zero_or_more(const base_lexer_ptr& lhs) {
-		append_success(lhs, lhs);
-		append_failure(lhs, base_lexer::terminal());
+		common::detail::append_success(lhs, lhs);
+		common::detail::append_failure(lhs, base_lexer::terminal());
 	}
 	
 //=====================================================================

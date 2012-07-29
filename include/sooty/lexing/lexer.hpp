@@ -7,6 +7,7 @@
 #define SOOTY_LEXING_LEXER_HPP
 //=====================================================================
 #include <sooty/common/detail/fold.hpp>
+#include <sooty/common/detail/append_success.hpp>
 //=====================================================================
 #include <sooty/lexing/detail/base_lexer.hpp>
 //=====================================================================
@@ -27,14 +28,14 @@ namespace lexing {
 		
 		lexer operator >> (const lexer& rhs) const {
 			detail::base_lexer_ptr new_lhs = clone_tree(this->base_lexer);
-			detail::append_success(new_lhs, rhs.base_lexer);
+			common::detail::append_success(new_lhs, rhs.base_lexer);
 			return lexer(new_lhs);
 		}
 		
 		lexer operator | (const lexer& rhs) const {
 			detail::base_lexer_ptr new_lhs = clone_tree(this->base_lexer);
-			detail::fold(new_lhs, rhs.base_lexer);
-			//sooty::common::detail::fold(new_lhs, rhs.base_lexer);
+			//detail::fold(new_lhs, rhs.base_lexer);
+			common::detail::fold(new_lhs, rhs.base_lexer);
 			return lexer(new_lhs);
 		}
 		
@@ -54,8 +55,8 @@ namespace lexing {
 			detail::base_lexer_ptr actor(new detail::base_lexer(detail::base_lexer::lexer_type::actor, _, _));
 			actor->action = action;
 			++_;
-			append_success(marker, clone_tree(this->base_lexer));
-			append_success(marker, actor);
+			common::detail::append_success(marker, clone_tree(this->base_lexer));
+			common::detail::append_success(marker, actor);
 			return lexer(marker);
 		}
 	};
@@ -73,7 +74,7 @@ namespace lexing {
 		
 		for (std::string::const_iterator i = str.begin(); i != str.end(); ++i) {
 			if (previous_lexer)
-				append_success(previous_lexer, char_(*i).base_lexer);
+				common::detail::append_success(previous_lexer, char_(*i).base_lexer);
 			else
 				previous_lexer = char_(*i).base_lexer;
 		}

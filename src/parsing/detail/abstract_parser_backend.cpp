@@ -89,7 +89,7 @@ bool sooty::parsing::detail::parsers::add_marker::applies( accumulator& acc, lex
 bool sooty::parsing::detail::parsers::rm_marker::applies( accumulator& acc, lexing::lexemes::const_iterator&, lexing::lexemes::const_iterator& )
 {
 	acc.rm_marker(mark_id);
-	return true;
+	return false;
 }
 
 

@@ -154,7 +154,10 @@ void print_parsemes_impl(parsemes_t& ps, int padding = 0)
 		for (int j = 0; j != padding; ++j) {
 			std::cout << " ";
 		}
-		std::cout << i->id() << std::endl;
+		std::cout << i->id();
+		if (i->lexeme())
+			std::cout << ": " << i->lexeme()->text();
+		std::cout << std::endl;
 		print_parsemes_impl(i->children(), padding + 2);
 	}
 }
@@ -181,8 +184,8 @@ int main()
 	lexemes the_lexemes;
 	{
 		lexer combination
-			= +(+in_range('a', 'z')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::variable, _1)]
-			| +in_range('0', '9')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::integer, _1)]
+			= +((+in_range('a', 'z'))[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::variable, _1)]
+			| (+in_range('0', '9'))[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::integer, _1)]
 			| char_('(')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::lparam, _1)]
 			| char_(')')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::rparam, _1)]
 			| char_('+')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::plus, _1)]
@@ -193,7 +196,7 @@ int main()
 			;
 		
 		
-		std::string test_string = "4 + x - 6";
+		std::string test_string = "4 + x / y - 6 * 3";
 		lex_results_t results = lex(combination, test_string.begin(), test_string.end());
 	}
 	
@@ -260,6 +263,7 @@ int main()
 		sooty::parsing::parsemes_t
 			result = sooty::parsing::parse(additive_expression, the_lexemes.begin(), the_lexemes.end());
 		
+		std::cout << std::endl;
 		print_parsemes_impl(result);
 	}
 	
