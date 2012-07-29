@@ -36,6 +36,12 @@ sooty::lexing::position_t sooty::parsing::detail::parseme_backend::position() co
 		return lexing::position_t();
 }
 
+
+const sooty::lexing::lexeme_t* sooty::parsing::detail::parseme_backend::lexeme() const
+{
+	return lexeme_;
+}
+
 std::string sooty::parsing::detail::parseme_backend::text() const
 {
 	if (lexeme_)

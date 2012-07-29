@@ -18,23 +18,29 @@ namespace detail {
 	template <typename Node, typename Edge>
 	inline void append_failure_impl(std::set<Node>& visited, const Node& lhs, const Edge& rhs)
 	{
-		if (visited.find(lhs) == visited.end())
-		{
-			visited.insert(lhs);
-			
-			if (valid_edge(lhs->on_failure)) {
-				if (!overwrote_edge(lhs->on_failure, rhs))
-					append_failure_impl(visited, node_of(lhs->on_failure), rhs);
-			}
+		// skippable nodes never fail
+		if (skippable(lhs))
+			if (valid_edge(lhs->on_success))
+				return append_failure_impl(visited, node_of(lhs->on_success), rhs);
 			else
-				lhs->on_failure = rhs;
-			
-			if (valid_edge(lhs->on_success) && !overwrote_edge(lhs->on_success, rhs))
-				append_success_impl(visited, node_of(lhs->on_success), rhs);
-			
-			if (valid_edge(lhs->on_invalid) && !overwrote_edge(lhs->on_invalid, rhs))
-				append_success_impl(visited, node_of(lhs->on_invalid), rhs);
+				return;
+		
+		if (visited.find(lhs) != visited.end())
+			return;
+		visited.insert(lhs);
+		
+		if (valid_edge(lhs->on_failure)) {
+			if (!overwrote_edge(lhs->on_failure, rhs))
+				append_failure_impl(visited, node_of(lhs->on_failure), rhs);
 		}
+		else
+			lhs->on_failure = rhs;
+		
+		if (valid_edge(lhs->on_success) && !overwrote_edge(lhs->on_success, rhs))
+			append_failure_impl(visited, node_of(lhs->on_success), rhs);
+		
+		if (valid_edge(lhs->on_invalid) && !overwrote_edge(lhs->on_invalid, rhs))
+			append_failure_impl(visited, node_of(lhs->on_invalid), rhs);
 	}
 	
 	template <typename Node, typename Edge>

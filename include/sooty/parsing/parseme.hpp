@@ -62,7 +62,7 @@ namespace parsing {
 		
 		parseme parent();
 		void set_parent(const_parseme_ref parent);
-		
+		const lexing::lexeme_t* lexeme() const;
 		parsemes_t& children();
 	};
 	

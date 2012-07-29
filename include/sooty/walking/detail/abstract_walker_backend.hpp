@@ -67,6 +67,10 @@ namespace detail {
 		return link_t(n, e.traversal);
 	}
 	
+	inline bool skippable(const abstract_walker_backend_ptr&) {
+		return false;
+	}
+	
 	// this function returns true if lhs was able to be overridden by rhs
 	// it returns false if it was impossible
 	inline bool overwrote_edge(link_t& lhs, const link_t& rhs)

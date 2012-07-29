@@ -1,6 +1,9 @@
 //=====================================================================
 //
-//
+//  fold
+//  ------
+//    Give two parse-trees, attempt to merge them together as tightly
+//    as possible.
 //
 //=====================================================================
 #ifndef SOOTY_COMMON_DETAIL_FOLD_HPP
@@ -69,9 +72,10 @@ namespace detail {
 			visited_nodes.erase(lhs);
 			fold_impl(visited_nodes, lhs, lhs_copy);
 		}
+		// we have found a point of difference
 		else {
 			if (lhs->on_failure)
-				fold_impl(visited_nodes, lhs->on_failure, rhs);
+				append_success_impl(visited_nodes, lhs->on_failure, rhs);
 			else
 				lhs->on_failure = rhs;
 		}

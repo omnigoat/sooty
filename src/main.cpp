@@ -181,7 +181,7 @@ int main()
 			;
 		
 		
-		std::string test_string = "4 + 5";
+		std::string test_string = "4 + 5 - 6";
 		lex_results_t results = lex(combination, test_string.begin(), test_string.end());
 	}
 	
@@ -204,18 +204,31 @@ int main()
 			multiplicative_expression
 			;
 		
-		multiplicative_expression = 
-			match_insert(lexid::integer, parsid::number);
 		
-		additive_expression =
+		/*additive_expression =
 			insert(parsid::addition) [
 				multiplicative_expression >>
 				discard(lexid::plus) >>
-				multiplicative_expression
+				additive_expression
+			]
+			|
+			insert(parsid::subtraction) [
+				multiplicative_expression >>
+				discard(lexid::dash) >>
+				additive_expression
 			]
 			|
 			multiplicative_expression
+			;*/
+		
+		additive_expression = 
+			(match(lexid::integer) >> match(lexid::plus))
+			|
+			(match(lexid::integer) >> match(lexid::dash))
 			;
+		
+		multiplicative_expression = 
+			match_insert(lexid::integer, parsid::number);
 		
 		
 		//insert(parsid::subtraction) [
@@ -223,6 +236,8 @@ int main()
 		//			discard(lexid::dash) >>
 		//			multiplicative_expression
 		//		]
+		sooty::parsing::debug(additive_expression.backend_);
+		
 		sooty::parsing::parsemes_t
 			result = sooty::parsing::parse(additive_expression, the_lexemes.begin(), the_lexemes.end());
 	}

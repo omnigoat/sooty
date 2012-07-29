@@ -14,6 +14,8 @@ namespace parsing {
 namespace detail {
 //=====================================================================
 	
+	
+	
 	struct parser_backend;
 	typedef boost::shared_ptr<parser_backend> parser_backend_ptr;
 
@@ -25,7 +27,7 @@ namespace detail {
 				matcher,
 				inserter,
 				superparser,
-				set_marker,
+				add_marker,
 				merge_into
 			};
 		};
@@ -78,11 +80,7 @@ namespace detail {
 	inline bool overwrote_edge(parser_backend_ptr& lhs, const parser_backend_ptr& rhs) {
 		return false;
 	}
-	
-	inline void clone_passalong(parser_backend_ptr& lhs, const parser_backend_ptr& rhs) {
-		if (rhs->type_ == parser_backend::type::superparser)
-			lhs->subparser = rhs->subparser;
-	}
+
 	
 //=====================================================================
 } // namespace detail

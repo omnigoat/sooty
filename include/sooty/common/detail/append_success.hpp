@@ -16,7 +16,7 @@ namespace detail {
 //=====================================================================
 	
 	template <typename Node, typename Edge>
-	void append_success_impl(std::set<Node>& visited, Node& lhs, const Edge& rhs)
+	Node& append_success_impl(std::set<Node>& visited, Node& lhs, const Edge& rhs)
 	{
 		if ( std::find(visited.begin(), visited.end(), lhs) == visited.end() )
 		{
@@ -35,12 +35,14 @@ namespace detail {
 			if (valid_edge(lhs->on_invalid) && !overwrote_edge(lhs->on_invalid, rhs))
 				append_success_impl<Node, Edge>(visited, node_of(lhs->on_invalid), rhs);
 		}
+		
+		return lhs;
 	}
 
 	template <typename Node, typename Edge>
-	inline void append_success( Node& lhs, const Edge& rhs ) {
+	inline Node& append_success( Node& lhs, const Edge& rhs ) {
 		std::set<Node> visited;
-		append_success_impl(visited, lhs, rhs);
+		return append_success_impl(visited, lhs, rhs);
 	}
 
 

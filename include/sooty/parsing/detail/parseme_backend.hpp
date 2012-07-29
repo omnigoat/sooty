@@ -42,6 +42,7 @@ namespace detail {
 	public:
 		id_t id() const;
 		lexing::position_t position() const;
+		const lexing::lexeme_t* lexeme() const;
 		
 		std::string text() const;
 		int integer() const;

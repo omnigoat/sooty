@@ -226,6 +226,10 @@
 					Name="detail"
 					>
 					<File
+						RelativePath="..\src\parsing\detail\abstract_parser_backend.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\src\parsing\detail\parseme_backend.cpp"
 						>
 					</File>

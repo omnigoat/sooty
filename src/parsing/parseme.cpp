@@ -60,3 +60,8 @@ sooty::parsing::parsemes_t& sooty::parsing::parseme::children()
 {
 	return backend_->children();
 }
+
+const sooty::lexing::lexeme_t* sooty::parsing::parseme::lexeme() const
+{
+	return backend_->lexeme();
+}

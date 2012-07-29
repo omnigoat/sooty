@@ -57,7 +57,7 @@ namespace detail {
 		
 		lexer_type::Enum type;
 		char from, to;
-		base_lexer_ptr on_success, on_failure;
+		base_lexer_ptr on_success, on_failure, on_invalid;
 		semantic_action action;
 		
 		static base_lexer_ptr terminal() {
@@ -93,6 +93,22 @@ namespace detail {
 
 	inline bool should_prepend(const base_lexer_ptr& L) {
 		return L->type == base_lexer::lexer_type::marker;
+	}
+	
+	inline bool skippable(const base_lexer_ptr&) {
+		return false;
+	}
+	
+	inline bool valid_edge(const base_lexer_ptr& L) {
+		return L;
+	}
+	
+	inline bool overwrote_edge(base_lexer_ptr&, const base_lexer_ptr&) {
+		return false;
+	}
+	
+	inline base_lexer_ptr& node_of(base_lexer_ptr& P) {
+		return P;
 	}
 
 	//=====================================================================
