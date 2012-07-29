@@ -40,6 +40,8 @@ namespace parsing {
 		
 		iterator begin();
 		iterator end();
+		const_iterator begin() const;
+		const_iterator end() const;
 		
 		void push_back(parseme_ref n);
 		void clear();
@@ -70,6 +72,8 @@ namespace parsing {
 
 		iterator erase(iterator where_);
 		iterator erase(iterator from, iterator to);
+		
+		size_t size() const { return parsemes_.size(); }
 	};
 	
 //=====================================================================

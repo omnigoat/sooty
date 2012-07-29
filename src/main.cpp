@@ -150,22 +150,9 @@ bool walk(parsemes_t& these, const walker& with)
 
 int main()
 {
-	/*char* giraffe = new char[7];
-	strcpy(giraffe, "giraffe");
-	reverse(giraffe, 7);
-	std::cout << giraffe << std::endl;*/
-	
-	
-	
-
 	using sooty::parsing::parseme;
 	using sooty::parsing::match;
 	
-	parser p = match(6) [ match(7) >> match(8) ];
-	
-	std::string whoo = "whoo";
-	
-	//lexemes test_lexemes;
 	struct lexid {
 		enum Enum {
 			variable,
@@ -231,7 +218,11 @@ int main()
 			;
 		
 		
-		
+		//insert(parsid::subtraction) [
+		//			multiplicative_expression >>
+		//			discard(lexid::dash) >>
+		//			multiplicative_expression
+		//		]
 		sooty::parsing::parsemes_t
 			result = sooty::parsing::parse(additive_expression, the_lexemes.begin(), the_lexemes.end());
 	}

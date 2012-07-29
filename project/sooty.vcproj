@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\include;..\dependencies\boost_1_50_0\"
+				AdditionalIncludeDirectories="..\include;..\dependencies\boost\include\"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_SCL_SECURE_NO_WARNINGS"
 				MinimalRebuild="false"
 				BasicRuntimeChecks="3"
@@ -293,6 +293,10 @@
 				Name="parsing"
 				>
 				<File
+					RelativePath="..\include\sooty\parsing\accumulator.hpp"
+					>
+				</File>
+				<File
 					RelativePath="..\include\sooty\parsing\parseme.hpp"
 					>
 				</File>
@@ -307,6 +311,10 @@
 				<Filter
 					Name="detail"
 					>
+					<File
+						RelativePath="..\include\sooty\parsing\detail\abstract_parser_backend.hpp"
+						>
+					</File>
 					<File
 						RelativePath="..\include\sooty\parsing\detail\parseme_backend.hpp"
 						>

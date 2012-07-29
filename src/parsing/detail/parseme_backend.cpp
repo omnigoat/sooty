@@ -9,9 +9,9 @@ sooty::parsing::detail::parseme_backend::parseme_backend()
 {	
 }
 
-sooty::parsing::detail::parseme_backend::parseme_backend( id_t id )
-	: id_(id), lexeme_(), parent_()
-{	
+sooty::parsing::detail::parseme_backend::parseme_backend( id_t id, const lexing::lexeme_t* lexeme )
+	: id_(id), lexeme_(lexeme), parent_()
+{
 }
 
 sooty::parsing::detail::parseme_backend::parseme_backend( parseme_backend_ptr parent, id_t id )

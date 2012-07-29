@@ -44,6 +44,14 @@ sooty::parsing::parsemes_t::iterator sooty::parsing::parsemes_t::end() {
 	return parsemes_.end();
 }
 
+sooty::parsing::parsemes_t::const_iterator sooty::parsing::parsemes_t::begin() const {
+	return parsemes_.begin();
+}
+
+sooty::parsing::parsemes_t::const_iterator sooty::parsing::parsemes_t::end() const {
+	return parsemes_.end();
+}
+
 void sooty::parsing::parsemes_t::clear()
 {
 	parsemes_.clear();

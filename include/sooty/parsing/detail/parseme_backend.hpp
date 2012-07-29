@@ -27,6 +27,7 @@ namespace detail {
 		
 	private:
 		id_t id_;
+		// parsemes created directly from lexems point to the lexeme
 		const lexing::lexeme_t* lexeme_;
 		parsemes_t children_;
 		parseme_backend_ptr parent_;
@@ -34,7 +35,7 @@ namespace detail {
 		// private constructors! :O
 		// only allowed to be created by friends (parseme)
 		parseme_backend();
-		parseme_backend(id_t id);
+		parseme_backend(id_t id, const lexing::lexeme_t* lexeme = NULL);
 		parseme_backend(parseme_backend_ptr parent, id_t id);
 		parseme_backend(parseme_backend_ptr parent, id_t id, const lexing::lexeme_t* lexeme);
 		

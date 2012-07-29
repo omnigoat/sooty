@@ -14,20 +14,31 @@ namespace sooty {
 namespace parsing {
 //=====================================================================
 	
-	// forward declare
+	//=====================================================================
+	// forward declares
+	//=====================================================================
 	namespace detail {
 		struct parseme_backend;
 		typedef boost::shared_ptr<parseme_backend> parseme_backend_ptr;
 	}
 	
-	// forward declare us
 	struct parseme;
-	typedef parseme* parseme_ptr;
-	typedef const parseme* const_parseme_ptr;
 	typedef parseme& parseme_ref;
 	typedef const parseme& const_parseme_ref;
-	//typedef std::vector<parseme> parsemes_t;
-
+	
+	
+	
+	
+	//=====================================================================
+	//
+	//  parseme
+	//  ---------
+	//    A parseme is a node in our abstract syntax tree. It is effectively
+	//    a glorified smart-pointer, and should be treated as such. It
+	//    points to parseme_backend, containing all the actual data, and has
+	//    several accessors and mutators.
+	//
+	//=====================================================================
 	struct parseme
 	{
 		friend struct parsemes_t;
