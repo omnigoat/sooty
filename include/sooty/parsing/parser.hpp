@@ -110,12 +110,24 @@ namespace parsing {
 	// two backends together -> match+insert
 	inline parser match(size_t id) {
 		accumulator::mark_t mark = accumulator::generate_marker();
+		using common::detail::append_success;
 		
 		return parser(
 			sooty::common::detail::append_success(
 				detail::parsers::match::create(id, id, mark),
 				detail::parsers::insert::create(id, mark)
 			)
+		
+			/*sooty::common::detail::append_success(
+				detail::parsers::add_marker::create(mark),
+				append_success(
+					detail::parsers::match::create(id, id),
+					append_success(
+						detail::parsers::insert::create(id, mark),
+						detail::parsers::rm_marker::create(mark)
+					)
+				)
+			)*/
 		);
 	}
 	

@@ -44,9 +44,7 @@ namespace detail {
 		return false;
 	}
 	
-	inline bool should_prepend(const abstract_parser_backend_ptr& P) {
-		return false;
-	}
+	bool should_prepend(const abstract_parser_backend_ptr& P);
 	
 	bool skippable(const abstract_parser_backend_ptr& P);
 	

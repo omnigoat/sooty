@@ -33,8 +33,8 @@ namespace lexing {
 		
 		lexer operator | (const lexer& rhs) const {
 			detail::base_lexer_ptr new_lhs = clone_tree(this->base_lexer);
-			//detail::fold(new_lhs, rhs.base_lexer);
-			sooty::common::detail::fold(new_lhs, rhs.base_lexer);
+			detail::fold(new_lhs, rhs.base_lexer);
+			//sooty::common::detail::fold(new_lhs, rhs.base_lexer);
 			return lexer(new_lhs);
 		}
 		

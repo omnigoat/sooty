@@ -148,6 +148,18 @@ bool walk(parsemes_t& these, const walker& with)
 	return true;
 }
 
+void print_parsemes_impl(parsemes_t& ps, int padding = 0)
+{
+	for (parsemes_t::iterator i = ps.begin(); i != ps.end(); ++i) {
+		for (int j = 0; j != padding; ++j) {
+			std::cout << " ";
+		}
+		std::cout << i->id() << std::endl;
+		print_parsemes_impl(i->children(), padding + 2);
+	}
+}
+
+
 int main()
 {
 	using sooty::parsing::parseme;
@@ -181,18 +193,19 @@ int main()
 			;
 		
 		
-		std::string test_string = "4 + 5 - 6";
+		std::string test_string = "4 + x - 6";
 		lex_results_t results = lex(combination, test_string.begin(), test_string.end());
 	}
 	
 	
 	struct parsid {
 		enum Enum {
-			addition = 1,
+			addition = 100,
 			subtraction,
 			multiplication,
 			division,
-			number
+			number,
+			variable
 		};
 	};
 	
@@ -201,11 +214,11 @@ int main()
 		parser
 			expression,
 			additive_expression,
-			multiplicative_expression
+			multiplicative_expression,
+			factor
 			;
-		
-		
-		/*additive_expression =
+
+		additive_expression = 
 			insert(parsid::addition) [
 				multiplicative_expression >>
 				discard(lexid::plus) >>
@@ -219,27 +232,35 @@ int main()
 			]
 			|
 			multiplicative_expression
-			;*/
-		
-		additive_expression = 
-			(match(lexid::integer) >> match(lexid::plus))
-			|
-			(match(lexid::integer) >> match(lexid::dash))
 			;
 		
 		multiplicative_expression = 
-			match_insert(lexid::integer, parsid::number);
+			insert(parsid::multiplication) [
+				factor >>
+				discard(lexid::star) >>
+				multiplicative_expression
+			]
+			|
+			insert(parsid::division) [
+				factor >>
+				discard(lexid::fwdslash) >>
+				multiplicative_expression
+			]
+			|
+			factor
+			;
 		
+		factor =
+			match_insert(lexid::integer, parsid::number) |
+			match_insert(lexid::variable, parsid::variable)
+			;
 		
-		//insert(parsid::subtraction) [
-		//			multiplicative_expression >>
-		//			discard(lexid::dash) >>
-		//			multiplicative_expression
-		//		]
 		sooty::parsing::debug(additive_expression.backend_);
 		
 		sooty::parsing::parsemes_t
 			result = sooty::parsing::parse(additive_expression, the_lexemes.begin(), the_lexemes.end());
+		
+		print_parsemes_impl(result);
 	}
 	
 }

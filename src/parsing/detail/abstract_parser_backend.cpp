@@ -131,9 +131,48 @@ bool sooty::parsing::detail::equivalent( const abstract_parser_backend_ptr& lhs,
 		boost::shared_ptr<parsers::match> rhs_mp
 			= boost::shared_dynamic_cast<parsers::match>(rhs);
 		
-		return rhs_mp && lhs_mp->match_from == rhs_mp->match_from &&
+		bool g = rhs_mp && lhs_mp->match_from == rhs_mp->match_from &&
 			lhs_mp->match_to == rhs_mp->match_to;
 		
+		if (g) {
+			accumulator::mark_t lm = lhs_mp->mark.get();
+			accumulator::mark_t rm = rhs_mp->mark.get();
+			
+			*rhs_mp->mark.get() = *lhs_mp->mark.get();
+		}
+		
+		return g;
+	}
+	
+	// inserters
+	boost::shared_ptr<parsers::insert> lhs_ip = boost::shared_dynamic_cast<parsers::insert>(lhs);
+	if (lhs_ip) {
+		boost::shared_ptr<parsers::insert> rhs_ip
+			= boost::shared_dynamic_cast<parsers::insert>(rhs);
+		
+		bool g = rhs_ip && lhs_ip->insert_id == rhs_ip->insert_id;
+		
+		if (g) {
+			accumulator::mark_t lm = lhs_ip->lexeme_mark_id.get();
+			accumulator::mark_t rm = rhs_ip->lexeme_mark_id.get();
+			
+			assert(*rhs_ip->lexeme_mark_id.get() == *lhs_ip->lexeme_mark_id.get());
+		}
+		
+		return g;
+	}
+	
+	// add-marker
+	boost::shared_ptr<parsers::add_marker> lhs_amp = boost::shared_dynamic_cast<parsers::add_marker>(lhs);
+	if (lhs_amp) {
+		boost::shared_ptr<parsers::add_marker> rhs_ip
+			= boost::shared_dynamic_cast<parsers::add_marker>(rhs);
+		
+		if (rhs_ip) {
+			*rhs_ip->mark_id.get() = *lhs_amp->mark_id.get();
+		}
+		
+		return true;
 	}
 	
 	return false;
@@ -142,4 +181,13 @@ bool sooty::parsing::detail::equivalent( const abstract_parser_backend_ptr& lhs,
 bool sooty::parsing::detail::overwrote_edge( abstract_parser_backend_ptr& lhs, const abstract_parser_backend_ptr& rhs )
 {
 	return false;
+}
+
+bool sooty::parsing::detail::should_prepend( const abstract_parser_backend_ptr& P )
+{
+	return
+		boost::shared_dynamic_cast<parsers::add_marker>(P) ||
+		boost::shared_dynamic_cast<parsers::rm_marker>(P) ||
+		boost::shared_dynamic_cast<parsers::nop>(P)
+		;
 }

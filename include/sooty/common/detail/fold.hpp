@@ -20,7 +20,7 @@ namespace detail {
 //=====================================================================
 
 	template <typename T>
-	void fold_impl(std::set<T>& visited_nodes, const T& lhs, const T& rhs)
+	inline void fold_impl(std::set<T>& visited_nodes, T& lhs, T& rhs)
 	{
 		if (!lhs || !rhs)
 			return;
@@ -32,10 +32,20 @@ namespace detail {
 		if ( should_prepend(lhs) ) {
 			fold_impl(visited_nodes, lhs->on_success, rhs);
 		}
+		// if this rhs node needs to be prepended, we manually add it to lhs->on_success
 		else if ( should_prepend(rhs) ) {
-			T saved_lhs = clone_tree(lhs);
-			*lhs = *rhs;
-			fold_impl(visited_nodes, lhs->on_success, saved_lhs);
+			if (lhs->on_success) {
+				visited_nodes.erase(lhs);
+				T saved_lhs = lhs;
+				lhs = rhs;
+				T saved_rhs_s = rhs->on_success;
+				lhs->on_success = saved_lhs;
+				
+				fold_impl(visited_nodes, lhs->on_success, saved_rhs_s);
+			}
+			else {
+				lhs->on_success = rhs;
+			}
 		}
 		// if lhs is partially equivalent to rhs, then we need to try rhs
 		// if it fails, but try the one /after/ rhs if it succeeds
@@ -51,27 +61,27 @@ namespace detail {
 				}
 			}
 		}
-		else if ( partially_equivalent(lhs, rhs) )
-		{
-			if (lhs->on_failure)
-				append_failure(lhs->on_failure, rhs);
-			else
-				lhs->on_failure = rhs;
-			
-			if (lhs->on_success)
-				fold_impl(visited_nodes, lhs->on_success, rhs->on_success);
-			else
-				lhs->on_success = rhs->on_success;
-		}
-		// rhs is partially equivalent to lhs, which means that we have to
-		// test rhs first, *then* lhs.
-		else if ( partially_equivalent(rhs, lhs) )
-		{
-			T lhs_copy = clone_tree(lhs);
-			*lhs = *rhs;
-			visited_nodes.erase(lhs);
-			fold_impl(visited_nodes, lhs, lhs_copy);
-		}
+		//else if ( partially_equivalent(lhs, rhs) )
+		//{
+		//	if (lhs->on_failure)
+		//		append_failure(lhs->on_failure, rhs);
+		//	else
+		//		lhs->on_failure = rhs;
+		//	
+		//	if (lhs->on_success)
+		//		fold_impl(visited_nodes, lhs->on_success, rhs->on_success);
+		//	else
+		//		lhs->on_success = rhs->on_success;
+		//}
+		//// rhs is partially equivalent to lhs, which means that we have to
+		//// test rhs first, *then* lhs.
+		//else if ( partially_equivalent(rhs, lhs) )
+		//{
+		//	T lhs_copy = clone_tree(lhs);
+		//	*lhs = *rhs;
+		//	visited_nodes.erase(lhs);
+		//	fold_impl(visited_nodes, lhs, lhs_copy);
+		//}
 		// we have found a point of difference
 		else {
 			if (lhs->on_failure)
@@ -82,9 +92,9 @@ namespace detail {
 	}
 
 	template <typename T>
-	void fold(const T& lhs, const T& rhs) {
+	inline void fold(T& lhs, const T& rhs) {
 		std::set<T> visited_nodes;
-		fold_impl<T>(visited_nodes, lhs, rhs);
+		fold_impl<T>(visited_nodes, lhs, *const_cast<T*>(&rhs));
 	}
 
 //=====================================================================
