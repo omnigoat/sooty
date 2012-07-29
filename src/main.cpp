@@ -72,31 +72,6 @@ using sooty::walking::detail::context_ref;
 using sooty::walking::detail::how_to_traverse;
 
 
-bool traverse(context_ref context, how_to_traverse::Enum htt)
-{
-	switch (htt)
-	{
-		case how_to_traverse::dive:
-			context.dive();
-			break;
-			
-		case how_to_traverse::surface:
-			context.surface();
-			break;
-			
-		case how_to_traverse::next_sibling:
-			context.next();
-			break;
-	}
-	
-	return true;
-}
-
-
-
-
-
-
 using namespace sooty::walking;
 
 
@@ -123,7 +98,7 @@ bool walk(parsemes_t& these, const walker& with)
 	{
 		if (current_walker->invalid_when_empty() && context.invalid()) {
 			if (current_walker->on_invalid.node) {
-				traverse(context, current_walker->on_invalid.traversal);
+				context.traverse(current_walker->on_invalid.traversal);
 				current_walker = current_walker->on_invalid.node;
 			}
 			else {
@@ -132,12 +107,12 @@ bool walk(parsemes_t& these, const walker& with)
 		}
 		else if ( current_walker->compare_impl(context) )
 		{
-			traverse(context, current_walker->on_success.traversal);
+			context.traverse(current_walker->on_success.traversal);
 			current_walker = current_walker->on_success.node;
 		}
 		else if (current_walker->on_failure.node)
 		{
-			traverse(context, current_walker->on_failure.traversal);
+			context.traverse(current_walker->on_failure.traversal);
 			current_walker = current_walker->on_failure.node;
 		}
 		else {
@@ -148,6 +123,32 @@ bool walk(parsemes_t& these, const walker& with)
 	return true;
 }
 
+
+struct lexid {
+	enum Enum {
+		variable,
+		integer,
+		lparen,
+		rparen,
+		plus,
+		dash,
+		fwdslash,
+		star
+	};
+};
+
+struct parsid {
+	enum Enum {
+		addition = 100,
+		subtraction,
+		multiplication,
+		division,
+		number,
+		variable
+	};
+};
+
+// debugging information for output
 void print_parsemes_impl(parsemes_t& ps, int padding = 0)
 {
 	for (parsemes_t::iterator i = ps.begin(); i != ps.end(); ++i) {
@@ -162,32 +163,56 @@ void print_parsemes_impl(parsemes_t& ps, int padding = 0)
 	}
 }
 
+void print_parsemes_prefix(parsemes_t& ps)
+{
+	for (parsemes_t::iterator i = ps.begin(); i != ps.end(); ++i) {
+		std::cout << " ";
+		if (i->id() != parsid::number && i->id() != parsid::variable)
+			std::cout << "(";
+		switch (i->id()) {
+			case parsid::addition:
+				std::cout << "+";
+				break;
+			
+			case parsid::subtraction:
+				std::cout << "-";
+				break;
+			
+			case parsid::multiplication:
+				std::cout << "*";
+				break;
+			
+			case parsid::division:
+				std::cout << "/";
+				break;
+			
+			case parsid::number:
+			case parsid::variable:
+				std::cout << i->lexeme()->text();
+				break;
+		}
+		
+		print_parsemes_prefix(i->children());
+		
+		if (i->id() != parsid::number && i->id() != parsid::variable)
+			std::cout << ")";
+	}
+}
 
 int main()
 {
 	using sooty::parsing::parseme;
 	using sooty::parsing::match;
 	
-	struct lexid {
-		enum Enum {
-			variable,
-			integer,
-			lparam,
-			rparam,
-			plus,
-			dash,
-			fwdslash,
-			star
-		};
-	};
+	
 	
 	lexemes the_lexemes;
 	{
 		lexer combination
 			= +((+in_range('a', 'z'))[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::variable, _1)]
 			| (+in_range('0', '9'))[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::integer, _1)]
-			| char_('(')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::lparam, _1)]
-			| char_(')')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::rparam, _1)]
+			| char_('(')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::lparen, _1)]
+			| char_(')')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::rparen, _1)]
 			| char_('+')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::plus, _1)]
 			| char_('-')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::dash, _1)]
 			| char_('/')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::fwdslash, _1)]
@@ -196,21 +221,11 @@ int main()
 			;
 		
 		
-		std::string test_string = "4 + x / y - 6 * 3";
+		std::string test_string = "4 + 5 - 6 + 12";
 		lex_results_t results = lex(combination, test_string.begin(), test_string.end());
 	}
 	
 	
-	struct parsid {
-		enum Enum {
-			addition = 100,
-			subtraction,
-			multiplication,
-			division,
-			number,
-			variable
-		};
-	};
 	
 	parsemes_t parsemes;
 	{
@@ -223,20 +238,20 @@ int main()
 
 		additive_expression = 
 			insert(parsid::addition) [
-				multiplicative_expression >>
+				match_insert(lexid::integer, parsid::number) >>
 				discard(lexid::plus) >>
 				additive_expression
 			]
 			|
 			insert(parsid::subtraction) [
-				multiplicative_expression >>
+				match_insert(lexid::integer, parsid::number) >>
 				discard(lexid::dash) >>
 				additive_expression
 			]
 			|
-			multiplicative_expression
+			match_insert(lexid::integer, parsid::number)
 			;
-		
+		/*
 		multiplicative_expression = 
 			insert(parsid::multiplication) [
 				factor >>
@@ -255,17 +270,33 @@ int main()
 		
 		factor =
 			match_insert(lexid::integer, parsid::number) |
-			match_insert(lexid::variable, parsid::variable)
-			;
+			match_insert(lexid::variable, parsid::variable) |
+			(
+				discard(lexid::lparen) >>
+				additive_expression >>
+				discard(lexid::rparen)
+			)
+			;*/
 		
 		sooty::parsing::debug(additive_expression.backend_);
-		
-		sooty::parsing::parsemes_t
-			result = sooty::parsing::parse(additive_expression, the_lexemes.begin(), the_lexemes.end());
-		
-		std::cout << std::endl;
-		print_parsemes_impl(result);
+		parsemes = sooty::parsing::parse(additive_expression, the_lexemes.begin(), the_lexemes.end());
 	}
 	
+	print_parsemes_impl(parsemes);
+	std::cout << std::endl;
+	std::cout << "before reduction:\n  ";
+	print_parsemes_prefix(parsemes);
+	
+	// reduction
+	{
+		using sooty::walking::eq;
+		
+		walk( parsemes, 
+			fuzzy_eq(parsid::addition) [
+				eq(parsid::number),
+				eq(parsid::number)
+			].on_match()
+		);
+	}
 }
 

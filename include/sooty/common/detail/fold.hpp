@@ -24,7 +24,6 @@ namespace detail {
 	{
 		if (!lhs || !rhs)
 			return;
-		
 		if (visited_nodes.find(lhs) != visited_nodes.end())
 			return;
 		visited_nodes.insert(lhs);
@@ -36,10 +35,17 @@ namespace detail {
 		else if ( should_prepend(rhs) ) {
 			visited_nodes.erase(lhs);
 			T saved_lhs = lhs;
-			T saved_rhs_os = rhs->on_success;
-			rhs->on_success = lhs;
-			lhs = rhs;
-			fold_impl(visited_nodes, rhs->on_success, saved_rhs_os);
+			T saved_rhs = rhs;
+			T& prepended_node = lhs;
+			prepended_node = rhs;
+			
+			prepended_node->on_success = saved_lhs;
+			append_failure(prepended_node->on_success, saved_rhs->on_failure);
+			prepended_node->on_failure = saved_rhs;
+			append_success(prepended_node->on_failure, saved_lhs->on_success);
+			
+			//fold_impl(visited_nodes, lhs->on_success, saved_rhs->on_success);
+			//fold_impl(visited_nodes, lhs->on_failure, saved_rhs->on_failure);
 		}
 		// equivalent nodes are simply skipped side-by-side. well, unless there is further
 		// nodes attached to rhs->on_success. then, 
@@ -52,6 +58,7 @@ namespace detail {
 		}
 		else {
 			append_failure(lhs, rhs);
+			append_success(lhs, rhs->on_failure);
 		}
 	}
 

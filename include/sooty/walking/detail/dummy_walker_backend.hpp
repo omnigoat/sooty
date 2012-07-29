@@ -27,6 +27,28 @@ namespace detail {
 		bool is_dummy() const { return true; }
 	};
 	
+	struct debug_walker_backend : abstract_walker_backend
+	{
+		bool compare_impl(context_ref context) {
+			std::cout << "ACTION" << std::endl;
+			return true;
+		}
+		
+		abstract_walker_backend_ptr clone() {
+			return abstract_walker_backend_ptr(new debug_walker_backend(*this));
+		}
+	};
+	
+	struct failer_walker_backend : abstract_walker_backend {
+		bool compare_impl(context_ref context) {
+			return false;
+		}
+		
+		abstract_walker_backend_ptr clone() {
+			return abstract_walker_backend_ptr(new failer_walker_backend(*this));
+		}
+	};
+	
 //=====================================================================
 } // namespace detail
 } // namespace walking

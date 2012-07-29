@@ -30,7 +30,7 @@ namespace walking {
 		detail::abstract_walker_backend_ptr backend;
 		
 		rewriter rewrite;
-		
+		walker on_match();
 		
 		walker(const detail::abstract_walker_backend_ptr& backend)
 			: backend(backend), rewrite(backend)
@@ -50,17 +50,16 @@ namespace walking {
 		return detail::abstract_walker_backend_ptr(new detail::id_eq_walker_backend(match_from, match_to));
 	}
 
-	inline walker eq(parsing::parseme::id_t id) {
-		return detail::abstract_walker_backend_ptr(new detail::id_eq_walker_backend(id, id));
-	}
+	walker eq(parsing::parseme::id_t id);
+	walker fuzzy_eq(parsing::parseme::id_t id);
 
 	inline walker start() {
 		return walker( detail::abstract_walker_backend_ptr(new detail::start_walker_backend) );
 	}
 	
 	inline walker dummy() {
-		static walker _(detail::abstract_walker_backend_ptr(new detail::dummy_walker_backend));
-		return _;
+		return walker(detail::abstract_walker_backend_ptr(new detail::dummy_walker_backend));
+		//return _;
 	}
 	
 	

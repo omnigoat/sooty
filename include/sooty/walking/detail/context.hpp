@@ -24,7 +24,8 @@ namespace detail {
 			dive,
 			surface,
 			next_sibling,
-			prev_sibling
+			prev_sibling,
+			surface_and_next_sibling
 		};
 	};
 	
@@ -55,18 +56,18 @@ namespace detail {
 		}
 		
 		void dive() {
-			assert( !invalid() );
+			if (invalid()) return;
 			parsing::parsemes_t& nf = container().back().children();
 			frames.push( frame(nf, nf.begin()) );
 		}
 		
 		void surface() {
-			assert( !frames.empty() );
+			if (invalid()) return;
 			frames.pop();
 		}
 		
 		void next() {
-			assert( !frames.empty() );
+			if (invalid()) return;
 			++frames.top().current;
 		}
 		
@@ -83,6 +84,11 @@ namespace detail {
 					break;
 					
 				case how_to_traverse::next_sibling:
+					next();
+					break;
+				
+				case how_to_traverse::surface_and_next_sibling:
+					surface();
 					next();
 					break;
 			}
