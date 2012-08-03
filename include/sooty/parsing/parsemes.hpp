@@ -44,6 +44,7 @@ namespace parsing {
 		const_iterator end() const;
 		
 		void push_back(parseme_ref n);
+		void pop_back();
 		void clear();
 		
 		iterator insert(iterator where_, const_parseme_ref n);

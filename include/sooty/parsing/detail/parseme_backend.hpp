@@ -51,6 +51,7 @@ namespace detail {
 		void set_parent(parseme_backend_ptr parent);
 		
 		parsemes_t& children();
+		const parsemes_t& children() const;
 	};
 	
 	typedef std::vector<parseme_backend_ptr> parseme_backends_t;

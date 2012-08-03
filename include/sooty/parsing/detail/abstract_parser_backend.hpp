@@ -11,6 +11,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/optional.hpp>
 //=====================================================================
+#include <sooty/common/node.hpp>
 #include <sooty/lexing/lexemes.hpp>
 #include <sooty/parsing/accumulator.hpp>
 //=====================================================================
@@ -18,12 +19,131 @@ namespace sooty {
 namespace parsing {
 namespace detail {
 //=====================================================================
-	
+	//=====================================================================
+	//=====================================================================
 	// forward declares
+	struct command_t;
+	typedef boost::shared_ptr<command_t> command_ptr;
+	
+	struct command_t {
+		typedef bool orders_t;
+		
+		enum Enum {
+			terminal,
+			add_marker,
+			rm_marker,
+			match,
+			insert,
+			merge
+		};
+		
+		static command_ptr make_add_marker(accumulator::const_mark_ref mark) {
+			return command_ptr(new command_t(add_marker, 0, 0, mark));
+		}
+		
+		static command_ptr make_rm_marker(accumulator::const_mark_ref mark) {
+			return command_ptr(new command_t(rm_marker, 0, 0, mark));
+		}
+		
+		static command_ptr make_match(size_t from_id, size_t to_id) {
+			return command_ptr(new command_t(match, from_id, to_id));
+		}
+		
+		static command_ptr make_insert(size_t insert_id, accumulator::const_mark_ref mark) {
+			return command_ptr(new command_t(insert, insert_id, insert_id, mark));
+		}
+		
+		static command_ptr make_terminal() {
+			return command_ptr(new command_t(terminal, 0, 0));
+		}
+		
+		bool operator == (const command_t& rhs) const {
+			return action_ == rhs.action_ && lower_id_ == rhs.lower_id_ && upper_id_ == rhs.upper_id_
+				&& (mark_ ? (rhs.mark_ ? *mark_ == *rhs.mark_ : false) : !rhs.mark_);
+		}
+		
+		bool sentinel() const {
+			return action_ == add_marker;
+		}
+		
+		bool is_terminal() const {
+			return action_ == terminal;
+		}
+		
+		bool operator() (accumulator& acc) const {
+			switch (action_) {
+				case add_marker:
+					acc.add_marker(mark_);
+					break;
+				
+				case rm_marker:
+					acc.rm_marker(mark_);
+					break;
+			}
+			
+			return true;
+		}
+		
+	public:
+		command_t(Enum action, size_t lower_id, size_t upper_id)
+			: action_(action), lower_id_(lower_id), upper_id_(upper_id)
+		{
+		}
+		
+		command_t(Enum action, size_t lower_id, size_t upper_id, accumulator::const_mark_ref mark)
+			: action_(action), lower_id_(lower_id), upper_id_(upper_id), mark_(mark)
+		{
+		}
+		
+		Enum action_;
+		accumulator::mark_t mark_;
+		size_t lower_id_, upper_id_;
+	};
+	
+	typedef common::node_t<command_t, accumulator> parser_backend_t;
+	typedef boost::shared_ptr<parser_backend_t> parser_backend_ptr;
+	
+	
+	inline parser_backend_ptr match(size_t match_from, size_t match_to) {
+		accumulator:: mark_t mark = accumulator::generate_marker();
+		
+		return parser_backend_t::make()
+			->push_back_command( command_t(command_t::add_marker, 0, 0, mark) )
+			->push_back_command_ex(false, command_t(command_t::rm_marker, 0, 0, mark) )
+			->push_back_command( command_t(command_t::match, match_from, match_to) )
+			->push_back_command( command_t(command_t::insert, 0, 0, mark) )
+			->push_back_command( command_t(command_t::rm_marker, 0, 0, mark) )
+			->push_back_command( command_t(command_t::terminal, 0, 0) )
+			;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	//=====================================================================
+	//=====================================================================
 	struct abstract_parser_backend;
 	typedef boost::shared_ptr<abstract_parser_backend> abstract_parser_backend_ptr;
-	
-	
 	
 	//=====================================================================
 	//=====================================================================
@@ -34,11 +154,12 @@ namespace detail {
 		
 		virtual abstract_parser_backend_ptr clone() = 0;
 		virtual int debug(std::set<detail::abstract_parser_backend_ptr>&, int p) {return p;}
-		virtual bool applies(accumulator&, lexing::lexemes::const_iterator&, lexing::lexemes::const_iterator&) = 0;
+		virtual bool applies(accumulator&, lexing::lexemes_t::const_iterator&, lexing::lexemes_t::const_iterator&) = 0;
 	};
 	
 	
-	bool equivalent(const abstract_parser_backend_ptr&, const abstract_parser_backend_ptr&);
+	bool equivalent(abstract_parser_backend_ptr&, const abstract_parser_backend_ptr&);
+	bool equivalent_in_failure(abstract_parser_backend_ptr&, abstract_parser_backend_ptr&);
 	
 	inline bool partially_equivalent(const abstract_parser_backend_ptr& lhs, const abstract_parser_backend_ptr& rhs) {
 		return false;
@@ -71,7 +192,7 @@ namespace detail {
 	
 		// nopper
 		struct nop : abstract_parser_backend {
-			bool applies(accumulator&, lexing::lexemes::const_iterator&, lexing::lexemes::const_iterator&);
+			bool applies(accumulator&, lexing::lexemes_t::const_iterator&, lexing::lexemes_t::const_iterator&);
 			int debug(std::set<detail::abstract_parser_backend_ptr>&, int padding) {
 				for (int i = 0; i != padding; ++i) {
 					std::cout << " ";
@@ -100,7 +221,7 @@ namespace detail {
 			{
 			}
 			
-			bool applies(accumulator& acc, lexing::lexemes::const_iterator& begin, lexing::lexemes::const_iterator& end);
+			bool applies(accumulator& acc, lexing::lexemes_t::const_iterator& begin, lexing::lexemes_t::const_iterator& end);
 			
 			int debug(std::set<detail::abstract_parser_backend_ptr>&, int padding);
 			
@@ -136,22 +257,15 @@ namespace detail {
 			{
 			}
 			
-			bool applies(accumulator& acc, lexing::lexemes::const_iterator& begin, lexing::lexemes::const_iterator& end);
+			bool applies(accumulator& acc, lexing::lexemes_t::const_iterator& begin, lexing::lexemes_t::const_iterator& end);
 			
-			int debug(std::set<detail::abstract_parser_backend_ptr>&, int padding) {
-				for (int i = 0; i != padding; ++i) {
-					std::cout << " ";
-				}
-				
-				std::cout << "match " << match_from << ":" << match_to;
-				if (mark.is_initialized())
-					std::cout << "  ->  " << *mark.get();
-				std::cout << std::endl;
-				return padding;
-			}
+			int debug(std::set<detail::abstract_parser_backend_ptr>&, int padding);
 			
 			abstract_parser_backend_ptr clone() {
-				return match::create(match_from, match_to, mark);
+				//if (mark.is_initialized())
+					//return match::create(match_from, match_to, accumulator::mapped_marker(mark.get()));
+				//else
+					return match::create(match_from, match_to, mark);
 			}
 			
 			static abstract_parser_backend_ptr create(size_t match_from, size_t match_to) {
@@ -178,7 +292,7 @@ namespace detail {
 			{
 			}
 			
-			bool applies(accumulator& acc, lexing::lexemes::const_iterator&, lexing::lexemes::const_iterator&);
+			bool applies(accumulator& acc, lexing::lexemes_t::const_iterator&, lexing::lexemes_t::const_iterator&);
 			
 			int debug(std::set<detail::abstract_parser_backend_ptr>&, int padding) {
 				for (int i = 0; i != padding; ++i) {
@@ -193,7 +307,10 @@ namespace detail {
 			}
 			
 			abstract_parser_backend_ptr clone() {
-				return insert::create(insert_id, lexeme_mark_id);
+				//if (lexeme_mark_id.is_initialized())
+				//	return insert::create(insert_id, accumulator::mapped_marker(lexeme_mark_id.get()));
+				//else
+					return insert::create(insert_id, lexeme_mark_id);
 			}
 			
 			static abstract_parser_backend_ptr create(size_t id) {
@@ -216,7 +333,7 @@ namespace detail {
 			
 			add_marker(const accumulator::mark_t& mark_id) : mark_id(mark_id) {}
 			
-			bool applies(accumulator& acc, lexing::lexemes::const_iterator&, lexing::lexemes::const_iterator&);
+			bool applies(accumulator& acc, lexing::lexemes_t::const_iterator&, lexing::lexemes_t::const_iterator&);
 			
 			int debug(std::set<detail::abstract_parser_backend_ptr>&, int padding) {
 				for (int i = 0; i != padding; ++i) {
@@ -242,7 +359,7 @@ namespace detail {
 			
 			rm_marker(const accumulator::mark_t& mark_id) : mark_id(mark_id) {}
 			
-			bool applies(accumulator& acc, lexing::lexemes::const_iterator&, lexing::lexemes::const_iterator&);
+			bool applies(accumulator& acc, lexing::lexemes_t::const_iterator&, lexing::lexemes_t::const_iterator&);
 			
 			int debug(std::set<detail::abstract_parser_backend_ptr>&, int padding) {
 				for (int i = 0; i != padding; ++i) {
@@ -262,14 +379,31 @@ namespace detail {
 			}
 		};
 		
-		
+		struct rewind : abstract_parser_backend {
+			accumulator::mark_t mark;
+			
+			rewind(const accumulator::mark_t& mark)
+				: mark(mark)
+			{
+			}
+			
+			bool applies(accumulator& acc, lexing::lexemes_t::const_iterator&, lexing::lexemes_t::const_iterator&);
+			
+			abstract_parser_backend_ptr clone() {
+				return rewind::create(mark);
+			}
+			
+			static abstract_parser_backend_ptr create(const accumulator::mark_t& mark) {
+				return abstract_parser_backend_ptr(new rewind(mark));
+			}
+		};
 		
 		struct merge : abstract_parser_backend {
 			accumulator::mark_t from_mark, to_mark;
 			
 			merge(const accumulator::mark_t& m) : from_mark(m) {}
 			
-			bool applies(accumulator& acc, lexing::lexemes::const_iterator&, lexing::lexemes::const_iterator&);
+			bool applies(accumulator& acc, lexing::lexemes_t::const_iterator&, lexing::lexemes_t::const_iterator&);
 			
 			int debug(std::set<detail::abstract_parser_backend_ptr>&, int padding) {
 				for (int i = 0; i != padding; ++i) {
@@ -286,6 +420,31 @@ namespace detail {
 			
 			static abstract_parser_backend_ptr create(const accumulator::mark_t& mark) {
 				return abstract_parser_backend_ptr(new merge(mark));
+			}
+		};
+		
+		struct terminal : abstract_parser_backend {
+			bool state;
+			
+			terminal(bool state) : state(state) {}
+			
+			bool applies(accumulator& acc, lexing::lexemes_t::const_iterator&, lexing::lexemes_t::const_iterator&);
+			
+			int debug(std::set<detail::abstract_parser_backend_ptr>&, int padding) {
+				for (int i = 0; i != padding; ++i) {
+					std::cout << " ";
+				}
+				
+				std::cout << "terminal: " << state << std::endl;
+				return padding;
+			}
+			
+			abstract_parser_backend_ptr clone() {
+				return terminal::create(state);
+			}
+			
+			static abstract_parser_backend_ptr create(bool state = true) {
+				return abstract_parser_backend_ptr(new terminal(state));
 			}
 		};
 		

@@ -57,6 +57,10 @@ namespace detail {
 		return false;
 	}
 	
+	inline bool should_prepend(const abstract_transformer_backend_ptr&) {
+		return false;
+	}
+	
 	
 	//=====================================================================
 	// dummy transformer needs no great implementation

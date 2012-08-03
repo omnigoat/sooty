@@ -20,7 +20,6 @@
 #include <sooty/lexing/input_iterator.hpp>
 #include <sooty/lexing/lexer.hpp>
 #include <sooty/parsing/parseme.hpp>
-#include <sooty/parsing/parsemes.hpp>
 #include <sooty/parsing/parser.hpp>
 
 //#include <sooty/walking/detail/layout.hpp>
@@ -78,7 +77,7 @@ using namespace sooty::walking;
 
 
 
-void make_lexeme(lexemes& out, lexeme_t::id_t id, lex_results_t& results) {
+void make_lexeme(lexemes_t& out, lexeme_t::id_t id, lex_results_t& results) {
 	out.push_back( lexeme_t(id, results.begin, results.end, position_t()) );
 }
 
@@ -199,14 +198,38 @@ void print_parsemes_prefix(parsemes_t& ps)
 	}
 }
 
+
+
 int main()
 {
+	sooty::parsing::detail::parser_backend_ptr M1 = sooty::parsing::detail::match(1, 1);
+	sooty::parsing::detail::parser_backend_ptr M2 = sooty::parsing::detail::match(2, 2);
+	sooty::parsing::detail::parser_backend_ptr M3 = sooty::parsing::detail::match(3, 3);
+	//sooty::parsing::detail::parser_backend_ptr M3 = sooty::parsing::detail::match(3, 3);
+	
+	sooty::parsing::detail::parser_backend_ptr seq_and_m1m2
+		= sooty::parsing::detail::parser_backend_t::seq_and(M1, M2);
+	
+	sooty::parsing::detail::parser_backend_ptr seq_and_m1m3
+		= sooty::parsing::detail::parser_backend_t::seq_and(M1, M3);
+	
+	sooty::parsing::detail::parser_backend_ptr or_m1m2_m1m3
+		= sooty::parsing::detail::parser_backend_t::one(seq_and_m1m2, seq_and_m1m3);
+	
+	sooty::parsing::detail::parser_backend_ptr or_or_m1m2_m1m3_m1
+		= sooty::parsing::detail::parser_backend_t::one(or_m1m2_m1m3, M1);
+	
+	sooty::parsing::accumulator acc;
+	M1->perform(acc);
+	
+	return 0;
+	
 	using sooty::parsing::parseme;
 	using sooty::parsing::match;
 	
 	
 	
-	lexemes the_lexemes;
+	lexemes_t the_lexemes;
 	{
 		lexer combination
 			= +((+in_range('a', 'z'))[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::variable, _1)]
@@ -220,8 +243,7 @@ int main()
 			| char_(' '))
 			;
 		
-		
-		std::string test_string = "4 + 5 - 6 + 12";
+		std::string test_string = "5 - 2 + 3";
 		lex_results_t results = lex(combination, test_string.begin(), test_string.end());
 	}
 	
@@ -235,7 +257,11 @@ int main()
 			multiplicative_expression,
 			factor
 			;
-
+		
+		expression =
+			additive_expression
+			;
+		
 		additive_expression = 
 			insert(parsid::addition) [
 				match_insert(lexid::integer, parsid::number) >>
@@ -267,21 +293,23 @@ int main()
 			|
 			factor
 			;
-		
-		factor =
-			match_insert(lexid::integer, parsid::number) |
-			match_insert(lexid::variable, parsid::variable) |
-			(
-				discard(lexid::lparen) >>
-				additive_expression >>
-				discard(lexid::rparen)
-			)
-			;*/
+		*/
+		//factor =
+		//	(
+		//		discard(lexid::lparen) >>
+		//		additive_expression >>
+		//		discard(lexid::rparen)
+		//	)
+		//	|
+		//	match_insert(lexid::integer, parsid::number) |
+		//	match_insert(lexid::variable, parsid::variable)
+		//	
+		//	;
 		
 		sooty::parsing::debug(additive_expression.backend_);
 		parsemes = sooty::parsing::parse(additive_expression, the_lexemes.begin(), the_lexemes.end());
 	}
-	
+	std::cout << std::endl;
 	print_parsemes_impl(parsemes);
 	std::cout << std::endl;
 	std::cout << "before reduction:\n  ";
@@ -298,5 +326,7 @@ int main()
 			].on_match()
 		);
 	}
+	
+	system("pause");
 }
 

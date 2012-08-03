@@ -19,7 +19,7 @@ namespace sooty {
 namespace parsing {
 //=====================================================================
 	
-		
+	
 	struct parser
 	{
 	// gotta make this private somehow
@@ -44,7 +44,9 @@ namespace parsing {
 		
 		parser operator | (const parser& rhs) {
 			detail::abstract_parser_backend_ptr new_lhs = sooty::common::detail::clone_tree(backend_);
-			sooty::common::detail::fold(new_lhs, sooty::common::detail::clone_tree(rhs.backend_));
+			detail::abstract_parser_backend_ptr new_rhs = sooty::common::detail::clone_tree(rhs.backend_);
+			//sooty::common::detail::append_failure(new_lhs, sooty::common::detail::clone_tree(rhs.backend_));
+			sooty::common::detail::fold(new_lhs, new_rhs);
 			return parser(new_lhs);
 		}
 		
@@ -73,6 +75,15 @@ namespace parsing {
 				assert(false);
 			}
 			
+			// merge
+			abstract_parser_backend_ptr mi = parsers::merge::create(mark);
+			// rewind
+			append_failure(mi, parsers::rewind::create(mark));
+			// append merge
+			append_success(tail, mi);
+			
+			
+			
 			// next we match our body like normal
 			abstract_parser_backend_ptr body = clone_tree(rhs.backend_);
 			append_success(head, body);
@@ -80,13 +91,10 @@ namespace parsing {
 			// if successful, we perform our insertion
 			append_success(head, tail);
 			
-			// now merge
-			abstract_parser_backend_ptr mi = parsers::merge::create(mark);
-			append_success(head, mi);
 			
 			// at any point 'till now, if we fail, remove our marker
 			append_failure(head, parsers::rm_marker::create(mark));
-			
+			append_success(head, parsers::terminal::create());
 			
 			return parser(head);
 		}
@@ -130,13 +138,17 @@ namespace parsing {
 		);
 	}
 	
-	inline parser match_insert(size_t match_id, size_t insert_id) {
+	inline parser match_insert(size_t match_id, size_t insert_id)
+	{
 		accumulator::mark_t mark = accumulator::generate_marker();
 		
 		return parser(
 			sooty::common::detail::append_success(
-				detail::parsers::match::create(match_id, match_id, mark),
-				detail::parsers::insert::create(insert_id, mark)
+				sooty::common::detail::append_success(
+					detail::parsers::match::create(match_id, match_id, mark),
+					detail::parsers::insert::create(insert_id, mark)
+				),
+				detail::parsers::terminal::create()
 			)
 		);
 	}
@@ -153,11 +165,11 @@ namespace parsing {
 		);
 	}
 	
-	parsemes_t parse(parser& parser, lexing::lexemes::const_iterator& begin, lexing::lexemes::const_iterator& end);
+	parsemes_t parse(parser& parser, lexing::lexemes_t::const_iterator& begin, lexing::lexemes_t::const_iterator& end);
 	
 	namespace detail {
-		void parse(accumulator&, const abstract_parser_backend_ptr&, 
-			lexing::lexemes::const_iterator&, lexing::lexemes::const_iterator&);
+		bool parse(accumulator&, const abstract_parser_backend_ptr&, 
+			lexing::lexemes_t::const_iterator&, lexing::lexemes_t::const_iterator&);
 	}
 	
 	inline void debug_impl(std::set<detail::abstract_parser_backend_ptr>& visited_nodes,

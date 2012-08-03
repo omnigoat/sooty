@@ -16,25 +16,26 @@ namespace detail {
 //=====================================================================
 	
 	template <typename Node, typename Edge>
-	Node& append_success_impl(std::set<Node>& visited, Node& lhs, const Edge& rhs)
+	Node& append_success_impl(std::set<Node>& visited, Node& lhs, Edge& rhs)
 	{
-		if ( std::find(visited.begin(), visited.end(), lhs) == visited.end() )
-		{
-			visited.insert(lhs);
-			
-			if (valid_edge(lhs->on_success)) {
-				if (!overwrote_edge(lhs->on_success, rhs))
-					append_success_impl<Node, Edge>(visited, node_of(lhs->on_success), rhs);
-			}
-			else
-				lhs->on_success = rhs;
-			
-			if (valid_edge(lhs->on_failure) && !overwrote_edge(lhs->on_failure, rhs))
-				append_success_impl<Node, Edge>(visited, node_of(lhs->on_failure), rhs);
-			
-			if (valid_edge(lhs->on_invalid) && !overwrote_edge(lhs->on_invalid, rhs))
-				append_success_impl<Node, Edge>(visited, node_of(lhs->on_invalid), rhs);
+		if ( std::find(visited.begin(), visited.end(), lhs) != visited.end() )
+			return lhs;
+		
+		visited.insert(lhs);
+
+		if (valid_edge(lhs->on_success)) {
+			if (!overwrote_edge(lhs->on_success, rhs))
+				append_success_impl<Node, Edge>(visited, node_of(lhs->on_success), rhs);
 		}
+		else
+			lhs->on_success = rhs;
+		
+		//if (valid_edge(lhs->on_failure) && !overwrote_edge(lhs->on_failure, rhs))
+		//	append_success_impl<Node, Edge>(visited, node_of(lhs->on_failure), rhs);
+		
+		//if (valid_edge(lhs->on_invalid) && !overwrote_edge(lhs->on_invalid, rhs))
+		//	append_success_impl<Node, Edge>(visited, node_of(lhs->on_invalid), rhs);
+		
 		
 		return lhs;
 	}

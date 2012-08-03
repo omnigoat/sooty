@@ -6,7 +6,7 @@ sooty::lexing::lex_results_t sooty::lexing::detail::lex_impl(const lexer& lexer,
 	input_iterator remembered_begin = begin;
 	detail::base_lexer_ptr current_lexer = lexer.base_lexer;
 	
-	std::map<int, sooty::lexing::input_iterator> things;
+	std::map<int, input_iterator> things;
 	
 	while (current_lexer)
 	{

@@ -28,7 +28,6 @@ namespace parsing {
 	
 	
 	
-	
 	//=====================================================================
 	//
 	//  parseme
@@ -42,7 +41,6 @@ namespace parsing {
 	struct parseme
 	{
 		friend struct parsemes_t;
-		
 		typedef size_t id_t;
 		
 	private:
@@ -64,6 +62,7 @@ namespace parsing {
 		void set_parent(const_parseme_ref parent);
 		const lexing::lexeme_t* lexeme() const;
 		parsemes_t& children();
+		const parsemes_t& children() const;
 	};
 	
 //=====================================================================

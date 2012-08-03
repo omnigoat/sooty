@@ -38,3 +38,8 @@ sooty::lexing::detail::base_lexer_ptr sooty::lexing::detail::clone_tree_impl(con
 	}
 }
 
+bool sooty::lexing::detail::equivalent( base_lexer_ptr& lhs, base_lexer_ptr& rhs )
+{
+	return lhs->type == rhs->type && lhs->from == rhs->from && lhs->to == rhs->to;
+}
+

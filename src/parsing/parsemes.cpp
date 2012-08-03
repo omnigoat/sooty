@@ -56,3 +56,8 @@ void sooty::parsing::parsemes_t::clear()
 {
 	parsemes_.clear();
 }
+
+void sooty::parsing::parsemes_t::pop_back()
+{
+	parsemes_.pop_back();
+}

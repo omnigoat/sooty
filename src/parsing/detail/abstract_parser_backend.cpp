@@ -6,7 +6,7 @@
 //=====================================================================
 // nop
 //=====================================================================
-bool sooty::parsing::detail::parsers::nop::applies( accumulator&, lexing::lexemes::const_iterator&, lexing::lexemes::const_iterator& )
+bool sooty::parsing::detail::parsers::nop::applies( accumulator&, lexing::lexemes_t::const_iterator&, lexing::lexemes_t::const_iterator& )
 {
 	return true;
 }
@@ -14,10 +14,9 @@ bool sooty::parsing::detail::parsers::nop::applies( accumulator&, lexing::lexeme
 //=====================================================================
 // superparser
 //=====================================================================
-bool sooty::parsing::detail::parsers::superparser::applies( accumulator& acc, lexing::lexemes::const_iterator& begin, lexing::lexemes::const_iterator& end )
+bool sooty::parsing::detail::parsers::superparser::applies( accumulator& acc, lexing::lexemes_t::const_iterator& begin, lexing::lexemes_t::const_iterator& end )
 {
-	detail::parse(acc, nop, begin, end);
-	return true;
+	return detail::parse(acc, nop, begin, end);
 }
 
 int sooty::parsing::detail::parsers::superparser::debug( std::set<detail::abstract_parser_backend_ptr>& visited_nodes, int padding )
@@ -40,13 +39,13 @@ void sooty::parsing::detail::parsers::superparser::assign_subparser( const abstr
 //=====================================================================
 // match
 //=====================================================================
-bool sooty::parsing::detail::parsers::match::applies( accumulator& acc, lexing::lexemes::const_iterator& begin, lexing::lexemes::const_iterator& end )
+bool sooty::parsing::detail::parsers::match::applies( accumulator& acc, lexing::lexemes_t::const_iterator& begin, lexing::lexemes_t::const_iterator& end )
 {
 	if (begin == end || (begin->id() < match_from) || (match_to < begin->id()))
 		return false;
 
 	if (mark.is_initialized()) {
-		acc.add_marker(mark.get());
+		acc.add_marker(mark.get(), begin);
 		acc.insert(0, &*begin);
 	}
 
@@ -54,16 +53,30 @@ bool sooty::parsing::detail::parsers::match::applies( accumulator& acc, lexing::
 	return true;
 }
 
+int sooty::parsing::detail::parsers::match::debug( std::set<detail::abstract_parser_backend_ptr>&, int padding )
+{
+	for (int i = 0; i != padding; ++i) {
+		std::cout << " ";
+	}
+
+	std::cout << "match " << match_from << ":" << match_to;
+	if (mark.is_initialized())
+		std::cout << "  ->  " << *mark.get();
+	std::cout << std::endl;
+	return padding;
+}
+
 
 //=====================================================================
 // insert
 //=====================================================================
-bool sooty::parsing::detail::parsers::insert::applies( accumulator& acc, lexing::lexemes::const_iterator&, lexing::lexemes::const_iterator& )
+bool sooty::parsing::detail::parsers::insert::applies( accumulator& acc, lexing::lexemes_t::const_iterator&, lexing::lexemes_t::const_iterator& )
 {
 	if (lexeme_mark_id.is_initialized()) {
 		parseme m = acc.at_marker(lexeme_mark_id.get());
 		acc.delete_at(lexeme_mark_id.get());
 		acc.insert(insert_id, m.lexeme());
+		acc.rm_marker(lexeme_mark_id.get());
 	}
 	else {
 		acc.insert(insert_id);
@@ -76,9 +89,9 @@ bool sooty::parsing::detail::parsers::insert::applies( accumulator& acc, lexing:
 //=====================================================================
 // add-marker
 //=====================================================================
-bool sooty::parsing::detail::parsers::add_marker::applies( accumulator& acc, lexing::lexemes::const_iterator&, lexing::lexemes::const_iterator& )
+bool sooty::parsing::detail::parsers::add_marker::applies( accumulator& acc, lexing::lexemes_t::const_iterator& begin, lexing::lexemes_t::const_iterator& )
 {
-	acc.add_marker(mark_id);
+	acc.add_marker(mark_id, begin);
 	return true;
 }
 
@@ -86,8 +99,9 @@ bool sooty::parsing::detail::parsers::add_marker::applies( accumulator& acc, lex
 //=====================================================================
 // rm-marker
 //=====================================================================
-bool sooty::parsing::detail::parsers::rm_marker::applies( accumulator& acc, lexing::lexemes::const_iterator&, lexing::lexemes::const_iterator& )
+bool sooty::parsing::detail::parsers::rm_marker::applies( accumulator& acc, lexing::lexemes_t::const_iterator& begin, lexing::lexemes_t::const_iterator& )
 {
+	//begin = acc.iter_marker(mark_id);
 	acc.rm_marker(mark_id);
 	return false;
 }
@@ -96,7 +110,7 @@ bool sooty::parsing::detail::parsers::rm_marker::applies( accumulator& acc, lexi
 //=====================================================================
 // merge
 //=====================================================================
-bool sooty::parsing::detail::parsers::merge::applies( accumulator& acc, lexing::lexemes::const_iterator&, lexing::lexemes::const_iterator& )
+bool sooty::parsing::detail::parsers::merge::applies( accumulator& acc, lexing::lexemes_t::const_iterator&, lexing::lexemes_t::const_iterator& )
 {
 	acc.merge_into(from_mark);
 	acc.rm_marker(from_mark);
@@ -104,17 +118,40 @@ bool sooty::parsing::detail::parsers::merge::applies( accumulator& acc, lexing::
 }
 
 
+//=====================================================================
+// rewind
+//=====================================================================
+bool sooty::parsing::detail::parsers::rewind::applies( accumulator& acc, lexing::lexemes_t::const_iterator& begin, lexing::lexemes_t::const_iterator& )
+{
+	parseme parent = acc.back();
+	acc.pop();
+	acc.promote_children();
+	acc.add_marker(mark);
+	acc.insert_all(parent.children());
+	begin = acc.iter_marker(mark);
+	return false;
+}
+
 
 bool sooty::parsing::detail::skippable( const abstract_parser_backend_ptr& P )
 {
 	return
-		boost::shared_dynamic_cast<parsers::add_marker>(P) ||
-		boost::shared_dynamic_cast<parsers::rm_marker>(P) ||
+		(
+			boost::shared_dynamic_cast<parsers::terminal>(P) &&
+			P->on_success
+		)
+		||
 		boost::shared_dynamic_cast<parsers::nop>(P)
 		;
 }
 
-bool sooty::parsing::detail::equivalent( const abstract_parser_backend_ptr& lhs, const abstract_parser_backend_ptr& rhs )
+
+
+
+//
+//
+///
+bool sooty::parsing::detail::equivalent( abstract_parser_backend_ptr& lhs, const abstract_parser_backend_ptr& rhs )
 {
 	// superparsers
 	boost::shared_ptr<parsers::superparser> lhs_sp = boost::shared_dynamic_cast<parsers::superparser>(lhs);
@@ -162,6 +199,31 @@ bool sooty::parsing::detail::equivalent( const abstract_parser_backend_ptr& lhs,
 		return g;
 	}
 	
+	
+	// terminals
+	{
+		boost::shared_ptr<parsers::terminal> lhsc = boost::shared_dynamic_cast<parsers::terminal>(lhs);
+		if (lhsc && lhsc->state)
+		{
+			abstract_parser_backend_ptr on_success = lhs->on_success, on_failure = lhs->on_failure;
+		
+			// if lhs and rhs are both terminals, overwrite lhs with rhs->on_success (if it exists)
+			// otherwise, just overwrite lhs with rhs
+			boost::shared_ptr<parsers::terminal> rhsc = boost::shared_dynamic_cast<parsers::terminal>(rhs);
+			if (rhsc && rhs->on_success)
+				lhs = rhs->on_success->clone();
+			else
+				lhs = rhs->clone();
+
+			lhs->on_success = on_success;
+			lhs->on_failure = on_failure;
+			return true;
+		}
+	}
+	
+	return false;
+	
+	
 	// add-marker
 	boost::shared_ptr<parsers::add_marker> lhs_amp = boost::shared_dynamic_cast<parsers::add_marker>(lhs);
 	if (lhs_amp) {
@@ -169,7 +231,8 @@ bool sooty::parsing::detail::equivalent( const abstract_parser_backend_ptr& lhs,
 			= boost::shared_dynamic_cast<parsers::add_marker>(rhs);
 		
 		if (rhs_ip) {
-			*rhs_ip->mark_id.get() = *lhs_amp->mark_id.get();
+			// give *both* nodes new a shared new marker
+			*rhs_ip->mark_id.get() = *lhs_amp->mark_id.get() = *accumulator::generate_marker();
 		}
 		
 		return true;
@@ -186,8 +249,28 @@ bool sooty::parsing::detail::overwrote_edge( abstract_parser_backend_ptr& lhs, c
 bool sooty::parsing::detail::should_prepend( const abstract_parser_backend_ptr& P )
 {
 	return
-		boost::shared_dynamic_cast<parsers::add_marker>(P) ||
-		boost::shared_dynamic_cast<parsers::rm_marker>(P) ||
-		boost::shared_dynamic_cast<parsers::nop>(P)
+		boost::shared_dynamic_cast<parsers::add_marker>(P) || 
+		boost::shared_dynamic_cast<parsers::rm_marker>(P)
 		;
+}
+
+bool sooty::parsing::detail::equivalent_in_failure( abstract_parser_backend_ptr& lhs, abstract_parser_backend_ptr& rhs )
+{
+	return false;
+	
+	if (boost::shared_dynamic_cast<parsers::rm_marker>(lhs)) {
+		abstract_parser_backend_ptr on_success = lhs->on_success;
+		abstract_parser_backend_ptr on_failure = lhs->on_failure;
+		lhs = rhs->clone();
+		lhs->on_success = on_success;
+		lhs->on_failure = on_failure;
+		return true;
+	}
+	
+	return false;
+}
+
+bool sooty::parsing::detail::parsers::terminal::applies( accumulator& acc, lexing::lexemes_t::const_iterator&, lexing::lexemes_t::const_iterator& )
+{
+	return state;
 }

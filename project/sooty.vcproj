@@ -336,6 +336,10 @@
 			<Filter
 				Name="common"
 				>
+				<File
+					RelativePath="..\include\sooty\common\node.hpp"
+					>
+				</File>
 				<Filter
 					Name="detail"
 					>

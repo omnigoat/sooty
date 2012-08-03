@@ -35,7 +35,8 @@ namespace lexing {
 		lexer operator | (const lexer& rhs) const {
 			detail::base_lexer_ptr new_lhs = clone_tree(this->base_lexer);
 			//detail::fold(new_lhs, rhs.base_lexer);
-			common::detail::fold(new_lhs, rhs.base_lexer);
+			//common::detail::fold<sooty::lexing::detail::base_lexer_ptr>(new_lhs, clone_tree(rhs.base_lexer));
+			common::detail::append_failure(new_lhs, clone_tree(rhs.base_lexer));
 			return lexer(new_lhs);
 		}
 		
@@ -51,10 +52,11 @@ namespace lexing {
 		
 		lexer operator [](semantic_action action) const {
 			static char _ = 0;
+			++_;
 			detail::base_lexer_ptr marker(new detail::base_lexer(detail::base_lexer::lexer_type::marker, _, _));
 			detail::base_lexer_ptr actor(new detail::base_lexer(detail::base_lexer::lexer_type::actor, _, _));
 			actor->action = action;
-			++_;
+			
 			common::detail::append_success(marker, clone_tree(this->base_lexer));
 			common::detail::append_success(marker, actor);
 			return lexer(marker);

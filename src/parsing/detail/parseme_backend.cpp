@@ -73,3 +73,8 @@ sooty::parsing::parsemes_t& sooty::parsing::detail::parseme_backend::children()
 {
 	return children_;
 }
+
+const sooty::parsing::parsemes_t& sooty::parsing::detail::parseme_backend::children() const
+{
+	return children_;
+}

@@ -132,7 +132,8 @@ namespace detail {
 		}
 		
 		void insert(parsing::parsemes_t::iterator begin, parsing::parsemes_t::iterator end) {
-			frames.top().current = container().insert(current(), begin, end);
+			assert(false);
+//			frames.top().current = container().insert(current(), begin, end);
 		}
 	};
 	

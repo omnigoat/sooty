@@ -5,10 +5,10 @@
 //=====================================================================
 #include <sooty/parsing/detail/parseme_backend.hpp>
 //=====================================================================
-using sooty::lexing::lexemes;
+using sooty::lexing::lexemes_t;
 using namespace sooty::parsing;
 
-sooty::parsing::parsemes_t sooty::parsing::parse(parser& parser, lexemes::const_iterator& begin, lexemes::const_iterator& end)
+sooty::parsing::parsemes_t sooty::parsing::parse(parser& parser, lexemes_t::const_iterator& begin, lexemes_t::const_iterator& end)
 {
 	using sooty::parsing::parseme;
 	using namespace sooty::parsing::detail;
@@ -20,8 +20,8 @@ sooty::parsing::parsemes_t sooty::parsing::parse(parser& parser, lexemes::const_
 	return acc.container();
 }
 
-void sooty::parsing::detail::parse(accumulator& acc,
-	const abstract_parser_backend_ptr& parser, lexing::lexemes::const_iterator& begin, lexing::lexemes::const_iterator& end)
+bool sooty::parsing::detail::parse(accumulator& acc,
+	const abstract_parser_backend_ptr& parser, lexing::lexemes_t::const_iterator& begin, lexing::lexemes_t::const_iterator& end)
 {
 	abstract_parser_backend_ptr current_parser = parser;
 	
@@ -32,6 +32,10 @@ void sooty::parsing::detail::parse(accumulator& acc,
 		}
 		else {
 			current_parser = current_parser->on_failure;
+			if (!current_parser)
+				return false;
 		}
 	}
+	
+	return true;
 }

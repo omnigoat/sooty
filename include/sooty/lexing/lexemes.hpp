@@ -14,7 +14,7 @@ namespace sooty {
 namespace lexing {
 //=====================================================================
 
-	typedef std::vector<lexeme_t> lexemes;
+	typedef std::vector<lexeme_t> lexemes_t;
 	
 //=====================================================================
 } // namespace lexing

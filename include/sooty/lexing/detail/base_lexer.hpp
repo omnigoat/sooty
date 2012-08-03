@@ -82,10 +82,12 @@ namespace detail {
 	//=====================================================================
 	// equivalence
 	//=====================================================================
-	inline bool equivalent(const base_lexer_ptr& lhs, const base_lexer_ptr& rhs) {
-		return lhs->type == rhs->type && lhs->from == rhs->from && lhs->to == rhs->to;
+	bool equivalent(base_lexer_ptr& lhs, base_lexer_ptr& rhs);
+	
+	inline bool equivalent_in_failure(const base_lexer_ptr& lhs, const base_lexer_ptr& rhs) {
+		return false;
 	}
-
+	
 	// lhs would match something that rhs could match
 	// rhs doesn't necessarily accept as limited an input as lhs, and may
 	// match things outside of lhs' purview
