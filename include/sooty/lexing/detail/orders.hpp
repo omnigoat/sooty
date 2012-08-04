@@ -3,21 +3,40 @@
 //
 //
 //=====================================================================
-#ifndef SOOTY_LEXING_LEXEMES_HPP
-#define SOOTY_LEXING_LEXEMES_HPP
+#ifndef SOOTY_LEXING_DETAIL_ORDERS_HPP
+#define SOOTY_LEXING_DETAIL_ORDERS_HPP
 //=====================================================================
-#include <vector>
+#include <set>
+#include <map>
 //=====================================================================
-#include <sooty/lexing/lexeme.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/function.hpp>
+//=====================================================================
+#include <sooty/common/node.hpp>
+#include <sooty/lexing/detail/accumulator.hpp>
 //=====================================================================
 namespace sooty {
 namespace lexing {
+namespace detail {
 //=====================================================================
-
-	typedef std::vector<lexeme_t> lexemes_t;
-	typedef lexemes_t& lexemes_ref;
+	
+	struct orders_t
+	{
+		typedef std::istreambuf_iterator<char> iterator_t;
+		accumulator_t accumulator;
+		
+		iterator_t begin;
+		iterator_t end;
+		
+		orders_t(lexemes_ref lexemes, const iterator_t& begin, const iterator_t& end)
+			: accumulator(lexemes), begin(begin), end(end)
+		{
+		}
+	};
+	
 	
 //=====================================================================
+} // namespace detail
 } // namespace lexing
 } // namespace sooty
 //=====================================================================

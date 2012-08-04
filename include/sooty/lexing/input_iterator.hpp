@@ -113,41 +113,36 @@ namespace lexing {
 			return *this;
 		}
 		
-		input_iterator& operator ++()
-		{
+		input_iterator& operator ++() {
 			backend->increment();
 			return *this;
 		}
 
-		input_iterator  operator ++(int)
-		{
+		input_iterator  operator ++(int) {
 			input_iterator L(*this);
 			++*this;
 			return L;
 		}
 		
-		char operator * () const
-		{
+		char operator * () const {
 			return backend->dereference();
 		}
 		
-		bool operator == (const input_iterator& rhs) const
-		{
+		bool operator == (const input_iterator& rhs) const {
 			return backend->equality(rhs.backend.get());
 		}
 		
-		bool operator != (const input_iterator& rhs) const
-		{
+		bool operator != (const input_iterator& rhs) const {
 			return !operator == (rhs);
 		}
 	};
 	
 	
 	
-	inline std::ostream& operator << (std::ostream& lhs, const input_iterator& rhs)
-	{
-		return lhs;
-	}
+	//inline std::ostream& operator << (std::ostream& lhs, const input_iterator& rhs)
+	//{
+	//	return lhs;
+	//}
 	
 	inline std::string make_string(const input_iterator& start, const input_iterator& stop)
 	{

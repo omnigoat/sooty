@@ -288,7 +288,15 @@
 					Name="detail"
 					>
 					<File
+						RelativePath="..\include\sooty\lexing\detail\accumulator.hpp"
+						>
+					</File>
+					<File
 						RelativePath="..\include\sooty\lexing\detail\base_lexer.hpp"
+						>
+					</File>
+					<File
+						RelativePath="..\include\sooty\lexing\detail\command.hpp"
 						>
 					</File>
 				</Filter>

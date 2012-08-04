@@ -41,11 +41,6 @@ using namespace sooty::lexing;
 //    10/1 is an integer, fwdslash, integer
 
 
-
-
-
-
-
 void print_identifier(lex_results_t& L) {
 	std::cout << "identifier: " << make_string(L.begin, L.end) << std::endl;
 }
@@ -63,7 +58,7 @@ using namespace sooty::parsing;
 //typedef const walking_context_t& walking_context_ref;
 
 
-
+std::stringstream my_ss("chickens!");
 
 
 
@@ -223,7 +218,15 @@ int main()
 	M1->perform(acc);
 	
 	return 0;
-	
+	/*
+	additive_expression = insert(addition) [
+		additive_expression,
+		skip(plus),
+		match(number)
+	]
+	|
+	number
+	*/
 	using sooty::parsing::parseme;
 	using sooty::parsing::match;
 	
