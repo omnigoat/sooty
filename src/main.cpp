@@ -186,29 +186,29 @@ void print_parsemes_prefix(parsemes_t& ps)
 
 int main()
 {
-	std::string input_string = "dragondrake";
-	std::stringstream input(input_string);
-	sooty::lexing::input_range_t input_range(input, input_string.size());
+	std::string input_string = "dragon drake";
 	sooty::lexing::lexemes_t lexemes;
-	
+	sooty::lexing::detail::accumulator_t acc(lexemes, input_string.size());
 	{
+		std::stringstream input(input_string);
+		sooty::lexing::input_range_t input_range(input);
+	
 		namespace slex = sooty::lexing;
 		slex::lexer_t Mdragon = slex::insert(4, slex::string_("dragon"));
 		slex::lexer_t Mdrake = slex::insert(6, slex::string_("drake"));
-		slex::lexer_t Mdraggable = slex::insert(6, slex::string_("draggable"));
+		slex::lexer_t Mdraggable = slex::insert(8, slex::string_("draggable"));
 		
-		slex::lexer_t animal = Mdragon | Mdrake | Mdraggable;
+		slex::lexer_t animal = Mdragon | Mdrake | Mdraggable | slex::match(' ', false);
 		slex::lexer_t some_animals = *animal;
 		
 		typedef sooty::common::performer_t<slex::detail::analyser_t> lexical_analysis_t;
 		
-		slex::detail::accumulator_t acc(lexemes);
 		
-		acc.clear(input_range.iterator(), input_range.position());
+		
 		lexical_analysis_t()(acc, input_range, some_animals.backend());
 	}
 	
-	std::cout << lexemes[0];
+	std::cout << lexemes[0] << "\n" << lexemes[1] << std::endl;
 	
 	return 0;
 	/*

@@ -22,7 +22,7 @@ namespace lexing {
 	
 	struct lexer_t
 	{
-		friend lexer_t match(char, char);
+		friend lexer_t match(char, char, bool);
 		friend lexer_t insert(size_t, const_lexer_ref);
 		friend lexer_t string_(const std::string&);
 		
@@ -60,28 +60,27 @@ namespace lexing {
 	
 	
 	
-	inline lexer_t match(char from, char to) {
+	inline lexer_t match(char from, char to, bool should_insert = true) {
 		using detail::command_t;
 		
 		detail::mark_t mark = detail::generate_mark();
 		
 		return lexer_t(
-			detail::lexer_backend_t::make()
-				->push_back_command( command_t::match(from, to) )
-				->push_back_command( command_t::terminal() )
+			detail::lexer_backend_t::make(true)
+				->push_back_command( command_t::match(from, to, should_insert) )
 		);
 	}
 	
-	inline lexer_t match(char c) {
-		return match(c, c);
+	inline lexer_t match(char c, bool should_insert = true) {
+		return match(c, c, should_insert);
 	}
 	
 	inline lexer_t string_(const std::string& str) {
-		detail::lexer_backend_ptr backend = detail::lexer_backend_t::make();
+		detail::lexer_backend_ptr backend = detail::lexer_backend_t::make(true);
 		for (std::string::const_iterator i = str.begin(); i != str.end(); ++i) {
-			backend->push_back_command( detail::command_t::match(*i, *i) );
+			backend->push_back_command( detail::command_t::match(*i, *i, true) );
 		}
-		backend->push_back_command( detail::command_t::terminal() );
+		//backend->push_back_command( detail::command_t::terminal() );
 		
 		return lexer_t(backend);
 	}

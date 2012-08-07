@@ -19,7 +19,10 @@ namespace lexing {
 	struct position_t
 	{
 		position_t() : row(), column() {}
-		
+		position_t(int row, int column)
+			: row(row), column(column)
+		{
+		}
 		int row, column;
 	};
 	

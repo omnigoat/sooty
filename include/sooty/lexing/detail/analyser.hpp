@@ -29,18 +29,21 @@ namespace detail {
 			switch (command.action)
 			{
 				case command_t::action_t::match:
-					if (input.exhausted() || input.cv() < command.from_id || command.to_id < input.cv())
+					if (input.is_exhausted() || input.cv() < command.from_id || command.to_id < input.cv())
 						return false;
-					else
+					else {
+						if (command.should_insert)
+							accumulator.push_back(input.cv());
 						input.advance();
+					}
 					break;
 				
 				case command_t::action_t::combine:
-					accumulator.combine(command.to_id, input.iterator());
+					accumulator.combine(command.to_id);
 					// fallthrough
 				
 				case command_t::action_t::clear:
-					accumulator.clear(input.iterator(), input.position());
+					accumulator.clear();
 					break;
 				
 				

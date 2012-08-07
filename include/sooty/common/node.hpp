@@ -181,11 +181,8 @@ namespace common {
 			// perform a non-mutative merge
 			merge_commands(combined_commands, new_lhs_commands, new_rhs_commands, lhs->commands_, rhs->commands_);
 			
-			if (combined_commands.empty()) {
-				return false;
-			}
 			// at least something was merged. recurse! :D
-			else {
+			if (!combined_commands.empty()) {
 				rhs->commands_.swap(new_rhs_commands);
 				
 				children_t::iterator child =

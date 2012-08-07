@@ -95,7 +95,8 @@ namespace common {
 								boost::bind(&performer_t::perform_node<StateT, InputT, NodePTR>, this, boost::ref(state), boost::ref(input), _1));
 						
 						if (child == children.end() && !current_node->is_terminal) {
-							current_node = current_node->failure;
+							//current_node = current_node->failure;
+							return false;
 						}
 						else {
 							current_node = current_node->success;
@@ -109,7 +110,8 @@ namespace common {
 								!boost::bind(&performer_t::perform_node<StateT, InputT, NodePTR>, this, boost::ref(state), boost::ref(input), _1));
 						
 						if (child != children.end() && !current_node->is_terminal) {
-							current_node = current_node->failure;
+							//current_node = current_node->failure;
+							return false;
 						}
 						else {
 							current_node = current_node->success;

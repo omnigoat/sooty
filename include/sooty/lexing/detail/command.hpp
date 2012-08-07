@@ -26,8 +26,8 @@ namespace detail {
 			};
 		};
 		
-		command_t(action_t::Enum action, char from_id, char to_id)
-			: action(action), from_id(from_id), to_id(to_id)
+		command_t(action_t::Enum action, char from_id, char to_id, bool should_insert)
+			: action(action), from_id(from_id), to_id(to_id), should_insert(should_insert)
 		{
 		}
 		
@@ -36,27 +36,28 @@ namespace detail {
 		}
 		
 		static command_t clear() {
-			return command_t(action_t::clear, 0, 0);
+			return command_t(action_t::clear, 0, 0, false);
 		}
 		
-		static command_t match(char f, char t) {
-			return command_t(action_t::match, f, t);
+		static command_t match(char f, char t, bool should_insert) {
+			return command_t(action_t::match, f, t, should_insert);
 		}
 		
 		static command_t combine(char id) {
-			return command_t(action_t::combine, 0, id);
+			return command_t(action_t::combine, 0, id, false);
 		}
 		
 		static command_t discard() {
-			return command_t(action_t::clear, 0, 0);
+			return command_t(action_t::clear, 0, 0, false);
 		}
 		
 		static command_t terminal() {
-			return command_t(action_t::terminal, 0, 0);
+			return command_t(action_t::terminal, 0, 0, false);
 		}
 		
 		action_t::Enum action;
 		char from_id, to_id;
+		bool should_insert;
 	};
 	
 	typedef const command_t& const_command_ref;
