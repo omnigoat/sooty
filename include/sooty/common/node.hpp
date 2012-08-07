@@ -48,8 +48,8 @@ namespace common {
 	//=====================================================================
 	struct combination_t {
 		enum Enum {
-			all,
-			one
+			seq_and,
+			logical_or
 		};
 	};
 	
@@ -94,6 +94,11 @@ namespace common {
 			return shared_from_this();
 		}
 		
+		node_ptr add_self_as_child() {
+			children_.push_back( shared_from_this() );
+			return shared_from_this();
+		}
+		
 		node_ptr push_back_command(const command_t& command) {
 			commands_.push_back( std::make_pair(true, command) );
 			return shared_from_this();
@@ -113,52 +118,44 @@ namespace common {
 			node_ptr C(new node_t(combination_));
 			C->children_.insert(C->children_.end(), children_.begin(), children_.end());
 			C->commands_.insert(C->commands_.end(), commands_.begin(), commands_.end());
-			C->success = success;
+			C->next_ = next_;
 			return C;
 		}
-		
-		node_ptr on_success(const_node_ptr_ref S) {
-			node_ptr new_lhs = this->clone();
-			assert(!success);
-			new_lhs->success = S;
-			return new_lhs;
-		}
-		
 		
 		static node_ptr make(bool is_terminal = false) {
 			return make_seq_and(is_terminal);
 		}
 		
 		static node_ptr make_seq_and(bool is_terminal = false) {
-			return node_ptr(new node_t(combination_t::all, is_terminal));
+			return node_ptr(new node_t(combination_t::seq_and, is_terminal));
 		}
 		
 		static node_ptr make_logical_or(bool is_terminal = false) {
-			return node_ptr(new node_t(combination_t::one, is_terminal));
+			return node_ptr(new node_t(combination_t::logical_or, is_terminal));
 		}
 		
 		
-		static node_ptr seq_and(const_node_ptr_ref lhs, const_node_ptr_ref rhs) {
-			if (lhs->combination_ == combination_t::all) {
-				node_ptr new_lhs = lhs->clone();
-				
-				if (new_lhs->commands_.back().second.is_terminal()) {
-					new_lhs->commands_.pop_back();
-				}
-				
+		static node_ptr seq_and(const_node_ptr_ref lhs, const_node_ptr_ref rhs)
+		{
+			node_ptr new_lhs = lhs->clone();
+			
+			// we can only combine commands when lhs is a sequential and node, and
+			// its children are empty 
+			if (new_lhs->combination() == combination_t::seq_and && new_lhs->children_.empty())
+			{
 				new_lhs->commands_.insert(
 					new_lhs->commands_.end(),
 					rhs->commands_.begin(),
 					rhs->commands_.end()
 				);
 				
-				return new_lhs;
+				new_lhs->children_.assign(rhs->children_.begin(), rhs->children_.end());
 			}
 			else {
-				lhs->success = rhs;
+				new_lhs->next_ = rhs->clone();
 			}
 			
-			return node_ptr();
+			return new_lhs;
 		}
 		
 		static node_ptr one(const_node_ptr_ref o_lhs, const_node_ptr_ref o_rhs)
@@ -204,12 +201,12 @@ namespace common {
 			node_ptr result = make_logical_or();
 			result->commands_.swap(combined_commands);
 			
-			if (lhs->combination_ == combination_t::one && lhs->commands_.empty())
+			if (lhs->combination_ == combination_t::logical_or && lhs->commands_.empty())
 				result->children_.swap(lhs->children_);
 			else
 				result->children_.push_back(lhs);
 			
-			if (rhs->combination_ == combination_t::one && rhs->commands_.empty())
+			if (rhs->combination_ == combination_t::logical_or && rhs->commands_.empty())
 				result->children_.insert(result->children_.end(), rhs->children_.begin(), rhs->children_.end());
 			else
 				result->children_.push_back(rhs);
@@ -272,7 +269,7 @@ namespace common {
 		bool is_terminal;
 		
 	private:
-		node_ptr success, failure;
+		node_ptr next_;
 		
 		combination_t::Enum combination_;
 		

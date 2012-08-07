@@ -186,7 +186,7 @@ void print_parsemes_prefix(parsemes_t& ps)
 
 int main()
 {
-	std::string input_string = "dragon drake";
+	std::string input_string = "dragon drake draggable";
 	sooty::lexing::lexemes_t lexemes;
 	sooty::lexing::detail::accumulator_t acc(lexemes, input_string.size());
 	{
@@ -204,11 +204,12 @@ int main()
 		typedef sooty::common::performer_t<slex::detail::analyser_t> lexical_analysis_t;
 		
 		
+		slex::lexer_t BANANA = slex::string_("bana") >> +slex::string_("na");
 		
 		lexical_analysis_t()(acc, input_range, some_animals.backend());
 	}
 	
-	std::cout << lexemes[0] << "\n" << lexemes[1] << std::endl;
+	std::cout << lexemes << std::endl;
 	
 	return 0;
 	/*

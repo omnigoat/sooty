@@ -89,7 +89,7 @@ namespace common {
 				}
 				
 				switch (current_node->combination_) {
-					case combination_t::one: {
+					case combination_t::logical_or: {
 						children_t::const_iterator child =
 							std::find_if(children.begin(), children.end(),
 								boost::bind(&performer_t::perform_node<StateT, InputT, NodePTR>, this, boost::ref(state), boost::ref(input), _1));
@@ -99,12 +99,12 @@ namespace common {
 							return false;
 						}
 						else {
-							current_node = current_node->success;
+							current_node = current_node->next_;
 						}
 						break;
 					}
 						
-					case combination_t::all: {
+					case combination_t::seq_and: {
 						children_t::const_iterator child = 
 							std::find_if(children.begin(), children.end(),
 								!boost::bind(&performer_t::perform_node<StateT, InputT, NodePTR>, this, boost::ref(state), boost::ref(input), _1));
@@ -114,14 +114,10 @@ namespace common {
 							return false;
 						}
 						else {
-							current_node = current_node->success;
+							current_node = current_node->next_;
 						}
 						break;
 					}
-					
-					default:
-						current_node = current_node->success;
-						break;
 				}
 			}
 			

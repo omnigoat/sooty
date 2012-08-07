@@ -32,6 +32,7 @@ namespace lexing {
 		detail::const_lexer_backend_ptr_ref backend() const { return backend_; }
 		
 		lexer_t operator * () const;
+		lexer_t operator + () const;
 		
 	private:
 		lexer_t(detail::const_lexer_backend_ptr_ref backend)
