@@ -1,25 +1,28 @@
 #include <sooty/lexing/lexeme.hpp>
 //=====================================================================
+using namespace sooty::lexing;
+//=====================================================================
 
 
 
-sooty::lexing::lexeme_t::lexeme_t( id_t id, const input_iterator& begin, const input_iterator& end, const position_t& position )
+//=====================================================================
+lexeme_t::lexeme_t( id_t id, const_characters_iterator_ref begin, const_characters_iterator_ref end, const position_t& position )
 	: id_(id), begin_(begin), end_(end), position_(position)
 {
-	text_ = make_string(begin_, end_);
 }
 
-sooty::lexing::lexeme_t::id_t sooty::lexing::lexeme_t::id() const
+lexeme_t::id_t lexeme_t::id() const
 {
 	return id_;
 }
 
-const std::string& sooty::lexing::lexeme_t::text() const
+std::string lexeme_t::text() const
 {
-	return text_;
+	std::string result(begin_, end_);
+	return result;
 }
 
-const sooty::lexing::position_t& sooty::lexing::lexeme_t::position() const
+const position_t& lexeme_t::position() const
 {
 	return position_;
 }

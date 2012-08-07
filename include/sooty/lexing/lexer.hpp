@@ -9,94 +9,91 @@
 #include <sooty/common/detail/fold.hpp>
 #include <sooty/common/detail/append_success.hpp>
 //=====================================================================
-#include <sooty/lexing/detail/base_lexer.hpp>
+#include <sooty/lexing/detail/lexer_backend.hpp>
+#include <sooty/lexing/detail/mark.hpp>
+#include <sooty/lexing/detail/command.hpp>
 //=====================================================================
 namespace sooty {
 namespace lexing {
 //=====================================================================
 	
-	typedef detail::lex_results_t lex_results_t;
-	typedef detail::semantic_action semantic_action;
+	struct lexer_t;
+	typedef const lexer_t& const_lexer_ref;
 	
-	struct lexer
+	struct lexer_t
 	{
-		detail::base_lexer_ptr base_lexer;
+		friend lexer_t match(char, char);
+		friend lexer_t insert(size_t, const_lexer_ref);
+		friend lexer_t string_(const std::string&);
 		
-		lexer(const detail::base_lexer_ptr& base_lexer) : base_lexer(base_lexer)
+		friend lexer_t operator >> (const_lexer_ref, const_lexer_ref);
+		friend lexer_t operator | (const_lexer_ref, const_lexer_ref);
+		
+		detail::const_lexer_backend_ptr_ref backend() const { return backend_; }
+		
+		lexer_t operator * () const;
+		
+	private:
+		lexer_t(detail::const_lexer_backend_ptr_ref backend)
+			: backend_(backend)
 		{
 		}
 		
-		lexer operator >> (const lexer& rhs) const {
-			detail::base_lexer_ptr new_lhs = clone_tree(this->base_lexer);
-			common::detail::append_success(new_lhs, rhs.base_lexer);
-			return lexer(new_lhs);
-		}
-		
-		lexer operator | (const lexer& rhs) const {
-			detail::base_lexer_ptr new_lhs = clone_tree(this->base_lexer);
-			//detail::fold(new_lhs, rhs.base_lexer);
-			//common::detail::fold<sooty::lexing::detail::base_lexer_ptr>(new_lhs, clone_tree(rhs.base_lexer));
-			common::detail::append_failure(new_lhs, clone_tree(rhs.base_lexer));
-			return lexer(new_lhs);
-		}
-		
-		lexer operator * () const {
-			detail::base_lexer_ptr new_lhs = clone_tree(this->base_lexer);
-			detail::zero_or_more(new_lhs);
-			return lexer(new_lhs);
-		}
-		
-		lexer operator + () const {
-			return *this >> **this;
-		}
-		
-		lexer operator [](semantic_action action) const {
-			static char _ = 0;
-			++_;
-			detail::base_lexer_ptr marker(new detail::base_lexer(detail::base_lexer::lexer_type::marker, _, _));
-			detail::base_lexer_ptr actor(new detail::base_lexer(detail::base_lexer::lexer_type::actor, _, _));
-			actor->action = action;
-			
-			common::detail::append_success(marker, clone_tree(this->base_lexer));
-			common::detail::append_success(marker, actor);
-			return lexer(marker);
-		}
+		detail::lexer_backend_ptr backend_;
 	};
-
-	inline lexer char_(char c) {
-		return lexer(detail::base_lexer_ptr(new detail::base_lexer(detail::base_lexer::lexer_type::matcher, c, c)));
+	
+	
+	
+	
+	inline lexer_t operator >> (const_lexer_ref lhs, const_lexer_ref rhs) {
+		return lexer_t(
+			detail::lexer_backend_t::seq_and(lhs.backend(), rhs.backend())
+		);
 	}
-
-	inline lexer in_range(char from, char to) {
-		return lexer(detail::base_lexer_ptr(new detail::base_lexer(detail::base_lexer::lexer_type::matcher, from, to)));
+	
+	inline lexer_t operator | (const_lexer_ref lhs, const_lexer_ref rhs) {
+		return lexer_t(
+			detail::lexer_backend_t::one(lhs.backend(), rhs.backend())
+		);
 	}
-
-	inline lexer string_(const std::string& str) {
-		detail::base_lexer_ptr previous_lexer;
+	
+	
+	
+	
+	inline lexer_t match(char from, char to) {
+		using detail::command_t;
 		
+		detail::mark_t mark = detail::generate_mark();
+		
+		return lexer_t(
+			detail::lexer_backend_t::make()
+				->push_back_command( command_t::match(from, to) )
+				->push_back_command( command_t::terminal() )
+		);
+	}
+	
+	inline lexer_t match(char c) {
+		return match(c, c);
+	}
+	
+	inline lexer_t string_(const std::string& str) {
+		detail::lexer_backend_ptr backend = detail::lexer_backend_t::make();
 		for (std::string::const_iterator i = str.begin(); i != str.end(); ++i) {
-			if (previous_lexer)
-				common::detail::append_success(previous_lexer, char_(*i).base_lexer);
-			else
-				previous_lexer = char_(*i).base_lexer;
+			backend->push_back_command( detail::command_t::match(*i, *i) );
 		}
-		return lexer(previous_lexer);
+		backend->push_back_command( detail::command_t::terminal() );
+		
+		return lexer_t(backend);
 	}
 	
-	namespace detail {
-		lex_results_t lex_impl(const lexer& lexer, input_iterator begin, input_iterator end);
+	inline lexer_t insert(size_t insert_id, const_lexer_ref L) {
+		return lexer_t(
+			detail::lexer_backend_t::seq_and(
+				L.backend(),
+				detail::lexer_backend_t::make()->push_back_command(detail::command_t::combine(insert_id))
+			)
+		);
 	}
-	
-	template <typename T>
-	inline lex_results_t lex(const lexer& start, const T& begin, const T& end) {
-		return detail::lex_impl(start, input_iterator(begin), input_iterator(end));
-	}
-	
-	template <>
-	inline lex_results_t lex(const lexer& start, const input_iterator& begin, const input_iterator& end) {
-		return detail::lex_impl(start, begin, end);
-	}
-	
 	
 
 //=====================================================================

@@ -100,7 +100,7 @@ namespace detail {
 		size_t lower_id_, upper_id_;
 	};
 	
-	typedef common::node_t<command_t, accumulator> parser_backend_t;
+	typedef common::node_t<command_t> parser_backend_t;
 	typedef boost::shared_ptr<parser_backend_t> parser_backend_ptr;
 	
 	
@@ -109,7 +109,7 @@ namespace detail {
 		
 		return parser_backend_t::make()
 			->push_back_command( command_t(command_t::add_marker, 0, 0, mark) )
-			->push_back_command_ex(false, command_t(command_t::rm_marker, 0, 0, mark) )
+			->push_back_failure( command_t(command_t::rm_marker, 0, 0, mark) )
 			->push_back_command( command_t(command_t::match, match_from, match_to) )
 			->push_back_command( command_t(command_t::insert, 0, 0, mark) )
 			->push_back_command( command_t(command_t::rm_marker, 0, 0, mark) )

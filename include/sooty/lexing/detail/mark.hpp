@@ -3,29 +3,26 @@
 //
 //
 //=====================================================================
-#ifndef SOOTY_LEXING_DETAIL_LEXER_BACKEND_HPP
-#define SOOTY_LEXING_DETAIL_LEXER_BACKEND_HPP
+#ifndef SOOTY_LEXING_DETAIL_MARK_HPP
+#define SOOTY_LEXING_DETAIL_MARK_HPP
 //=====================================================================
-#include <set>
-#include <map>
+#include <vector>
 //=====================================================================
 #include <boost/shared_ptr.hpp>
-#include <boost/function.hpp>
-//=====================================================================
-#include <sooty/common/node.hpp>
-#include <sooty/lexing/detail/command.hpp>
-#include <sooty/lexing/detail/orders.hpp>
 //=====================================================================
 namespace sooty {
 namespace lexing {
 namespace detail {
 //=====================================================================
 	
-	typedef common::node_t<command_t> lexer_backend_t;
-	typedef lexer_backend_t::node_ptr lexer_backend_ptr;
-	typedef const lexer_backend_ptr& const_lexer_backend_ptr_ref;
+	typedef boost::shared_ptr<size_t> mark_t;
+	typedef const mark_t& const_mark_ref;
 	
-	//common::performer_t<lexer_backend_t, accumulator_t, 
+	inline mark_t generate_mark()
+	{
+		static size_t _;
+		return mark_t(new size_t(++_));
+	}
 	
 //=====================================================================
 } // namespace detail

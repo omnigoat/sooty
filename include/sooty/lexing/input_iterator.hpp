@@ -144,10 +144,7 @@ namespace lexing {
 	//	return lhs;
 	//}
 	
-	inline std::string make_string(const input_iterator& start, const input_iterator& stop)
-	{
-		return start.backend->stringize(stop.backend.get());
-	}
+	
 	
 //=====================================================================
 } // namespace lexing

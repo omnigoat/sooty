@@ -273,6 +273,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\include\sooty\lexing\input_range.hpp"
+					>
+				</File>
+				<File
+					RelativePath="..\include\sooty\lexing\iterator.hpp"
+					>
+				</File>
+				<File
 					RelativePath="..\include\sooty\lexing\lexeme.hpp"
 					>
 				</File>
@@ -292,11 +300,27 @@
 						>
 					</File>
 					<File
+						RelativePath="..\include\sooty\lexing\detail\analyser.hpp"
+						>
+					</File>
+					<File
 						RelativePath="..\include\sooty\lexing\detail\base_lexer.hpp"
 						>
 					</File>
 					<File
 						RelativePath="..\include\sooty\lexing\detail\command.hpp"
+						>
+					</File>
+					<File
+						RelativePath="..\include\sooty\lexing\detail\lexer_backend.hpp"
+						>
+					</File>
+					<File
+						RelativePath="..\include\sooty\lexing\detail\mark.hpp"
+						>
+					</File>
+					<File
+						RelativePath="..\include\sooty\lexing\detail\orders.hpp"
 						>
 					</File>
 				</Filter>
@@ -346,6 +370,10 @@
 				>
 				<File
 					RelativePath="..\include\sooty\common\node.hpp"
+					>
+				</File>
+				<File
+					RelativePath="..\include\sooty\common\performer.hpp"
 					>
 				</File>
 				<Filter

@@ -3,8 +3,8 @@
 //
 //
 //=====================================================================
-#ifndef SOOTY_LEXING_DETAIL_LEXER_BACKEND_HPP
-#define SOOTY_LEXING_DETAIL_LEXER_BACKEND_HPP
+#ifndef SOOTY_LEXING_DETAIL_ANALYSER_HPP
+#define SOOTY_LEXING_DETAIL_ANALYSER_HPP
 //=====================================================================
 #include <set>
 #include <map>
@@ -14,18 +14,43 @@
 //=====================================================================
 #include <sooty/common/node.hpp>
 #include <sooty/lexing/detail/command.hpp>
-#include <sooty/lexing/detail/orders.hpp>
+#include <sooty/lexing/detail/accumulator.hpp>
+#include <sooty/lexing/input_range.hpp>
 //=====================================================================
 namespace sooty {
 namespace lexing {
 namespace detail {
 //=====================================================================
 	
-	typedef common::node_t<command_t> lexer_backend_t;
-	typedef lexer_backend_t::node_ptr lexer_backend_ptr;
-	typedef const lexer_backend_ptr& const_lexer_backend_ptr_ref;
-	
-	//common::performer_t<lexer_backend_t, accumulator_t, 
+	struct analyser_t
+	{
+		bool operator ()(accumulator_ref accumulator, input_range_ref input, const_command_ref command) const
+		{
+			switch (command.action)
+			{
+				case command_t::action_t::match:
+					if (input.exhausted() || input.cv() < command.from_id || command.to_id < input.cv())
+						return false;
+					else
+						input.advance();
+					break;
+				
+				case command_t::action_t::combine:
+					accumulator.combine(command.to_id, input.iterator());
+					// fallthrough
+				
+				case command_t::action_t::clear:
+					accumulator.clear(input.iterator(), input.position());
+					break;
+				
+				
+				case command_t::action_t::terminal:
+					break;
+			}
+			
+			return true;
+		}
+	};
 	
 //=====================================================================
 } // namespace detail

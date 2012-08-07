@@ -17,8 +17,10 @@
 #include <boost/variant.hpp>
 #include <boost/tuple/tuple.hpp>
 //=====================================================================
-#include <sooty/lexing/input_iterator.hpp>
+#include <sooty/lexing/detail/analyser.hpp>
 #include <sooty/lexing/lexer.hpp>
+#include <sooty/lexing/input_range.hpp>
+
 #include <sooty/parsing/parseme.hpp>
 #include <sooty/parsing/parser.hpp>
 
@@ -33,6 +35,7 @@
 //#include <sooty/parsing/detail/parseme_backend.hpp>
 #include <sooty/common/detail/append_success.hpp>
 #include <sooty/common/detail/append_invalid.hpp>
+#include <sooty/common/performer.hpp>
 
 using namespace sooty::lexing;
 
@@ -41,13 +44,6 @@ using namespace sooty::lexing;
 //    10/1 is an integer, fwdslash, integer
 
 
-void print_identifier(lex_results_t& L) {
-	std::cout << "identifier: " << make_string(L.begin, L.end) << std::endl;
-}
-
-void print_giraffe(lex_results_t& L) {
-	std::cout << "giraffe: " << make_string(L.begin, L.end) << std::endl;
-}
 
 using sooty::parsing::parser;
 
@@ -58,7 +54,6 @@ using namespace sooty::parsing;
 //typedef const walking_context_t& walking_context_ref;
 
 
-std::stringstream my_ss("chickens!");
 
 
 
@@ -69,12 +64,6 @@ using sooty::walking::detail::how_to_traverse;
 using namespace sooty::walking;
 
 
-
-
-
-void make_lexeme(lexemes_t& out, lexeme_t::id_t id, lex_results_t& results) {
-	out.push_back( lexeme_t(id, results.begin, results.end, position_t()) );
-}
 
 
 
@@ -197,25 +186,29 @@ void print_parsemes_prefix(parsemes_t& ps)
 
 int main()
 {
-	sooty::parsing::detail::parser_backend_ptr M1 = sooty::parsing::detail::match(1, 1);
-	sooty::parsing::detail::parser_backend_ptr M2 = sooty::parsing::detail::match(2, 2);
-	sooty::parsing::detail::parser_backend_ptr M3 = sooty::parsing::detail::match(3, 3);
-	//sooty::parsing::detail::parser_backend_ptr M3 = sooty::parsing::detail::match(3, 3);
+	std::string input_string = "dragondrake";
+	std::stringstream input(input_string);
+	sooty::lexing::input_range_t input_range(input, input_string.size());
+	sooty::lexing::lexemes_t lexemes;
 	
-	sooty::parsing::detail::parser_backend_ptr seq_and_m1m2
-		= sooty::parsing::detail::parser_backend_t::seq_and(M1, M2);
+	{
+		namespace slex = sooty::lexing;
+		slex::lexer_t Mdragon = slex::insert(4, slex::string_("dragon"));
+		slex::lexer_t Mdrake = slex::insert(6, slex::string_("drake"));
+		slex::lexer_t Mdraggable = slex::insert(6, slex::string_("draggable"));
+		
+		slex::lexer_t animal = Mdragon | Mdrake | Mdraggable;
+		slex::lexer_t some_animals = *animal;
+		
+		typedef sooty::common::performer_t<slex::detail::analyser_t> lexical_analysis_t;
+		
+		slex::detail::accumulator_t acc(lexemes);
+		
+		acc.clear(input_range.iterator(), input_range.position());
+		lexical_analysis_t()(acc, input_range, some_animals.backend());
+	}
 	
-	sooty::parsing::detail::parser_backend_ptr seq_and_m1m3
-		= sooty::parsing::detail::parser_backend_t::seq_and(M1, M3);
-	
-	sooty::parsing::detail::parser_backend_ptr or_m1m2_m1m3
-		= sooty::parsing::detail::parser_backend_t::one(seq_and_m1m2, seq_and_m1m3);
-	
-	sooty::parsing::detail::parser_backend_ptr or_or_m1m2_m1m3_m1
-		= sooty::parsing::detail::parser_backend_t::one(or_m1m2_m1m3, M1);
-	
-	sooty::parsing::accumulator acc;
-	M1->perform(acc);
+	std::cout << lexemes[0];
 	
 	return 0;
 	/*
@@ -234,20 +227,7 @@ int main()
 	
 	lexemes_t the_lexemes;
 	{
-		lexer combination
-			= +((+in_range('a', 'z'))[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::variable, _1)]
-			| (+in_range('0', '9'))[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::integer, _1)]
-			| char_('(')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::lparen, _1)]
-			| char_(')')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::rparen, _1)]
-			| char_('+')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::plus, _1)]
-			| char_('-')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::dash, _1)]
-			| char_('/')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::fwdslash, _1)]
-			| char_('*')[boost::bind(make_lexeme, boost::ref(the_lexemes), lexid::star, _1)]
-			| char_(' '))
-			;
 		
-		std::string test_string = "5 - 2 + 3";
-		lex_results_t results = lex(combination, test_string.begin(), test_string.end());
 	}
 	
 	
