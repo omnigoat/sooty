@@ -33,7 +33,7 @@ using namespace sooty::lexing;
 
 int main()
 {
-	std::string input_string = "BABAAABABABA";
+	std::string input_string = "bananabanananananabanana";
 	sooty::lexing::lexemes_t lexemes;
 	sooty::lexing::detail::accumulator_t acc(lexemes, input_string.size());
 	{
@@ -44,13 +44,7 @@ int main()
 		
 		typedef sooty::common::performer_t<slex::detail::analyser_t> lexical_analysis_t;
 		
-		slex::lexer_t seq_and_test = slex::match('a') >> slex::match('b');
-		slex::lexer_t zero_or_more_test = *slex::match('a');
-		slex::lexer_t seq_and_zero_or_more_test = slex::match('a') >> *slex::match('b');
-		slex::lexer_t zero_or_more_seq_and_test = *slex::match('b') >> slex::match('a');
-		slex::lexer_t many_zero_or_more_seq_and_test = *(*slex::match('b') >> slex::match('a'));
-		
-		slex::lexer_t BANANA = +insert(1, slex::match('B') >> +slex::match('A'));
+		slex::lexer_t BANANA = +insert(1, slex::string_("bana") >> +slex::string_("na"));
 		
 		lexical_analysis_t()(acc, input_range, BANANA.backend());
 	}
