@@ -6,12 +6,36 @@
 #ifndef SOOTY_COMMON_PERFORMER_HPP
 #define SOOTY_COMMON_PERFORMER_HPP
 //=====================================================================
+#include <queue>
 #include <boost/bind.hpp>
 //=====================================================================
 namespace sooty {
 namespace common {
 //=====================================================================
+	/*
+	template <typename NodeT>
+	struct node_prioritiser_t
+	{
+		typedef NodeT node_t;
+		typedef node_t::node_ptr node_ptr;
+		
+		typedef std::pair<size_t, node_ptr> entry_t;
+		typedef const entry_t& const_entry_ref;
+		
+		struct comparer_t {
+			bool operator () (const_entry_ref lhs, const_entry_ref rhs) const {
+				return true;
+			}
+		};
+		
+		typedef std::priority_queue<
+			entry_t,
+			std::vector<entry_t>,
+			comparer_t
+		> queue_t;
+	};
 	
+	*/
 	template <typename ExecutorT>
 	struct performer_t
 	{
@@ -35,6 +59,7 @@ namespace common {
 			typedef input_t& input_ref;
 			
 			typedef typename node_t::node_ptr node_ptr;
+			typedef typename node_t::node_ptr_ref node_ptr_ref;
 			typedef typename node_t::const_node_ptr_ref const_node_ptr_ref;
 			typedef typename node_t::command_t command_t;
 			typedef typename node_t::commands_t commands_t;
@@ -42,12 +67,17 @@ namespace common {
 			typedef typename node_t::children_t children_t;
 			typedef typename node_t::const_children_ref const_children_ref;
 			
+			children_t first_children;
+			first_children.push_back(node);
 			
+			size_t parent_child_count = 1;
+			children_t::const_iterator parent_child_iter = first_children.begin();
+			children_t::const_iterator parent_child_end = first_children.end();
 			
-			node_ptr current_node = node;
-			
-			while (current_node)
+			while (parent_child_iter != parent_child_end)
 			{
+				const_node_ptr_ref current_node = *parent_child_iter;
+				
 				const_commands_ref commands = current_node->commands_;
 				const_children_ref children = current_node->children_;
 				
@@ -85,49 +115,33 @@ namespace common {
 						failure = std::find_if(failure, first_failure, node_t::is_failure);
 					}
 					
-					return false;
+					// move onto our sibling
+					++parent_child_iter;
+					continue;
+				}
+				else {
+					parent_child_count = children.size();
+					parent_child_iter = children.begin();
+					parent_child_end = children.end();
 				}
 				
-				switch (current_node->combination_) {
-					case combination_t::logical_or: {
-						children_t::const_iterator child =
-							std::find_if(children.begin(), children.end(),
-								boost::bind(&performer_t::perform_node<StateT, InputT, NodePTR>, this, boost::ref(state), boost::ref(input), _1));
-						
-						if (child == children.end() && !current_node->is_terminal) {
-							//current_node = current_node->failure;
-							return false;
-						}
-						else {
-							current_node = current_node->next_;
-						}
-						break;
-					}
-						
-					case combination_t::seq_and: {
-						children_t::const_iterator child = 
-							std::find_if(children.begin(), children.end(),
-								!boost::bind(&performer_t::perform_node<StateT, InputT, NodePTR>, this, boost::ref(state), boost::ref(input), _1));
-						
-						if (child != children.end() && !current_node->is_terminal) {
-							//current_node = current_node->failure;
-							return false;
-						}
-						else {
-							current_node = current_node->next_;
-						}
-						break;
-					}
-				}
+				//children_t::const_iterator child =
+				//	std::find_if(children.begin(), children.end(),
+				//		boost::bind(&performer_t::perform_node<StateT, InputT, NodePTR>, this, boost::ref(state), boost::ref(input), _1));
+				//				
+				//if (children.empty() || child != children.end() || current_node->is_terminal) {
+				//	current_node = node_ptr();
+				//}
+				//else {
+				//	return false;
+				//}
 			}
 			
-			return true;
+			return parent_child_iter != parent_child_end || parent_child_count == 0;
 		}
 		
 	private:
 		executor_t executor_;
-		
-		//std::stack< boost::tuple<node_ptr, commands_t::const_reverse_iterator, commands_t::const_iterator> > node_stack_;
 	};
 	
 	

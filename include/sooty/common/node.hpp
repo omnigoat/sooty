@@ -12,6 +12,7 @@
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
+#include <sooty/common/detail/clone_impl.hpp>
 //=====================================================================
 namespace sooty {
 namespace common {
@@ -44,18 +45,6 @@ namespace common {
 	
 	
 	//=====================================================================
-	// combination
-	//=====================================================================
-	struct combination_t {
-		enum Enum {
-			seq_and,
-			logical_or
-		};
-	};
-	
-	
-
-	//=====================================================================
 	// no_orders
 	//=====================================================================
 	struct no_orders {};
@@ -71,7 +60,9 @@ namespace common {
 	{
 		template <typename ExecutorT>
 		friend struct performer_t;
-		
+		template <typename NodePtr>
+		friend NodePtr detail::clone_tree_impl(std::map<NodePtr, NodePtr>& visited_nodes, const NodePtr& clonee);
+	
 		//typedef node_t<Command, Orders> node_t;
 		typedef boost::shared_ptr<node_t> node_ptr;
 		typedef node_ptr& node_ptr_ref;
@@ -85,10 +76,18 @@ namespace common {
 		typedef std::vector<node_ptr> children_t;
 		typedef const children_t& const_children_ref;
 		
-		combination_t::Enum combination() const {
-			return combination_;
+		
+		// cloning!
+		node_ptr clone() const {
+			// purposefully doesn't clone next_. use detail::clone_tree for that
+			node_ptr C(new node_t(is_terminal));
+			C->children_.insert(C->children_.end(), children_.begin(), children_.end());
+			C->commands_.insert(C->commands_.end(), commands_.begin(), commands_.end());
+			return C;
 		}
 		
+		
+		// adding children
 		node_ptr add_child(const_node_ptr_ref n) {
 			children_.push_back(n);
 			return shared_from_this();
@@ -99,6 +98,11 @@ namespace common {
 			return shared_from_this();
 		}
 		
+		node_ptr append_self() {
+			return append(shared_from_this());
+		}
+		
+		// adding commands
 		node_ptr push_back_command(const command_t& command) {
 			commands_.push_back( std::make_pair(true, command) );
 			return shared_from_this();
@@ -114,69 +118,39 @@ namespace common {
 			return shared_from_this();
 		}
 		
-		node_ptr clone() const {
-			node_ptr C(new node_t(combination_));
-			C->children_.insert(C->children_.end(), children_.begin(), children_.end());
-			C->commands_.insert(C->commands_.end(), commands_.begin(), commands_.end());
-			C->next_ = next_;
-			return C;
-		}
 		
-		static node_ptr make(bool is_terminal = false) {
-			return make_seq_and(is_terminal);
-		}
-		
-		static node_ptr make_seq_and(bool is_terminal = false) {
-			return node_ptr(new node_t(combination_t::seq_and, is_terminal));
-		}
-		
-		static node_ptr make_logical_or(bool is_terminal = false) {
-			return node_ptr(new node_t(combination_t::logical_or, is_terminal));
-		}
-		
-		
-		static node_ptr seq_and(const_node_ptr_ref lhs, const_node_ptr_ref rhs)
+		// appending 
+		node_ptr append(const_node_ptr_ref node)
 		{
-			node_ptr new_lhs = lhs->clone();
+			std::set<node_ptr> visited;
+			return append_impl(visited, node);
+		}
+		
+		node_ptr append_impl(std::set<node_ptr>& visited, node_ptr node) {
+			if (visited.find(shared_from_this()) != visited.end())
+				return shared_from_this();
 			
-			// we can only combine commands when lhs is a sequential and node, and
-			// its children are empty 
-			if (new_lhs->combination() == combination_t::seq_and && new_lhs->children_.empty())
-			{
-				new_lhs->commands_.insert(
-					new_lhs->commands_.end(),
-					rhs->commands_.begin(),
-					rhs->commands_.end()
-				);
-				
-				new_lhs->children_.assign(rhs->children_.begin(), rhs->children_.end());
+			visited.insert(shared_from_this());
+			
+			if (children_.empty()) {
+				children_.push_back(node);
 			}
 			else {
-				new_lhs->next_ = rhs->clone();
+				std::for_each(children_.begin(), children_.end(), boost::bind(&node_t::append_impl, _1, boost::ref(visited), boost::ref(node)));
 			}
 			
-			return new_lhs;
+			return shared_from_this();
 		}
 		
-		static node_ptr one(const_node_ptr_ref o_lhs, const_node_ptr_ref o_rhs)
-		{
-			node_ptr lhs = o_lhs->clone(),
-					 rhs = o_rhs->clone()
-					 ;
-			
-			merge(lhs, rhs);
-			
-			return lhs;
-		}
 		
 		// returns true if merging occurred
-		static bool merge(node_ptr_ref lhs, const_node_ptr_ref rhs)
+		node_ptr merge(const_node_ptr_ref rhs)
 		{
 			commands_t combined_commands;
 			commands_t new_lhs_commands, new_rhs_commands;
 			
 			// perform a non-mutative merge
-			merge_commands(combined_commands, new_lhs_commands, new_rhs_commands, lhs->commands_, rhs->commands_);
+			merge_commands(combined_commands, new_lhs_commands, new_rhs_commands, commands_, rhs->commands_);
 			
 			// at least something was merged. recurse! :D
 			if (!combined_commands.empty()) {
@@ -184,38 +158,48 @@ namespace common {
 				
 				children_t::iterator child =
 					std::find_if(
-						lhs->children_.begin(),
-						lhs->children_.end(),
+						children_.begin(),
+						children_.end(),
 						boost::bind(&node_t::merge, _1, boost::ref(rhs))
 					);
 				
 				// the problem of merging has been pushed down one level. we're done!
-				if (child != lhs->children_.end())
-					return true;
+				if (child != children_.end())
+					return shared_from_this();
 			}
 			
 			// we now mutate lhs, because there's *still* stuff left, we're going to join it.
 			// the following code optimizes the join by combining one-nodes.
-			lhs->commands_.swap(new_lhs_commands);
+			commands_.swap(new_lhs_commands);
 			
-			node_ptr result = make_logical_or();
+			node_ptr result = make();
 			result->commands_.swap(combined_commands);
 			
-			if (lhs->combination_ == combination_t::logical_or && lhs->commands_.empty())
-				result->children_.swap(lhs->children_);
+			if (commands_.empty())
+				result->children_.swap(children_);
 			else
-				result->children_.push_back(lhs);
+				result->children_.push_back(shared_from_this());
 			
-			if (rhs->combination_ == combination_t::logical_or && rhs->commands_.empty())
+			if (rhs->commands_.empty())
 				result->children_.insert(result->children_.end(), rhs->children_.begin(), rhs->children_.end());
 			else
 				result->children_.push_back(rhs);
 			
 			
-			lhs = result;
+			*this = *result;
 			
-			return true;
+			return shared_from_this();
 		}
+		
+		
+		
+		static node_ptr make(bool is_terminal = false) {
+			return node_ptr(new node_t(is_terminal));
+		}
+		
+		
+		
+		
 		
 		
 		
@@ -228,8 +212,8 @@ namespace common {
 		}
 		
 	private:
-		node_t(const combination_t::Enum& combination, bool is_terminal = false)
-			: combination_(combination), is_terminal(is_terminal)
+		node_t(bool is_terminal = false)
+			: is_terminal(false)
 		{
 		}
 		
@@ -269,10 +253,6 @@ namespace common {
 		bool is_terminal;
 		
 	private:
-		node_ptr next_;
-		
-		combination_t::Enum combination_;
-		
 		commands_t commands_;
 		
 		children_t children_;

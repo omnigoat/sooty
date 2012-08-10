@@ -15,43 +15,21 @@ namespace common {
 namespace detail {
 //=====================================================================
 
-	template <typename Node>
-	Node clone_tree_impl(std::map<Node, Node>& visited_nodes, const Node& clonee)
+	template <typename NodePtr>
+	NodePtr clone_tree_impl(std::map<NodePtr, NodePtr>& visited_nodes, const NodePtr& clonee)
 	{
 		if ( visited_nodes.find(clonee) != visited_nodes.end() ) {
 			return visited_nodes[clonee];
 		}
 		
-		Node new_node = clonee->clone();	
+		NodePtr new_node = clonee->clone();	
 		visited_nodes[clonee] = new_node;
 		
-		if ( valid_edge(clonee->on_success) ) {
-			new_node->on_success = new_edge_from(
-				clone_tree_impl<Node>(visited_nodes, node_of(clonee->on_success)),
-				clonee->on_success
-			);
-		}
-		if ( valid_edge(clonee->on_failure) ) {
-			new_node->on_failure = new_edge_from(
-				clone_tree_impl<Node>(visited_nodes, node_of(clonee->on_failure)),
-				clonee->on_failure
-			);
-		}
-		if ( valid_edge(clonee->on_invalid) ) {
-			new_node->on_invalid = new_edge_from(
-				clone_tree_impl<Node>(visited_nodes, node_of(clonee->on_invalid)),
-				clonee->on_invalid
-			);
-		}
+		std::transform(new_node->children_.begin(), new_node->children_.end(), new_node->children_.begin(),
+			boost::bind(&clone_tree_impl<NodePtr>, boost::ref(visited_nodes), _1));
+		
 		
 		return new_node;
-	}
-	
-	template <typename Node>
-	Node clone_tree(const Node& root)
-	{
-		std::map<Node, Node> visited_nodes;
-		return clone_tree_impl<Node>(visited_nodes, root);
 	}
 
 	

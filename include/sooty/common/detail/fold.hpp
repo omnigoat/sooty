@@ -12,7 +12,7 @@
 #include <cassert>
 #include <set>
 //=====================================================================
-#include <sooty/common/detail/clone.hpp>
+#include <sooty/common/detail/clone_impl.hpp>
 #include <sooty/common/detail/append_failure.hpp>
 //=====================================================================
 namespace sooty {
