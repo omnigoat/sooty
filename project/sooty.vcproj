@@ -207,58 +207,6 @@
 					</File>
 				</Filter>
 			</Filter>
-			<Filter
-				Name="parsing"
-				>
-				<File
-					RelativePath="..\src\parsing\parse.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\parsing\parseme.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\parsing\parsemes.cpp"
-					>
-				</File>
-				<Filter
-					Name="detail"
-					>
-					<File
-						RelativePath="..\src\parsing\detail\abstract_parser_backend.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\src\parsing\detail\parseme_backend.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\src\parsing\detail\parser_backend.cpp"
-						>
-					</File>
-				</Filter>
-			</Filter>
-			<Filter
-				Name="walking"
-				>
-				<File
-					RelativePath="..\src\walking\walker.cpp"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="transforming"
-				>
-				<File
-					RelativePath="..\src\transforming\transform.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\transforming\transformer.cpp"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="include"
@@ -369,6 +317,10 @@
 				Name="common"
 				>
 				<File
+					RelativePath="..\include\sooty\common\clone.hpp"
+					>
+				</File>
+				<File
 					RelativePath="..\include\sooty\common\node.hpp"
 					>
 				</File>
@@ -380,19 +332,7 @@
 					Name="detail"
 					>
 					<File
-						RelativePath="..\include\sooty\common\detail\append_failure.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\include\sooty\common\detail\append_invalid.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\include\sooty\common\detail\append_success.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\include\sooty\common\detail\clone.hpp"
+						RelativePath="..\include\sooty\common\detail\clone_impl.hpp"
 						>
 					</File>
 					<File

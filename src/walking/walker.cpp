@@ -1,6 +1,6 @@
 #include <sooty/walking/walker.hpp>
 //=====================================================================
-#include <sooty/common/detail/clone.hpp>
+#include <sooty/common/clone.hpp>
 #include <sooty/common/detail/append_failure.hpp>
 #include <sooty/common/detail/append_success.hpp>
 #include <sooty/common/detail/append_invalid.hpp>
