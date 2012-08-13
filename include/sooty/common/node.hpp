@@ -62,7 +62,9 @@ namespace common {
 		friend struct performer_t;
 		template <typename NodePtr>
 		friend NodePtr detail::clone_tree_impl(std::map<NodePtr, NodePtr>& visited_nodes, const NodePtr& clonee);
-	
+		/*template <typename StateT, typename InputT, typename NodePTR>
+		static void perform_unchosen(StateT& state, InputT& input, const NodePTR& N)
+		*/
 		//typedef node_t<Command, Orders> node_t;
 		typedef boost::shared_ptr<node_t> node_ptr;
 		typedef node_ptr& node_ptr_ref;
@@ -148,9 +150,18 @@ namespace common {
 		{
 			commands_t combined_commands;
 			commands_t new_lhs_commands, new_rhs_commands;
+			commands_t lhs_unchosen, rhs_unchosen;
 			
-			// perform a non-mutative merge
-			merge_commands(combined_commands, new_lhs_commands, new_rhs_commands, commands_, rhs->commands_);
+			// perform a merge
+			merge_commands(
+				combined_commands,
+				new_lhs_commands,
+				new_rhs_commands,
+				lhs_unchosen,
+				rhs_unchosen,
+				commands_,
+				rhs->commands_
+			);
 			
 			// we merged all the commands @this has, so recurse into the children
 			if (!combined_commands.empty() && new_lhs_commands.empty()) {
@@ -173,7 +184,10 @@ namespace common {
 			// we now mutate lhs, because there's *still* stuff left, we're going to join it.
 			// the following code optimizes the join by combining one-nodes.
 			commands_.swap(new_lhs_commands);
+			this->unchosen_.swap(lhs_unchosen);
+			
 			rhs->commands_.swap(new_rhs_commands);
+			rhs->unchosen_.swap(rhs_unchosen);
 			
 			node_ptr result = make();
 			result->commands_.swap(combined_commands);
@@ -218,36 +232,46 @@ namespace common {
 		{
 		}
 		
-		static void merge_commands(commands_ref combined, commands_ref new_lhs, commands_ref new_rhs, const_commands_ref lhs, const_commands_ref rhs)
+		static void merge_commands(commands_ref combined, commands_ref new_lhs, commands_ref new_rhs,
+			commands_ref lhs_unchosen, commands_ref rhs_unchosen, const_commands_ref lhs, const_commands_ref rhs)
 		{
 			commands_t::const_iterator
 			  lhsi = lhs.begin(),
 			  rhsi = rhs.begin()
 			  ;
 			
-			while (lhsi != lhs.end() && rhsi != rhs.end() && lhsi->first == rhsi->first && lhsi->second == rhsi->second) {
+			while (lhsi != lhs.end() && rhsi != rhs.end())
+			{
+				// push back lhs sentinels
+				while (lhsi->second.is_sentinel() && lhsi != lhs.end())
+					combined.push_back(*lhsi++);
+				
+				// push back rhs sentinels
+				while (rhsi->second.is_sentinel() && rhsi != rhs.end())
+					combined.push_back(*rhsi++);
+				
+				if (lhsi == lhs.end() || rhsi == rhs.end() || lhsi->first != rhsi->first)
+					break;
+				
+				// if these are commands
+				if (lhsi->first) {
+					if (lhsi->second == rhsi->second)
+						combined.push_back(*lhsi);
+					else
+						break;
+				}
+				// a recourse
+				else {
+					lhs_unchosen.push_back(*lhsi);
+					rhs_unchosen.push_back(*rhsi);
+				}
+				
 				++lhsi;
 				++rhsi;
 			}
 			
-			combined.assign(lhs.begin(), lhsi);
 			new_lhs.assign(lhsi, lhs.end());
 			new_rhs.assign(rhsi, rhs.end());
-		}
-		
-		static typename commands_t::iterator intersection_of(commands_ref lhs, commands_ref rhs)
-		{
-			commands_t::iterator
-			  lhsi = lhs.begin(),
-			  rhsi = rhs.begin()
-			  ;
-			
-			while (lhsi != lhs.end() && rhsi != rhs.end() && *lhsi == *rhsi) {
-				++lhsi;
-				++rhsi;
-			}
-			
-			return lhsi;
 		}
 		
 	public:
@@ -255,6 +279,7 @@ namespace common {
 		
 	private:
 		commands_t commands_;
+		commands_t unchosen_;
 		
 		children_t children_;
 	};

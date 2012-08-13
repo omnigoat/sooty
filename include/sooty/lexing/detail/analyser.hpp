@@ -24,6 +24,8 @@ namespace detail {
 	
 	struct analyser_t
 	{
+		typedef bool result_type;
+		
 		bool operator ()(accumulator_ref accumulator, input_range_ref input, const_command_ref command) const
 		{
 			switch (command.action)

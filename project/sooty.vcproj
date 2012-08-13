@@ -271,10 +271,6 @@
 						RelativePath="..\include\sooty\parsing\detail\parseme_backends.hpp"
 						>
 					</File>
-					<File
-						RelativePath="..\include\sooty\parsing\detail\parser_backend.hpp"
-						>
-					</File>
 				</Filter>
 			</Filter>
 			<Filter

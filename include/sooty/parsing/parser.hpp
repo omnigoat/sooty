@@ -40,6 +40,11 @@ namespace parsing {
 			);
 		}
 		
+		parser operator | (const parser& rhs) const {
+			return parser (
+				common::clone_tree(backend_)->merge( common::clone_tree(rhs.backend_) )
+			);
+		}
 		
 	};
 	
@@ -49,17 +54,15 @@ namespace parsing {
 		
 		return parser(
 			detail::parser_backend_t::make()
-				->push_back_command( command_t(command_t::add_marker, 0, 0, mark) )
-				->push_back_failure( command_t(command_t::rm_marker, 0, 0, mark) )
-				->push_back_command( command_t(command_t::match, id, id) )
-				->push_back_command( command_t(command_t::insert, 0, 0, mark) )
-				->push_back_command( command_t(command_t::rm_marker, 0, 0, mark) )
+				->push_back_command( command_t::make_add_marker(mark) )
+				->push_back_failure( command_t::make_rm_marker(mark) )
+				->push_back_command( command_t::make_match(id, id) )
+				->push_back_command( command_t::make_insert(0, mark) )
+				->push_back_command( command_t::make_rm_marker(mark) )
 		);
 	}
 	
 	
-	//parsemes_t parse(parser& parser, lexing::lexemes_t::const_iterator& begin, lexing::lexemes_t::const_iterator& end);
-
 	
 //=====================================================================
 } // namespace parsing

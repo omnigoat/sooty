@@ -30,8 +30,8 @@ namespace detail {
 		{
 		}
 		
-		bool is_terminal() const {
-			return action == action_t::terminal;
+		bool is_sentinel() const {
+			return false;
 		}
 		
 		static command_t clear() {

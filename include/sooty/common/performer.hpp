@@ -45,6 +45,7 @@ namespace common {
 			first_children.push_back(node);
 			
 			size_t parent_child_count = 1;
+			children_t::const_iterator parent_child_begin = first_children.begin();
 			children_t::const_iterator parent_child_iter = first_children.begin();
 			children_t::const_iterator parent_child_end = first_children.end();
 			
@@ -93,14 +94,33 @@ namespace common {
 					++parent_child_iter;
 					continue;
 				}
-				else {
+				else
+				{
+					// first, inform our siblings that we were chosen, and they were unchosen
+					std::for_each(parent_child_begin, parent_child_end,
+						boost::bind(&performer_t::perform_unchosen<StateT, InputT, NodePTR>, boost::ref(state), boost::ref(input), _1));
+					
+					
+					// continue with our children
 					parent_child_count = children.size();
+					parent_child_begin = children.begin();
 					parent_child_iter = children.begin();
 					parent_child_end = children.end();
 				}
 			}
 			
 			return parent_child_count == 0 || parent_child_iter != parent_child_end;
+		}
+	
+	private:
+		template <typename StateT, typename InputT, typename NodePTR>
+		static void perform_unchosen(StateT& state, InputT& input, const NodePTR& N) {
+			typename NodePTR::value_type::commands_t::const_iterator begin = N->unchosen_.begin();
+			for ( ; begin != N->unchosen_.end(); ++begin )
+				executor_t()(state, input, begin->second);
+				
+			/*std::for_each(N->unchosen_.begin(), N->unchosen_.end(), 
+				boost::bind(executor_t(), boost::ref(state), boost::ref(input), _1));*/
 		}
 		
 	private:

@@ -33,7 +33,7 @@ int main()
 	std::string input_string = "dragongeese drake drake dragon";
 	sooty::lexing::lexemes_t lexemes;
 	sooty::lexing::detail::accumulator_t acc(lexemes, input_string.size());
-	{
+	while (false) {
 		using namespace sooty::lexing;
 		typedef sooty::common::performer_t<detail::analyser_t> lexical_analysis_t;
 		
@@ -50,9 +50,54 @@ int main()
 	}
 	
 	{
-		sooty::parsing::parser K = sooty::parsing::match(1) >> sooty::parsing::match(2);
+		sooty::parsing::parser K = sooty::parsing::match(1) | sooty::parsing::match(2);
+		
+		/*
+		match(number),
+		^match(plus | dash),
+		match(number)
+		
+		additive_expression = 
+			insert(addition) [
+				additive_expression,
+				match(plus, discard),
+				match(number)
+			]
+			|
+			insert(subtraction) [
+				match(number),
+				match(dash, discard),
+				match(number)
+			]
+			|
+			match(number)
+			;
+		
+		add_mark ADD
+		-rm_mark ADD
+		match N
+		rm_mark MN
+		discard plus
+		match number
+		combine ADD
+		rm_mark ADD
 		
 		
+		
+		
+		           add_mark ADD
+		           add_mark SUB
+		           add_mark MN
+		           match N
+		           insert MN
+		           rm_mark MN
+		* discard plus     * discard dash       * e
+		* match number     * match number
+		* combine add      * combine sub
+		* rm_mark ADD      * rm_mark SUB
+		
+		
+		*/
 	}
 	
 	std::cout << lexemes << std::endl;
