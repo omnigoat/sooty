@@ -7,7 +7,6 @@
 #define SOOTY_LEXING_DETAIL_COMMAND_HPP
 //=====================================================================
 #include <sooty/common/node.hpp>
-#include <sooty/lexing/detail/mark.hpp>
 #include <sooty/lexing/detail/accumulator.hpp>
 //=====================================================================
 namespace sooty {

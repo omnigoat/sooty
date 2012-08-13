@@ -14,7 +14,6 @@
 //=====================================================================
 #include <sooty/common/node.hpp>
 #include <sooty/lexing/detail/command.hpp>
-#include <sooty/lexing/detail/orders.hpp>
 //=====================================================================
 namespace sooty {
 namespace lexing {

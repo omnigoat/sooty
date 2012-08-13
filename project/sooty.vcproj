@@ -186,26 +186,6 @@
 					RelativePath="..\src\lexing\lexer.cpp"
 					>
 				</File>
-				<Filter
-					Name="detail"
-					>
-					<File
-						RelativePath="..\src\lexing\detail\append_failure.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\src\lexing\detail\append_success.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\src\lexing\detail\base_lexer.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\src\lexing\detail\fold.cpp"
-						>
-					</File>
-				</Filter>
 			</Filter>
 		</Filter>
 		<Filter
@@ -216,10 +196,6 @@
 			<Filter
 				Name="lexing"
 				>
-				<File
-					RelativePath="..\include\sooty\lexing\input_iterator.hpp"
-					>
-				</File>
 				<File
 					RelativePath="..\include\sooty\lexing\input_range.hpp"
 					>
@@ -252,23 +228,11 @@
 						>
 					</File>
 					<File
-						RelativePath="..\include\sooty\lexing\detail\base_lexer.hpp"
-						>
-					</File>
-					<File
 						RelativePath="..\include\sooty\lexing\detail\command.hpp"
 						>
 					</File>
 					<File
 						RelativePath="..\include\sooty\lexing\detail\lexer_backend.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\include\sooty\lexing\detail\mark.hpp"
-						>
-					</File>
-					<File
-						RelativePath="..\include\sooty\lexing\detail\orders.hpp"
 						>
 					</File>
 				</Filter>
@@ -296,7 +260,7 @@
 					Name="detail"
 					>
 					<File
-						RelativePath="..\include\sooty\parsing\detail\abstract_parser_backend.hpp"
+						RelativePath="..\include\sooty\parsing\detail\command.hpp"
 						>
 					</File>
 					<File

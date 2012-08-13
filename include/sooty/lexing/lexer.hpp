@@ -10,7 +10,6 @@
 #include <sooty/common/detail/append_success.hpp>
 //=====================================================================
 #include <sooty/lexing/detail/lexer_backend.hpp>
-#include <sooty/lexing/detail/mark.hpp>
 #include <sooty/lexing/detail/command.hpp>
 //=====================================================================
 namespace sooty {

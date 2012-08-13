@@ -50,10 +50,8 @@ namespace detail {
 		
 	private:
 		typedef std::stack<size_t> frames_t;
-		typedef std::map<mark_t::value_type, frames_t> markers_t;
 		typedef std::string characters_t;
 		
-		markers_t markers_;
 		lexemes_ref lexemes_;
 		
 		characters_t characters_;
