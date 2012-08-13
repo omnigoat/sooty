@@ -21,16 +21,11 @@ namespace parsing {
 	
 	struct parser
 	{
-	// gotta make this private somehow
-		//detail::parser_backend_ptr backend_;
-		detail::parser_backend_ptr backend_;
-		
-	public:
-		parser()
+		/*parser()
 			: backend_()
 		{
 		}
-		
+		*/
 		parser(const detail::parser_backend_ptr& backend) : backend_(backend) {}
 	
 		parser operator >> (const parser& rhs) const
@@ -45,7 +40,9 @@ namespace parsing {
 				common::clone_tree(backend_)->merge( common::clone_tree(rhs.backend_) )
 			);
 		}
-		
+	
+	private:
+		detail::parser_backend_ptr backend_;
 	};
 	
 	inline parser match(size_t id) {

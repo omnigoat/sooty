@@ -245,6 +245,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\include\sooty\parsing\lexeme_range.hpp"
+					>
+				</File>
+				<File
 					RelativePath="..\include\sooty\parsing\parseme.hpp"
 					>
 				</File>
@@ -261,6 +265,10 @@
 					>
 					<File
 						RelativePath="..\include\sooty\parsing\detail\command.hpp"
+						>
+					</File>
+					<File
+						RelativePath="..\include\sooty\parsing\detail\executor.hpp"
 						>
 					</File>
 					<File

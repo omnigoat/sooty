@@ -24,6 +24,7 @@
 #include <sooty/lexing/input_range.hpp>
 //=====================================================================
 #include <sooty/parsing/parser.hpp>
+#include <sooty/parsing/detail/executor.hpp>
 //=====================================================================
 
 

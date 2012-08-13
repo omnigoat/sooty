@@ -21,8 +21,6 @@ namespace detail {
 //=====================================================================
 
 	struct command_t {
-		typedef bool orders_t;
-		
 		enum Enum {
 			terminal,
 			add_marker,
@@ -33,7 +31,7 @@ namespace detail {
 		};
 		
 		bool is_sentinel() const {
-			return action_ == add_marker;
+			return action == add_marker;
 		}
 		
 		static command_t make_add_marker(accumulator::const_mark_ref mark) {
@@ -57,29 +55,28 @@ namespace detail {
 		}
 		
 		bool operator == (const command_t& rhs) const {
-			return action_ == rhs.action_ && lower_id_ == rhs.lower_id_ && upper_id_ == rhs.upper_id_
-				&& (mark_ ? (rhs.mark_ ? *mark_ == *rhs.mark_ : false) : !rhs.mark_);
+			return action == rhs.action && lower_id == rhs.lower_id && upper_id == rhs.upper_id
+				&& (mark ? (rhs.mark ? *mark == *rhs.mark : false) : !rhs.mark);
 		}
 		
-	public:
 		command_t(Enum action, size_t lower_id, size_t upper_id)
-			: action_(action), lower_id_(lower_id), upper_id_(upper_id)
+			: action(action), lower_id(lower_id), upper_id(upper_id)
 		{
 		}
 		
 		command_t(Enum action, size_t lower_id, size_t upper_id, accumulator::const_mark_ref mark)
-			: action_(action), lower_id_(lower_id), upper_id_(upper_id), mark_(mark)
+			: action(action), lower_id(lower_id), upper_id(upper_id), mark(mark)
 		{
 		}
 		
-		Enum action_;
-		accumulator::mark_t mark_;
-		size_t lower_id_, upper_id_;
+		Enum action;
+		accumulator::mark_t mark;
+		size_t lower_id, upper_id;
 	};
 	
 	typedef common::node_t<command_t> parser_backend_t;
 	typedef boost::shared_ptr<parser_backend_t> parser_backend_ptr;
-		
+	
 	
 //=====================================================================
 } // namespace detail

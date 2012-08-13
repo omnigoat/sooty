@@ -159,6 +159,8 @@ namespace parsing {
 		markers_t markers;
 	};
 	
+	typedef accumulator& accumulator_ref;
+	
 //=====================================================================
 } // namespace parsing
 } // namespace sooty
