@@ -152,25 +152,28 @@ namespace common {
 			// perform a non-mutative merge
 			merge_commands(combined_commands, new_lhs_commands, new_rhs_commands, commands_, rhs->commands_);
 			
-			// at least something was merged. recurse! :D
-			if (!combined_commands.empty()) {
+			// we merged all the commands @this has, so recurse into the children
+			if (!combined_commands.empty() && new_lhs_commands.empty()) {
 				rhs->commands_.swap(new_rhs_commands);
 				
-				children_t::iterator child =
-					std::find_if(
-						children_.begin(),
-						children_.end(),
-						boost::bind(&node_t::merge, _1, boost::ref(rhs))
-					);
+				children_t::iterator i = children_.begin();
+				for (; i != children_.end(); ++i) {
+					node_ptr n = (*i)->merge(rhs);
+					if (n) {
+						*i = n;
+						break;
+					}
+				}
 				
 				// the problem of merging has been pushed down one level. we're done!
-				if (child != children_.end())
+				if (i != children_.end())
 					return shared_from_this();
 			}
 			
 			// we now mutate lhs, because there's *still* stuff left, we're going to join it.
 			// the following code optimizes the join by combining one-nodes.
 			commands_.swap(new_lhs_commands);
+			rhs->commands_.swap(new_rhs_commands);
 			
 			node_ptr result = make();
 			result->commands_.swap(combined_commands);
@@ -178,7 +181,7 @@ namespace common {
 			if (commands_.empty())
 				result->children_.swap(children_);
 			else
-				result->children_.push_back(shared_from_this());
+				result->children_.push_back(shared_from_this()->clone());
 			
 			if (rhs->commands_.empty())
 				result->children_.insert(result->children_.end(), rhs->children_.begin(), rhs->children_.end());
@@ -186,9 +189,7 @@ namespace common {
 				result->children_.push_back(rhs);
 			
 			
-			*this = *result;
-			
-			return shared_from_this();
+			return result;
 		}
 		
 		

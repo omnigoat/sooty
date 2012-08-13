@@ -59,7 +59,6 @@ namespace lexing {
 		for (std::string::const_iterator i = str.begin(); i != str.end(); ++i) {
 			backend->push_back_command( detail::command_t::match(*i, *i, true) );
 		}
-		//backend->push_back_command( detail::command_t::terminal() );
 		
 		return lexer_t(backend);
 	}

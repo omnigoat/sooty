@@ -23,32 +23,32 @@
 
 #include <sooty/common/performer.hpp>
 
-using namespace sooty::lexing;
-
-
-using namespace sooty::lexing;
-
-
 
 
 int main()
 {
-	std::string input_string = "bananabanananananabanana";
+	std::string input_string = "dragongeese drake drake dragon";
 	sooty::lexing::lexemes_t lexemes;
 	sooty::lexing::detail::accumulator_t acc(lexemes, input_string.size());
 	{
+		using namespace sooty::lexing;
+		typedef sooty::common::performer_t<detail::analyser_t> lexical_analysis_t;
+		
+		// input stream
 		std::stringstream input(input_string);
-		sooty::lexing::input_range_t input_range(input);
-	
-		namespace slex = sooty::lexing;
 		
-		typedef sooty::common::performer_t<slex::detail::analyser_t> lexical_analysis_t;
+		// input range
+		input_range_t input_range(input);
 		
-		slex::lexer_t BANANA = +insert(1, slex::string_("bana") >> +slex::string_("na"));
+		// have a banana
+		lexer_t BANANA = +(insert(1, (string_("dragon") >> *string_("geese")) | string_("drake")) | match(' ', false));
 		
 		lexical_analysis_t()(acc, input_range, BANANA.backend());
 	}
 	
 	std::cout << lexemes << std::endl;
 }
+
+
+
 
