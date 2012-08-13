@@ -97,9 +97,12 @@ namespace common {
 				else
 				{
 					// first, inform our siblings that we were chosen, and they were unchosen
-					std::for_each(parent_child_begin, parent_child_end,
+					std::for_each(parent_child_begin, parent_child_iter,
 						boost::bind(&performer_t::perform_unchosen<StateT, InputT, NodePTR>, boost::ref(state), boost::ref(input), _1));
 					
+					++parent_child_iter;
+					std::for_each(parent_child_iter, parent_child_end,
+						boost::bind(&performer_t::perform_unchosen<StateT, InputT, NodePTR>, boost::ref(state), boost::ref(input), _1));
 					
 					// continue with our children
 					parent_child_count = children.size();

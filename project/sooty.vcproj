@@ -187,6 +187,22 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="parsing"
+				>
+				<File
+					RelativePath="..\src\parsing\parseme.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\parsing\detail\parseme_backend.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\parsing\parsemes.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="include"

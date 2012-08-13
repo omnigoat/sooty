@@ -28,6 +28,8 @@ namespace parsing {
 		*/
 		parser(const detail::parser_backend_ptr& backend) : backend_(backend) {}
 	
+		const detail::parser_backend_ptr& backend() const { return backend_; }
+		
 		parser operator >> (const parser& rhs) const
 		{
 			return parser(

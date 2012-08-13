@@ -12,7 +12,6 @@ namespace parsing {
 	
 	struct lexeme_range_t
 	{
-		template <typename T>
 		lexeme_range_t(lexing::const_lexemes_ref lexemes)
 			: lexemes_(lexemes), begin_(lexemes_.begin()), end_(lexemes_.end())
 		{
@@ -37,7 +36,7 @@ namespace parsing {
 		
 		
 	private:
-		lexing::lexemes_ref lexemes_;
+		lexing::const_lexemes_ref lexemes_;
 		lexing::lexemes_t::const_iterator begin_, end_;
 	};
 	

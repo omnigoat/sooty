@@ -50,9 +50,8 @@ int main()
 		lexical_analysis_t()(acc, input_range, BANANA.backend());
 	}
 	
+	sooty::parsing::parsemes_t parsemes;
 	{
-		sooty::parsing::parser K = sooty::parsing::match(1) | sooty::parsing::match(2);
-		
 		/*
 		match(number),
 		^match(plus | dash),
@@ -99,6 +98,12 @@ int main()
 		
 		
 		*/
+		
+		sooty::parsing::parser K = sooty::parsing::match(1) | sooty::parsing::match(2);
+		
+		typedef sooty::common::performer_t<sooty::parsing::detail::executor_t> parsing_t;
+		sooty::parsing::accumulator pracc;
+		parsing_t()(pracc, sooty::parsing::lexeme_range_t(lexemes), K.backend());
 	}
 	
 	std::cout << lexemes << std::endl;
