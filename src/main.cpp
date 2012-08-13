@@ -33,7 +33,7 @@ int main()
 	std::string input_string = "dragongeese drake drake dragon";
 	sooty::lexing::lexemes_t lexemes;
 	sooty::lexing::detail::accumulator_t acc(lexemes, input_string.size());
-	while (false) {
+	{
 		using namespace sooty::lexing;
 		typedef sooty::common::performer_t<detail::analyser_t> lexical_analysis_t;
 		

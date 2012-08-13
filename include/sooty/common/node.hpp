@@ -62,10 +62,7 @@ namespace common {
 		friend struct performer_t;
 		template <typename NodePtr>
 		friend NodePtr detail::clone_tree_impl(std::map<NodePtr, NodePtr>& visited_nodes, const NodePtr& clonee);
-		/*template <typename StateT, typename InputT, typename NodePTR>
-		static void perform_unchosen(StateT& state, InputT& input, const NodePTR& N)
-		*/
-		//typedef node_t<Command, Orders> node_t;
+		
 		typedef boost::shared_ptr<node_t> node_ptr;
 		typedef node_ptr& node_ptr_ref;
 		typedef const node_ptr& const_node_ptr_ref;
@@ -75,28 +72,34 @@ namespace common {
 		typedef const commands_t& const_commands_ref;
 		typedef commands_t& commands_ref;
 		
-		typedef std::vector<node_ptr> children_t;
+		// sort nodes descending by number of commands
+		struct ordering_t {
+			bool operator () (const_node_ptr_ref lhs, const_node_ptr_ref rhs) const {
+				return rhs->commands_.size() < lhs->commands_.size();
+			};
+		};
+		
+		typedef std::multiset<node_ptr, ordering_t> children_t;
 		typedef const children_t& const_children_ref;
 		
 		
 		// cloning!
 		node_ptr clone() const {
 			// purposefully doesn't clone next_. use detail::clone_tree for that
-			node_ptr C(new node_t(is_terminal));
-			C->children_.insert(C->children_.end(), children_.begin(), children_.end());
-			C->commands_.insert(C->commands_.end(), commands_.begin(), commands_.end());
+			node_ptr C(new node_t(*this));
+			
 			return C;
 		}
 		
 		
 		// adding children
 		node_ptr add_child(const_node_ptr_ref n) {
-			children_.push_back(n);
+			children_.insert(n);
 			return shared_from_this();
 		}
 		
 		node_ptr add_self_as_child() {
-			children_.push_back( shared_from_this() );
+			children_.insert( shared_from_this() );
 			return shared_from_this();
 		}
 		
@@ -135,7 +138,7 @@ namespace common {
 			visited.insert(shared_from_this());
 			
 			if (children_.empty()) {
-				children_.push_back(node);
+				children_.insert(node);
 			}
 			else {
 				std::for_each(children_.begin(), children_.end(), boost::bind(&node_t::append_impl, _1, boost::ref(visited), boost::ref(node)));
@@ -195,12 +198,12 @@ namespace common {
 			if (commands_.empty())
 				result->children_.swap(children_);
 			else
-				result->children_.push_back(shared_from_this()->clone());
+				result->children_.insert(shared_from_this()->clone());
 			
 			if (rhs->commands_.empty())
-				result->children_.insert(result->children_.end(), rhs->children_.begin(), rhs->children_.end());
+				result->children_.insert(rhs->children_.begin(), rhs->children_.end());
 			else
-				result->children_.push_back(rhs);
+				result->children_.insert(rhs);
 			
 			
 			return result;
@@ -283,6 +286,7 @@ namespace common {
 		
 		children_t children_;
 	};
+	
 
 //=====================================================================
 } // namespace common
