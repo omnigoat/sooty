@@ -17,11 +17,14 @@
 #include <boost/variant.hpp>
 #include <boost/tuple/tuple.hpp>
 //=====================================================================
+#include <sooty/common/performer.hpp>
+//=====================================================================
 #include <sooty/lexing/detail/analyser.hpp>
 #include <sooty/lexing/lexer.hpp>
 #include <sooty/lexing/input_range.hpp>
-
-#include <sooty/common/performer.hpp>
+//=====================================================================
+#include <sooty/parsing/parser.hpp>
+//=====================================================================
 
 
 
@@ -44,6 +47,12 @@ int main()
 		lexer_t BANANA = +(insert(1, (string_("dragon") >> *string_("geese")) | string_("drake")) | match(' ', false));
 		
 		lexical_analysis_t()(acc, input_range, BANANA.backend());
+	}
+	
+	{
+		sooty::parsing::parser K = sooty::parsing::match(1) >> sooty::parsing::match(2);
+		
+		
 	}
 	
 	std::cout << lexemes << std::endl;
