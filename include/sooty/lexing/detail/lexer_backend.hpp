@@ -25,8 +25,6 @@ namespace detail {
 	typedef lexer_backend_t::node_ptr lexer_backend_ptr;
 	typedef const lexer_backend_ptr& const_lexer_backend_ptr_ref;
 	
-	//common::performer_t<lexer_backend_t, accumulator_t, 
-	
 //=====================================================================
 } // namespace detail
 } // namespace lexing

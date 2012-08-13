@@ -16,8 +16,9 @@ namespace lexing {
 
 	typedef std::vector<lexeme_t> lexemes_t;
 	typedef lexemes_t& lexemes_ref;
+	typedef const lexemes_t& const_lexemes_ref;
 	
-	inline std::ostream& operator << (std::ostream& stream, const lexemes_t& rhs) 
+	inline std::ostream& operator << (std::ostream& stream, const_lexemes_ref rhs) 
 	{
 		stream << "lexemes\n---------" << std::endl;
 		if (rhs.empty())
