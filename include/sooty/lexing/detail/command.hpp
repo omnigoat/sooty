@@ -74,7 +74,7 @@ namespace detail {
 	}
 	
 	inline command_t merged(const_command_ref lhs, const_command_ref rhs, bool& success) {
-		success = true;
+		success = false;
 		return lhs;
 	}
 	

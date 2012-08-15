@@ -45,10 +45,17 @@ namespace detail {
 						accumulator.insert(command.insert_id, &input.cv());
 						input.advance();
 					}
+					else {
+						input.advance();
+					}
 					break;
 				
 				case command_t::insert:
 					accumulator.insert(command.insert_id);
+					break;
+				
+				case command_t::combine:
+					accumulator.merge_into(command.mark);
 					break;
 			}
 			

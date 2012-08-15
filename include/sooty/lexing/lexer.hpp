@@ -22,8 +22,9 @@ namespace lexing {
 	struct lexer_t
 	{
 		friend lexer_t match(char, char, bool);
+		friend lexer_t match(const std::string&);
 		friend lexer_t insert(size_t, const_lexer_ref);
-		friend lexer_t string_(const std::string&);
+		
 		
 		friend lexer_t operator >> (const_lexer_ref, const_lexer_ref);
 		friend lexer_t operator | (const_lexer_ref, const_lexer_ref);
@@ -53,7 +54,7 @@ namespace lexing {
 		return match(c, c, should_insert);
 	}
 	
-	inline lexer_t string_(const std::string& str) {
+	inline lexer_t match(const std::string& str) {
 		detail::lexer_backend_ptr backend = detail::lexer_backend_t::make();
 		for (std::string::const_iterator i = str.begin(); i != str.end(); ++i) {
 			backend->push_back_command( detail::command_t::match(*i, *i, true) );

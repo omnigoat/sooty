@@ -94,11 +94,7 @@ namespace detail {
 		}
 		
 		static command_t make_insert(size_t insert_id) {
-			return command_t(insert, insert_id, 0);
-		}
-		
-		static command_t make_insert(size_t insert_id, detail::const_mark_ref mark) {
-			return command_t(insert, insert_id, insert_id, mark);
+			return command_t(insert, 0, 0, insert_id);
 		}
 		
 		static command_t make_terminal() {

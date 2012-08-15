@@ -137,8 +137,10 @@ namespace common {
 			visited.insert(shared_from_this());
 			
 			if (children_.empty()) {
-				//children_.insert(node);
-				commands_.insert(commands_.end(), node->commands_.begin(), node->commands_.end());
+				if (!node->commands_.empty() && node->children_.empty())
+					commands_.insert(commands_.end(), node->commands_.begin(), node->commands_.end());
+				else 
+					children_.insert(node);
 			}
 			else {
 				std::for_each(children_.begin(), children_.end(), boost::bind(&node_t::append_impl, _1, boost::ref(visited), boost::ref(node)));
@@ -167,7 +169,7 @@ namespace common {
 			);
 			
 			// we merged all the commands @this has, so recurse into the children
-			if (!combined_commands.empty() && new_lhs_commands.empty()) {
+			if (!combined_commands.empty() && !new_rhs_commands.empty() && new_lhs_commands.empty()) {
 				rhs->commands_.swap(new_rhs_commands);
 				
 				children_t::iterator i = children_.begin();
@@ -187,10 +189,12 @@ namespace common {
 			// we now mutate lhs, because there's *still* stuff left, we're going to join it.
 			// the following code optimizes the join by combining one-nodes.
 			commands_.swap(new_lhs_commands);
-			this->unchosen_.swap(lhs_unchosen);
+			//this->unchosen_.swap(lhs_unchosen);
+			//rhs->unchosen_.swap(rhs_unchosen);
+			
 			
 			rhs->commands_.swap(new_rhs_commands);
-			rhs->unchosen_.swap(rhs_unchosen);
+			
 			
 			node_ptr result = make();
 			result->commands_.swap(combined_commands);
@@ -200,10 +204,11 @@ namespace common {
 			else
 				result->children_.insert(shared_from_this()->clone());
 			
-			if (rhs->commands_.empty())
+			if (rhs->commands_.empty() && !rhs->children_.empty())
 				result->children_.insert(rhs->children_.begin(), rhs->children_.end());
 			else
 				result->children_.insert(rhs);
+				
 			
 			
 			return result;
@@ -257,20 +262,20 @@ namespace common {
 				command_t merged_command = merged(lhsi->second, rhsi->second, success);
 				
 				// success!
-				if (success)
+				if (success) {
 					combined.push_back( std::make_pair(lhsi->first, merged_command) );
+					++lhsi;
+					++rhsi;
+				}
 				// sentinels will merge together, but if only one of lhs or rhs is a sentinel,
 				// then we prepend it to the combined commands
 				else if (lhsi->second.is_sentinel())
-					combined.push_back(*lhsi);
+					combined.push_back(*lhsi++);
 				else if (rhsi->second.is_sentinel())
-					combined.push_back(*rhsi);
+					combined.push_back(*rhsi++);
 				// anything else and we're done
 				else
 					break;
-				
-				++lhsi;
-				++rhsi;
 			}
 			
 			new_lhs.assign(lhsi, lhs.end());

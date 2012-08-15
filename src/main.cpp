@@ -31,7 +31,7 @@
 
 int main()
 {
-	std::string input_string = "dragongeese drake drake dragon";
+	std::string input_string = "4 + 5";
 	sooty::lexing::lexemes_t lexemes;
 	sooty::lexing::detail::accumulator_t acc(lexemes, input_string.size());
 	{
@@ -45,9 +45,17 @@ int main()
 		input_range_t input_range(input);
 		
 		// have a banana
-		//lexer_t BANANA = +(insert(1, (string_("dragon") >> *string_("geese")) | string_("drake")) | match(' ', false));
+		lexer_t BANANA = +(
+			insert(1, match('0', '9'))
+			|
+			insert(2, match('+'))
+			|
+			insert(3, match('-'))
+			|
+			match(' ', false)
+		);
 		
-		//lexical_analysis_t()(acc, input_range, BANANA.backend());
+		lexical_analysis_t()(acc, input_range, BANANA.backend());
 	}
 	
 	sooty::parsing::parsemes_t parsemes;
@@ -109,13 +117,13 @@ int main()
 		parser K =
 			insert(10) [
 				match(1) >>
-				match(2) >>
+				match(2, false) >>
 				match(1)
 			]
 			|
 			insert(11) [
 				match(1) >>
-				match(3) >>
+				match(3, false) >>
 				match(1)
 			]
 			|

@@ -62,12 +62,12 @@ namespace parsing {
 		detail::parser_backend_ptr backend_;
 	};
 	
-	inline parser match(size_t id) {
+	inline parser match(size_t id, bool insert = true) {
 		using detail::command_t;
 		
 		return parser(
 			detail::parser_backend_t::make()
-				->push_back_command( command_t(command_t::match, id, id, id) )
+				->push_back_command( command_t(command_t::match, id, id, insert ? id : 0) )
 		);
 	}
 	
