@@ -28,6 +28,8 @@ namespace detail {
 		std::transform(new_node->children_.begin(), new_node->children_.end(), new_node->children_.begin(),
 			boost::bind(&clone_tree_impl<NodePtr>, boost::ref(visited_nodes), _1));
 		
+		std::transform(new_node->commands_.begin(), new_node->commands_.end(), new_node->commands_.begin(),
+			boost::bind(&typename NodePtr::value_type::clone_command, new_node, _1));
 		
 		return new_node;
 	}

@@ -87,7 +87,6 @@ namespace common {
 		node_ptr clone() const {
 			// purposefully doesn't clone next_. use detail::clone_tree for that
 			node_ptr C(new node_t(*this));
-			
 			return C;
 		}
 		
@@ -236,39 +235,39 @@ namespace common {
 		{
 		}
 		
+		std::pair<bool, command_t> clone_command(const std::pair<bool, command_t>& C) {
+			return std::make_pair(C.first, C.second.clone());
+		}
+		
 		static void merge_commands(commands_ref combined, commands_ref new_lhs, commands_ref new_rhs,
-			commands_ref lhs_unchosen, commands_ref rhs_unchosen, const_commands_ref lhs, const_commands_ref rhs)
+			commands_ref lhs_unchosen, commands_ref rhs_unchosen, commands_ref lhs, commands_ref rhs)
 		{
-			commands_t::const_iterator
+			commands_t::iterator
 			  lhsi = lhs.begin(),
 			  rhsi = rhs.begin()
 			  ;
 			
 			while (lhsi != lhs.end() && rhsi != rhs.end())
 			{
-				// push back lhs sentinels
-				while (lhsi != lhs.end() && lhsi->second.is_sentinel())
-					combined.push_back(*lhsi++);
-				
-				// push back rhs sentinels
-				while (rhsi != rhs.end() && rhsi->second.is_sentinel())
-					combined.push_back(*rhsi++);
-				
 				if (lhsi == lhs.end() || rhsi == rhs.end() || lhsi->first != rhsi->first)
 					break;
 				
-				// if these are commands
-				if (lhsi->first) {
-					if (lhsi->second == rhsi->second)
-						combined.push_back(*lhsi);
-					else
-						break;
-				}
-				// a recourse
-				else {
-					lhs_unchosen.push_back(*lhsi);
-					rhs_unchosen.push_back(*rhsi);
-				}
+				// merging commands
+				bool success = false;
+				command_t merged_command = merged(lhsi->second, rhsi->second, success);
+				
+				// success!
+				if (success)
+					combined.push_back( std::make_pair(lhsi->first, merged_command) );
+				// sentinels will merge together, but if only one of lhs or rhs is a sentinel,
+				// then we prepend it to the combined commands
+				else if (lhsi->second.is_sentinel())
+					combined.push_back(*lhsi);
+				else if (rhsi->second.is_sentinel())
+					combined.push_back(*rhsi);
+				// anything else and we're done
+				else
+					break;
 				
 				++lhsi;
 				++rhsi;

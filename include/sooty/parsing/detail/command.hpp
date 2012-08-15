@@ -71,6 +71,16 @@ namespace detail {
 			return action == add_marker;
 		}
 		
+		command_t clone() const {
+			command_t result(*this);
+			if (result.mark) {
+				result.mark->remove_command(&result);
+				result.mark = detail::mapped_mark(result.mark);
+				result.mark->add_command(&result);
+			}
+			return result;
+		}
+		
 		static command_t make_add_marker(detail::const_mark_ref mark) {
 			return command_t(add_marker, 0, 0, mark);
 		}
@@ -111,13 +121,17 @@ namespace detail {
 	typedef common::node_t<command_t> parser_backend_t;
 	typedef boost::shared_ptr<parser_backend_t> parser_backend_ptr;
 	
-	inline command_t merged(const command_t& lhs, const command_t& rhs, bool& success) {
-		if (lhs.action == command_t::add_marker ||
+	inline command_t merged(command_t& lhs, command_t& rhs, bool& success) {
+		if ((lhs.action == command_t::add_marker ||
 		    lhs.action == command_t::combine ||
 		    lhs.action == command_t::rm_marker)
+		    && rhs.action == lhs.action)
 		{
 			success = true;
-			//return command_t(lhs.action, lhs.lower_id, lhs.upper_id, detail::combined_mark(lhs.mark, rhs.mark));
+			mark_t m = generate_mark();
+			lhs.mark->replace_self_with(m);
+			rhs.mark->replace_self_with(m);
+			return command_t(lhs.action, lhs.lower_id, lhs.upper_id, m);
 		}
 		else {
 			success = lhs == rhs;

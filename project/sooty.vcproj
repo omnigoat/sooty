@@ -191,6 +191,10 @@
 				Name="parsing"
 				>
 				<File
+					RelativePath="..\src\parsing\detail\mark.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\src\parsing\parseme.cpp"
 					>
 				</File>

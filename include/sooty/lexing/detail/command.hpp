@@ -34,6 +34,10 @@ namespace detail {
 			return false;
 		}
 		
+		command_t clone() const {
+			return *this;
+		}
+		
 		const command_t& merge(const command_t& rhs) const {
 			return *this;
 		}
