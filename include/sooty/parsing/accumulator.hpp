@@ -16,6 +16,7 @@
 //=====================================================================
 #include <sooty/parsing/parsemes.hpp>
 #include <sooty/parsing/parseme.hpp>
+#include <sooty/parsing/detail/mark.hpp>
 //=====================================================================
 namespace sooty {
 namespace parsing {
@@ -23,8 +24,8 @@ namespace parsing {
 	
 	struct accumulator 
 	{
-		typedef boost::shared_ptr<size_t> mark_t;
-		typedef const mark_t& const_mark_ref;
+		typedef detail::mark_t mark_t;
+		typedef detail::const_mark_ref const_mark_ref;
 		
 		struct frame {
 			parseme parent;
@@ -63,27 +64,27 @@ namespace parsing {
 			return parsemes;
 		}
 		
-		void add_marker(const mark_t& id) {
-			markers[*id].first.push(parsemes.size());
+		void add_marker(const mark_t& mark) {
+			markers[mark->id].first.push(parsemes.size());
 		}
 		
-		void add_marker(const mark_t& id, const lexing::lexemes_t::const_iterator& iter) {
-			markers[*id].second = iter;
-			markers[*id].first.push(parsemes.size());
+		void add_marker(const mark_t& mark, const lexing::lexemes_t::const_iterator& iter) {
+			markers[mark->id].second = iter;
+			markers[mark->id].first.push(parsemes.size());
 		}
 		
-		void rm_marker(const mark_t& id) {
-			markers_t::iterator m = markers.find(*id);
+		void rm_marker(const mark_t& mark) {
+			markers_t::iterator m = markers.find(mark->id);
 			if (m != markers.end())
 				m->second.first.pop();
 			if (m->second.first.empty())
-				markers.erase(*id);
+				markers.erase(mark->id);
 		}
 		
-		void unmerge(const mark_t& id) {
+		void unmerge(const mark_t& mark) {
 			parsemes_t insertables;
 			parsemes_t::iterator i = parsemes.end() - 1;
-			for ( ; i != parsemes.begin() + markers[*id].first.top() - 1; --i) {
+			for ( ; i != parsemes.begin() + markers[mark->id].first.top() - 1; --i) {
 				parsemes_t& children = i->children();
 				if (children.size() > 0) {
 					insertables.insert(insertables.begin(), children.begin(), children.end());
@@ -93,12 +94,12 @@ namespace parsing {
 			}
 		}
 		
-		void delete_at(const mark_t& id) {
-			parsemes.erase(parsemes.begin() + markers[*id].first.top());
+		void delete_at(const mark_t& mark) {
+			parsemes.erase(parsemes.begin() + markers[mark->id].first.top());
 		}
 		
-		void delete_all_at(const mark_t& id) {
-			parsemes.erase(parsemes.begin() + markers[*id].first.top(), parsemes.end());
+		void delete_all_at(const mark_t& mark) {
+			parsemes.erase(parsemes.begin() + markers[mark->id].first.top(), parsemes.end());
 		}
 		
 		void pop() {
@@ -122,36 +123,36 @@ namespace parsing {
 			parsemes.erase(parsemes.end() - 1);
 		}
 		
-		parseme at_marker(const mark_t& id) {
-			return *(parsemes.begin() + markers[*id].first.top());
+		parseme at_marker(const mark_t& mark) {
+			return *(parsemes.begin() + markers[mark->id].first.top());
 		}
 		
-		lexing::lexemes_t::const_iterator iter_marker(const mark_t& id) {
-			return markers[*id].second;
+		lexing::lexemes_t::const_iterator iter_marker(const mark_t& mark) {
+			return markers[mark->id].second;
 		}
 		
-		void merge_into(const mark_t& id) {
+		void merge_into(const mark_t& mark) {
 			parseme parent = parsemes.back();
 			parent.children().insert(
 				parent.children().end(),
-				parsemes.begin() + markers[*id].first.top(),
+				parsemes.begin() + markers[mark->id].first.top(),
 				parsemes.end() - 1
 			);
-			parsemes.erase(parsemes.begin() + markers[*id].first.top(), parsemes.end() - 1);
+			parsemes.erase(parsemes.begin() + markers[mark->id].first.top(), parsemes.end() - 1);
 		}
 		
-		static mark_t generate_marker() {
-			static size_t _ = 0;
-			return mark_t(new size_t(++_));
-		}
-		
-		static mark_t mapped_marker(const mark_t& m) {
-			static std::map<size_t, mark_t> _;
-			if (_.find(*m) == _.end())
-				_[*m] = accumulator::generate_marker();
+		/*static mark_t combined_mark(const mark_t& lhs, const mark_t& rhs) {
+			typedef std::map< std::pair<mark_t, mark_t>, mark_t > map_t;
+			static map_t _;
 			
-			return _[*m];
-		}
+			map_t::iterator i;
+			if ((i = _.find(std::make_pair(lhs, rhs))) == _.end() &&
+			    (i = _.find(std::make_pair(rhs, lhs))) == _.end()
+			   )
+				return _[std::make_pair(lhs, rhs)] = accumulator::generate_marker();
+			else
+				return i->second;
+		}*/
 		
 	private:
 		parsemes_t parsemes;

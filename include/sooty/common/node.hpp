@@ -138,7 +138,8 @@ namespace common {
 			visited.insert(shared_from_this());
 			
 			if (children_.empty()) {
-				children_.insert(node);
+				//children_.insert(node);
+				commands_.insert(commands_.end(), node->commands_.begin(), node->commands_.end());
 			}
 			else {
 				std::for_each(children_.begin(), children_.end(), boost::bind(&node_t::append_impl, _1, boost::ref(visited), boost::ref(node)));
@@ -246,11 +247,11 @@ namespace common {
 			while (lhsi != lhs.end() && rhsi != rhs.end())
 			{
 				// push back lhs sentinels
-				while (lhsi->second.is_sentinel() && lhsi != lhs.end())
+				while (lhsi != lhs.end() && lhsi->second.is_sentinel())
 					combined.push_back(*lhsi++);
 				
 				// push back rhs sentinels
-				while (rhsi->second.is_sentinel() && rhsi != rhs.end())
+				while (rhsi != rhs.end() && rhsi->second.is_sentinel())
 					combined.push_back(*rhsi++);
 				
 				if (lhsi == lhs.end() || rhsi == rhs.end() || lhsi->first != rhsi->first)

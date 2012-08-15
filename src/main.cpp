@@ -45,9 +45,9 @@ int main()
 		input_range_t input_range(input);
 		
 		// have a banana
-		lexer_t BANANA = +(insert(1, (string_("dragon") >> *string_("geese")) | string_("drake")) | match(' ', false));
+		//lexer_t BANANA = +(insert(1, (string_("dragon") >> *string_("geese")) | string_("drake")) | match(' ', false));
 		
-		lexical_analysis_t()(acc, input_range, BANANA.backend());
+		//lexical_analysis_t()(acc, input_range, BANANA.backend());
 	}
 	
 	sooty::parsing::parsemes_t parsemes;
@@ -91,15 +91,37 @@ int main()
 		           match N
 		           insert MN
 		           rm_mark MN
-		* discard plus     * discard dash       * e
+		* match plus       * match dash       * e
 		* match number     * match number
 		* combine add      * combine sub
 		* rm_mark ADD      * rm_mark SUB
 		
 		
+		           match N
+		* match plus       * match dash
+		* match number     * match number
+		* combine add      * combine sub
+		
 		*/
 		
-		sooty::parsing::parser K = sooty::parsing::match(1) | sooty::parsing::match(2);
+		using namespace sooty::parsing;
+		
+		parser K =
+			insert(10) [
+				match(1) >>
+				match(2) >>
+				match(1)
+			]
+			|
+			insert(11) [
+				match(1) >>
+				match(3) >>
+				match(1)
+			]
+			|
+			match(1)
+			;
+		
 		
 		typedef sooty::common::performer_t<sooty::parsing::detail::executor_t> parsing_t;
 		sooty::parsing::accumulator pracc;

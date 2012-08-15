@@ -288,6 +288,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\include\sooty\parsing\detail\mark.hpp"
+						>
+					</File>
+					<File
 						RelativePath="..\include\sooty\parsing\detail\parseme_backend.hpp"
 						>
 					</File>

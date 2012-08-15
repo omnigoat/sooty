@@ -41,21 +41,15 @@ namespace detail {
 				case command_t::match:
 					if (input.is_exhausted() || input.cv().id() < command.lower_id || command.upper_id < input.cv().id())
 						return false;
-					else {
-						accumulator.insert(command.lower_id, &input.cv());
+					else if (command.insert_id != 0) {
+						accumulator.insert(command.insert_id, &input.cv());
 						input.advance();
 					}
 					break;
 				
 				case command_t::insert:
-					if (command.mark) {
-						parseme p = accumulator.at_marker(command.mark);
-						accumulator.delete_at(command.mark);
-						accumulator.insert(p.id(), p.lexeme());
-					}
-					else {
-						accumulator.insert(command.lower_id);
-					}
+					accumulator.insert(command.insert_id);
+					break;
 			}
 			
 			return true;

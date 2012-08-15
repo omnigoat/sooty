@@ -34,6 +34,10 @@ namespace detail {
 			return false;
 		}
 		
+		const command_t& merge(const command_t& rhs) const {
+			return *this;
+		}
+		
 		static command_t clear() {
 			return command_t(action_t::clear, 0, 0, false);
 		}
@@ -63,6 +67,11 @@ namespace detail {
 	
 	inline bool operator == (const_command_ref lhs, const_command_ref rhs) {
 		return lhs.action == rhs.action && lhs.from_id == rhs.from_id && lhs.to_id == rhs.to_id;
+	}
+	
+	inline command_t merged(const_command_ref lhs, const_command_ref rhs, bool& success) {
+		success = true;
+		return lhs;
 	}
 	
 //=====================================================================
