@@ -26,9 +26,14 @@ namespace parsing {
 		{
 		}
 		*/
-		parser(const detail::parser_backend_ptr& backend) : backend_(backend) {}
+		parser(const detail::parser_backend_ptr& backend)
+			: backend_(backend)
+		{
+		}
 	
-		const detail::parser_backend_ptr& backend() const { return backend_; }
+		const detail::parser_backend_ptr& backend() const {
+			return backend_;
+		}
 		
 		parser operator >> (const parser& rhs) const
 		{
@@ -50,6 +55,7 @@ namespace parsing {
 			return parser (
 				detail::parser_backend_t::make()
 					->push_back_command(detail::command_t::make_add_marker(mark))
+					->push_back_failure(detail::command_t::make_rm_marker(mark))
 					->append(common::clone_tree(rhs.backend_))
 					->append(common::clone_tree(backend_))
 					->append(detail::parser_backend_t::make()

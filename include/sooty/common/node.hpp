@@ -155,15 +155,12 @@ namespace common {
 		{
 			commands_t combined_commands;
 			commands_t new_lhs_commands, new_rhs_commands;
-			commands_t lhs_unchosen, rhs_unchosen;
 			
 			// perform a merge
 			merge_commands(
 				combined_commands,
 				new_lhs_commands,
 				new_rhs_commands,
-				lhs_unchosen,
-				rhs_unchosen,
 				commands_,
 				rhs->commands_
 			);
@@ -244,8 +241,7 @@ namespace common {
 			return std::make_pair(C.first, C.second.clone());
 		}
 		
-		static void merge_commands(commands_ref combined, commands_ref new_lhs, commands_ref new_rhs,
-			commands_ref lhs_unchosen, commands_ref rhs_unchosen, commands_ref lhs, commands_ref rhs)
+		static void merge_commands(commands_ref combined, commands_ref new_lhs, commands_ref new_rhs, commands_ref lhs, commands_ref rhs)
 		{
 			commands_t::iterator
 			  lhsi = lhs.begin(),
@@ -254,7 +250,7 @@ namespace common {
 			
 			while (lhsi != lhs.end() && rhsi != rhs.end())
 			{
-				if (lhsi == lhs.end() || rhsi == rhs.end() || lhsi->first != rhsi->first)
+				if (lhsi == lhs.end() || rhsi == rhs.end())
 					break;
 				
 				// merging commands
@@ -272,6 +268,11 @@ namespace common {
 				else if (lhsi->second.is_sentinel())
 					combined.push_back(*lhsi++);
 				else if (rhsi->second.is_sentinel())
+					combined.push_back(*rhsi++);
+				// failure-commands are totes fine to be prepended too
+				else if (!lhsi->first)
+					combined.push_back(*lhsi++);
+				else if (!rhsi->first)
 					combined.push_back(*rhsi++);
 				// anything else and we're done
 				else

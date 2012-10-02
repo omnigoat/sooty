@@ -31,7 +31,7 @@ lexer_t sooty::lexing::operator >> ( const_lexer_ref lhs, const_lexer_ref rhs )
 lexer_t sooty::lexing::operator | ( const_lexer_ref lhs, const_lexer_ref rhs )
 {
 	return lexer_t(
-		lhs.backend()->clone()->merge(rhs.backend())
+		clone_tree(lhs.backend())->merge(rhs.backend())
 	);
 }
 

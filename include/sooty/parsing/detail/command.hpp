@@ -68,7 +68,7 @@ namespace detail {
 		}
 		
 		bool is_sentinel() const {
-			return action == add_marker;
+			return action == add_marker || action == rm_marker;
 		}
 		
 		command_t clone() const {
@@ -118,9 +118,7 @@ namespace detail {
 	typedef boost::shared_ptr<parser_backend_t> parser_backend_ptr;
 	
 	inline command_t merged(command_t& lhs, command_t& rhs, bool& success) {
-		if ((lhs.action == command_t::add_marker ||
-		    lhs.action == command_t::combine ||
-		    lhs.action == command_t::rm_marker)
+		if ((lhs.action == command_t::add_marker)
 		    && rhs.action == lhs.action)
 		{
 			success = true;

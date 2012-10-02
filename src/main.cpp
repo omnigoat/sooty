@@ -31,7 +31,7 @@
 
 int main()
 {
-	std::string input_string = "4 + 5";
+	std::string input_string = "4 - 5";
 	sooty::lexing::lexemes_t lexemes;
 	sooty::lexing::detail::accumulator_t acc(lexemes, input_string.size());
 	{
@@ -61,48 +61,13 @@ int main()
 	sooty::parsing::parsemes_t parsemes;
 	{
 		/*
-		match(number),
-		^match(plus | dash),
-		match(number)
-		
-		additive_expression = 
-			insert(addition) [
-				additive_expression,
-				match(plus, discard),
-				match(number)
-			]
-			|
-			insert(subtraction) [
-				match(number),
-				match(dash, discard),
-				match(number)
-			]
-			|
-			match(number)
-			;
-		
-		add_mark ADD
-		-rm_mark ADD
-		match N
-		rm_mark MN
-		discard plus
-		match number
-		combine ADD
-		rm_mark ADD
-		
-		
-		
-		
-		           add_mark ADD
-		           add_mark SUB
-		           add_mark MN
-		           match N
-		           insert MN
-		           rm_mark MN
+		           add_mark M
+		           -rm_mark M
+		           match number
 		* match plus       * match dash       * e
 		* match number     * match number
 		* combine add      * combine sub
-		* rm_mark ADD      * rm_mark SUB
+		* rm_mark M        * rm_mark M
 		
 		
 		           match N
@@ -134,9 +99,13 @@ int main()
 		typedef sooty::common::performer_t<sooty::parsing::detail::executor_t> parsing_t;
 		sooty::parsing::accumulator pracc;
 		parsing_t()(pracc, sooty::parsing::lexeme_range_t(lexemes), K.backend());
+		
+		parsemes = pracc.container();
 	}
 	
 	std::cout << lexemes << std::endl;
+	
+	//std::cout << parsemes << std::endl;
 }
 
 
