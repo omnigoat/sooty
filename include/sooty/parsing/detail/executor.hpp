@@ -10,7 +10,6 @@
 #include <map>
 //=====================================================================
 #include <boost/shared_ptr.hpp>
-#include <boost/function.hpp>
 //=====================================================================
 #include <sooty/common/node.hpp>
 #include <sooty/parsing/accumulator.hpp>
