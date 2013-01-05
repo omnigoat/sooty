@@ -12,7 +12,6 @@
 //=====================================================================
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
-#include <boost/bind.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/variant.hpp>
 #include <boost/tuple/tuple.hpp>

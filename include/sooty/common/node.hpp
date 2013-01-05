@@ -8,8 +8,8 @@
 //=====================================================================
 #include <vector>
 #include <deque>
+#include <functional>
 //=====================================================================
-#include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <sooty/common/detail/clone_impl.hpp>
@@ -82,6 +82,13 @@ namespace common {
 		typedef std::multiset<node_ptr, ordering_t> children_t;
 		typedef const children_t& const_children_ref;
 		
+
+		node_t(const node_t& rhs)
+		 : is_terminal(rhs.is_terminal), commands_(rhs.commands_), unchosen_(rhs.unchosen_)
+		{	
+		}
+
+
 		
 		// cloning!
 		node_ptr clone() const {
@@ -143,14 +150,14 @@ namespace common {
 					children_.insert(node);
 			}
 			else {
-				std::for_each(children_.begin(), children_.end(), boost::bind(&node_t::append_impl, _1, boost::ref(visited), boost::ref(node)));
+				std::for_each(children_.begin(), children_.end(), std::bind(&node_t::append_impl, std::placeholders::_1, std::ref(visited), std::ref(node)));
 			}
 			
 			return shared_from_this();
 		}
 		
 		
-		// returns true if merging occurred
+		// returns non-empty if merging occurred
 		node_ptr merge(const_node_ptr_ref rhs)
 		{
 			commands_t combined_commands;
@@ -166,17 +173,27 @@ namespace common {
 			);
 			
 			// we merged all the commands @this has, so recurse into the children
-			if (!combined_commands.empty() && !new_rhs_commands.empty() && new_lhs_commands.empty()) {
+			if (!combined_commands.empty() && !new_rhs_commands.empty() && new_lhs_commands.empty())
+			{
 				rhs->commands_.swap(new_rhs_commands);
 				
+				children_t new_children;
 				children_t::iterator i = children_.begin();
-				for (; i != children_.end(); ++i) {
+				for (; i != children_.end(); ++i)
+				{
 					node_ptr n = (*i)->merge(rhs);
+
+					// we successfully merged, so there's no need to process further.
+					// however, we need to insert remaining (untouched) children.
 					if (n) {
-						*i = n;
+						new_children.insert(n);
+						std::copy(++i, children_.end(), std::inserter(new_children, new_children.end()));
 						break;
 					}
+
+					new_children.insert(*i);
 				}
+				children_.swap(new_children);
 				
 				// the problem of merging has been pushed down one level. we're done!
 				if (i != children_.end())
@@ -186,9 +203,6 @@ namespace common {
 			// we now mutate lhs, because there's *still* stuff left, we're going to join it.
 			// the following code optimizes the join by combining one-nodes.
 			commands_.swap(new_lhs_commands);
-			//this->unchosen_.swap(lhs_unchosen);
-			//rhs->unchosen_.swap(rhs_unchosen);
-			
 			
 			rhs->commands_.swap(new_rhs_commands);
 			

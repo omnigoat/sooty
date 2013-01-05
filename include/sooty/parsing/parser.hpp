@@ -13,6 +13,7 @@
 //=====================================================================
 #include <sooty/parsing/parsemes.hpp>
 #include <sooty/parsing/detail/command.hpp>
+#include <sooty/parsing/detail/parser_backend.hpp>
 //=====================================================================
 namespace sooty {
 namespace parsing {

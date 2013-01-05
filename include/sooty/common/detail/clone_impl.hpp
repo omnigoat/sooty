@@ -25,11 +25,13 @@ namespace detail {
 		NodePtr new_node = clonee->clone();	
 		visited_nodes[clonee] = new_node;
 		
-		std::transform(new_node->children_.begin(), new_node->children_.end(), new_node->children_.begin(),
-			boost::bind(&clone_tree_impl<NodePtr>, boost::ref(visited_nodes), _1));
-		
+		// recurse for children nodes
+		std::for_each(clonee->children_.begin(), clonee->children_.end(), [&](const NodePtr& x) {
+			new_node->children_.insert( clone_tree_impl(visited_nodes, x) );
+		});
+
 		std::transform(new_node->commands_.begin(), new_node->commands_.end(), new_node->commands_.begin(),
-			boost::bind(&typename NodePtr::value_type::clone_command, new_node, _1));
+			std::bind(&typename NodePtr::value_type::clone_command, new_node, std::placeholders::_1));
 		
 		return new_node;
 	}

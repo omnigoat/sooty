@@ -114,9 +114,6 @@ namespace detail {
 		size_t lower_id, upper_id, insert_id;
 	};
 	
-	typedef common::node_t<command_t> parser_backend_t;
-	typedef boost::shared_ptr<parser_backend_t> parser_backend_ptr;
-	
 	inline command_t merged(command_t& lhs, command_t& rhs, bool& success) {
 		if ((lhs.action == command_t::add_marker)
 		    && rhs.action == lhs.action)
