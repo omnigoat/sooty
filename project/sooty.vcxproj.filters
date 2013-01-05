@@ -1,0 +1,200 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="src\lexing">
+      <UniqueIdentifier>{e81fc97d-e850-4a02-937f-8628ee6868ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\parsing">
+      <UniqueIdentifier>{f51ed671-e1a9-4432-addb-c5f696c300f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="include\lexing">
+      <UniqueIdentifier>{c60a5805-88ef-4b15-8c5c-cbb254dfac4a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\lexing\detail">
+      <UniqueIdentifier>{1487aed6-81c8-4916-a672-0b0d4892b513}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\parsing">
+      <UniqueIdentifier>{9e821b09-8734-43da-8df1-424593550014}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\parsing\detail">
+      <UniqueIdentifier>{380c0d18-3acb-46bc-a2e0-4f369b21688b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\common">
+      <UniqueIdentifier>{538387ba-9370-430e-8cb9-e4f16613d908}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\common\detail">
+      <UniqueIdentifier>{c2a43032-6e4f-4665-9112-50838301773c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\walking">
+      <UniqueIdentifier>{c207fe96-a39c-467a-8627-d15f859f07f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\walking\detail">
+      <UniqueIdentifier>{13fe3041-1079-4543-a518-baec5c526b16}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\transforming">
+      <UniqueIdentifier>{80c3c3bd-9e6d-44ee-8866-def9f89d9553}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\transforming\detail">
+      <UniqueIdentifier>{767825bb-5b8a-4278-8a13-61aeb44a3d1c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\lexing\lexeme.cpp">
+      <Filter>src\lexing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\lexing\lexer.cpp">
+      <Filter>src\lexing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\parsing\detail\mark.cpp">
+      <Filter>src\parsing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\parsing\parseme.cpp">
+      <Filter>src\parsing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\parsing\detail\parseme_backend.cpp">
+      <Filter>src\parsing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\parsing\parsemes.cpp">
+      <Filter>src\parsing</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\sooty\lexing\input_range.hpp">
+      <Filter>include\lexing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\lexing\iterator.hpp">
+      <Filter>include\lexing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\lexing\lexeme.hpp">
+      <Filter>include\lexing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\lexing\lexemes.hpp">
+      <Filter>include\lexing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\lexing\lexer.hpp">
+      <Filter>include\lexing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\lexing\detail\accumulator.hpp">
+      <Filter>include\lexing\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\lexing\detail\analyser.hpp">
+      <Filter>include\lexing\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\lexing\detail\command.hpp">
+      <Filter>include\lexing\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\lexing\detail\lexer_backend.hpp">
+      <Filter>include\lexing\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\parsing\accumulator.hpp">
+      <Filter>include\parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\parsing\lexeme_range.hpp">
+      <Filter>include\parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\parsing\parseme.hpp">
+      <Filter>include\parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\parsing\parsemes.hpp">
+      <Filter>include\parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\parsing\parser.hpp">
+      <Filter>include\parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\parsing\detail\command.hpp">
+      <Filter>include\parsing\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\parsing\detail\executor.hpp">
+      <Filter>include\parsing\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\parsing\detail\mark.hpp">
+      <Filter>include\parsing\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\parsing\detail\parseme_backend.hpp">
+      <Filter>include\parsing\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\parsing\detail\parseme_backends.hpp">
+      <Filter>include\parsing\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\parsing\detail\parser_backend.hpp">
+      <Filter>include\parsing\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\common\clone.hpp">
+      <Filter>include\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\common\node.hpp">
+      <Filter>include\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\common\performer.hpp">
+      <Filter>include\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\common\detail\clone_impl.hpp">
+      <Filter>include\common\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\common\detail\fold.hpp">
+      <Filter>include\common\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\common\detail\layout.hpp">
+      <Filter>include\common\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\walking\placeholder.hpp">
+      <Filter>include\walking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\walking\walker.hpp">
+      <Filter>include\walking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\walking\detail\abstract_walker_backend.hpp">
+      <Filter>include\walking\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\walking\detail\context.hpp">
+      <Filter>include\walking\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\walking\detail\dummy_walker_backend.hpp">
+      <Filter>include\walking\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\walking\detail\id_eq_walker_backend.hpp">
+      <Filter>include\walking\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\walking\detail\layout.hpp">
+      <Filter>include\walking\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\walking\detail\position_setter_walker_backend.hpp">
+      <Filter>include\walking\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\walking\detail\rewriter_walker_backend.hpp">
+      <Filter>include\walking\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\walking\detail\start_walker_backend.hpp">
+      <Filter>include\walking\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\transforming\transform.hpp">
+      <Filter>include\transforming</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\transforming\transformer.hpp">
+      <Filter>include\transforming</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\transforming\detail\abstract_transformer_backend.hpp">
+      <Filter>include\transforming\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\transforming\insert_transformer_backend.hpp">
+      <Filter>include\transforming\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\transforming\detail\layout.hpp">
+      <Filter>include\transforming\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sooty\transforming\detail\mk_transformer_backend.hpp">
+      <Filter>include\transforming\detail</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

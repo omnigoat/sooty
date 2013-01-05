@@ -1,6 +1,11 @@
 # ignore MSVC config files
-project/*.ncb
-project/*.user
+*.ncb
+*.user
+*.sdf
+*.opensdf
+*.pch
+*.suo
+*.log
 
 # ignore generated build folders
 project/Debug/

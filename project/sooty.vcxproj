@@ -1,0 +1,146 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{A1692F8A-9981-44C9-BC15-8FB795AC9D06}</ProjectGuid>
+    <RootNamespace>sooty</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>11.0.50727.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\include;..\dependencies\boost\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\main.cpp" />
+    <ClCompile Include="..\src\lexing\lexeme.cpp" />
+    <ClCompile Include="..\src\lexing\lexer.cpp" />
+    <ClCompile Include="..\src\parsing\detail\mark.cpp" />
+    <ClCompile Include="..\src\parsing\parseme.cpp" />
+    <ClCompile Include="..\src\parsing\detail\parseme_backend.cpp" />
+    <ClCompile Include="..\src\parsing\parsemes.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\sooty\lexing\input_range.hpp" />
+    <ClInclude Include="..\include\sooty\lexing\iterator.hpp" />
+    <ClInclude Include="..\include\sooty\lexing\lexeme.hpp" />
+    <ClInclude Include="..\include\sooty\lexing\lexemes.hpp" />
+    <ClInclude Include="..\include\sooty\lexing\lexer.hpp" />
+    <ClInclude Include="..\include\sooty\lexing\detail\accumulator.hpp" />
+    <ClInclude Include="..\include\sooty\lexing\detail\analyser.hpp" />
+    <ClInclude Include="..\include\sooty\lexing\detail\command.hpp" />
+    <ClInclude Include="..\include\sooty\lexing\detail\lexer_backend.hpp" />
+    <ClInclude Include="..\include\sooty\parsing\accumulator.hpp" />
+    <ClInclude Include="..\include\sooty\parsing\lexeme_range.hpp" />
+    <ClInclude Include="..\include\sooty\parsing\parseme.hpp" />
+    <ClInclude Include="..\include\sooty\parsing\parsemes.hpp" />
+    <ClInclude Include="..\include\sooty\parsing\parser.hpp" />
+    <ClInclude Include="..\include\sooty\parsing\detail\command.hpp" />
+    <ClInclude Include="..\include\sooty\parsing\detail\executor.hpp" />
+    <ClInclude Include="..\include\sooty\parsing\detail\mark.hpp" />
+    <ClInclude Include="..\include\sooty\parsing\detail\parseme_backend.hpp" />
+    <ClInclude Include="..\include\sooty\parsing\detail\parseme_backends.hpp" />
+    <ClInclude Include="..\include\sooty\parsing\detail\parser_backend.hpp" />
+    <ClInclude Include="..\include\sooty\common\clone.hpp" />
+    <ClInclude Include="..\include\sooty\common\node.hpp" />
+    <ClInclude Include="..\include\sooty\common\performer.hpp" />
+    <ClInclude Include="..\include\sooty\common\detail\clone_impl.hpp" />
+    <ClInclude Include="..\include\sooty\common\detail\fold.hpp" />
+    <ClInclude Include="..\include\sooty\common\detail\layout.hpp" />
+    <ClInclude Include="..\include\sooty\walking\placeholder.hpp" />
+    <ClInclude Include="..\include\sooty\walking\walker.hpp" />
+    <ClInclude Include="..\include\sooty\walking\detail\abstract_walker_backend.hpp" />
+    <ClInclude Include="..\include\sooty\walking\detail\context.hpp" />
+    <ClInclude Include="..\include\sooty\walking\detail\dummy_walker_backend.hpp" />
+    <ClInclude Include="..\include\sooty\walking\detail\id_eq_walker_backend.hpp" />
+    <ClInclude Include="..\include\sooty\walking\detail\layout.hpp" />
+    <ClInclude Include="..\include\sooty\walking\detail\position_setter_walker_backend.hpp" />
+    <ClInclude Include="..\include\sooty\walking\detail\rewriter_walker_backend.hpp" />
+    <ClInclude Include="..\include\sooty\walking\detail\start_walker_backend.hpp" />
+    <ClInclude Include="..\include\sooty\transforming\transform.hpp" />
+    <ClInclude Include="..\include\sooty\transforming\transformer.hpp" />
+    <ClInclude Include="..\include\sooty\transforming\detail\abstract_transformer_backend.hpp" />
+    <ClInclude Include="..\include\sooty\transforming\insert_transformer_backend.hpp" />
+    <ClInclude Include="..\include\sooty\transforming\detail\layout.hpp" />
+    <ClInclude Include="..\include\sooty\transforming\detail\mk_transformer_backend.hpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
