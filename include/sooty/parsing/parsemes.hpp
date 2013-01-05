@@ -18,62 +18,44 @@ namespace parsing {
 	
 	struct parsemes_t
 	{
-		friend struct detail::parseme_backend;
-		friend struct parseme;
-		
-	private:
-		detail::parseme_backend_ptr owner;
 		typedef std::vector<parseme> internal_container_t;
-		internal_container_t parsemes_;
-		
-	public:
 		typedef internal_container_t::iterator iterator;
 		typedef internal_container_t::const_iterator const_iterator;
 
-		static parsemes_t empty;
-		
+		// constructors
 		parsemes_t();
-		
-		parseme_ref front();
-		parseme_ref back();
-		
-		iterator begin();
-		iterator end();
-		const_iterator begin() const;
-		const_iterator end() const;
-		
-		void push_back(parseme_ref n);
-		void pop_back();
-		void clear();
-		
-		iterator insert(iterator where_, const_parseme_ref n);
 
+		// accessors
+		auto size() const -> size_t;
+		auto begin() const -> const_iterator;
+		auto end() const -> const_iterator;
+		//auto cbegin() const -> const_iterator;
+		//auto cend() const -> const_iterator;
+
+		// mutators
+		auto begin() -> iterator;
+		auto end() -> iterator;
+		auto front() -> parseme_ref;
+		auto back() -> parseme_ref;
+		auto push_back(parseme_ref n) -> void;
+		auto pop_back() -> void;
+		auto clear() -> void;
+		auto insert(iterator where_, const_parseme_ref n) -> iterator;
+		auto erase(iterator where_) -> iterator;
+		auto erase(iterator from, iterator to) -> iterator;
+		
 		template <typename IT>
-		iterator insert(iterator where_, IT begin, IT end)
-		{
-			// we need to set all parsemes to have this as a new parent
-			int new_children = 0;
-			for (IT i = begin; i != end; ++i) {
-				begin->set_parent(parseme(owner));
-				++new_children;
-			}
-			
-			// move [where_, parsemes_.end()) to auxilary container, then put [begin, end)
-			// on the end of parsemes_, then stick aux back on again
-			internal_container_t aux;
-			std::copy(where_, parsemes_.end(), std::back_inserter(aux));
-			parsemes_.erase(where_, parsemes_.end());
-			parsemes_.insert(parsemes_.end(), begin, end);
-			// remember offset so we can calculate the iterator afterwards
-			internal_container_t::size_type result_offset = parsemes_.size();
-			parsemes_.insert(parsemes_.end(), aux.begin(), aux.end());
-			return parsemes_.begin() + result_offset;
+		auto insert(iterator where_, IT begin, IT end) -> void {
+			parsemes_.insert(where_, begin, end);
 		}
-
-		iterator erase(iterator where_);
-		iterator erase(iterator from, iterator to);
 		
-		size_t size() const { return parsemes_.size(); }
+		
+	private:
+		detail::parseme_backend_ptr owner;
+		internal_container_t parsemes_;
+
+		friend struct detail::parseme_backend;
+		friend struct parseme;
 	};
 	
 //=====================================================================

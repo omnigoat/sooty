@@ -27,7 +27,7 @@ namespace parsing {
 	struct parseme;
 	typedef parseme& parseme_ref;
 	typedef const parseme& const_parseme_ref;
-	
+	struct parsemes_t;
 	
 	
 	//=====================================================================
@@ -42,29 +42,32 @@ namespace parsing {
 	//=====================================================================
 	struct parseme
 	{
-		friend struct parsemes_t;
 		typedef size_t id_t;
-		
-	private:
-		detail::parseme_backend_ptr backend_;
-		parseme(detail::parseme_backend_ptr backend);
-		
-	public:
+		typedef lexing::position_t position_t;
+
+		// constructors
 		parseme();
 		parseme(id_t id);
 		parseme(const_parseme_ref parent, id_t id, const lexing::lexeme_t* lexeme);
 		
-		id_t id() const;
-		lexing::position_t position() const;
+		// accessors
+		auto id() const -> id_t;
+		auto position() const -> position_t;
+		auto text() const -> std::string;
+		auto integer() const -> int;
+		auto lexeme() const -> lexing::lexeme_t const*;
+		auto parent() const -> parseme;
+		auto children() const -> parsemes_t const&;
 		
-		std::string text() const;
-		int integer() const;
+		// mutators
+		auto children() -> parsemes_t&;
+		auto set_parent(const_parseme_ref parent) -> void;
 		
-		parseme parent();
-		void set_parent(const_parseme_ref parent);
-		const lexing::lexeme_t* lexeme() const;
-		parsemes_t& children();
-		const parsemes_t& children() const;
+	private:
+		detail::parseme_backend_ptr backend_;
+		parseme(detail::parseme_backend_ptr backend);
+
+		friend struct parsemes_t;
 	};
 	
 //=====================================================================

@@ -2,70 +2,67 @@
 //=====================================================================
 #include <sooty/parsing/detail/parseme_backend.hpp>
 //=====================================================================
+using sooty::parsing::parseme;
+using sooty::parsing::const_parseme_ref;
+using sooty::parsing::detail::parseme_backend;
+using sooty::parsing::detail::parseme_backend_ptr;
 
-sooty::parsing::parseme::parseme()
+parseme::parseme()
 {
 }
 
-sooty::parsing::parseme::parseme(detail::parseme_backend_ptr backend)
-	: backend_(backend)
+parseme::parseme(parseme_backend_ptr backend)
+: backend_(backend)
 {
 }
 
-
-sooty::parsing::parseme::parseme(id_t id)
-	: backend_(new detail::parseme_backend(id))
-{
-	backend_->children_.owner = backend_;
-}
-
-
-sooty::parsing::parseme::parseme( const_parseme_ref parent, id_t id, const lexing::lexeme_t* lexeme )
-	: backend_(new detail::parseme_backend(parent.backend_, id, lexeme))
+parseme::parseme(id_t id)
+: backend_(new parseme_backend(id))
 {
 	backend_->children_.owner = backend_;
 }
 
-sooty::parsing::parseme::id_t sooty::parsing::parseme::id() const {
+
+parseme::parseme( const_parseme_ref parent, id_t id, const sooty::lexing::lexeme_t* lexeme )
+: backend_(new parseme_backend(parent.backend_, id, lexeme))
+{
+	backend_->children_.owner = backend_;
+}
+
+// accessors
+auto parseme::id() const -> parseme::id_t {
 	return backend_->id();
 }
 
-sooty::lexing::position_t sooty::parsing::parseme::position() const
-{
+auto parseme::position() const -> position_t {
 	return backend_->position();
 }
 
-std::string sooty::parsing::parseme::text() const
-{
+auto parseme::text() const -> std::string {
 	return backend_->text();
 }
 
-int sooty::parsing::parseme::integer() const
-{
+auto parseme::integer() const -> int {
 	return backend_->integer();
 }
 
-sooty::parsing::parseme sooty::parsing::parseme::parent()
-{
+auto parseme::parent() const -> parseme {
 	return parseme(backend_->parent());
 }
 
-void sooty::parsing::parseme::set_parent( const_parseme_ref parent )
-{
+auto parseme::children() const -> const sooty::parsing::parsemes_t& {
+	return backend_->children();
+}
+
+auto parseme::lexeme() const -> sooty::lexing::lexeme_t const* {
+	return backend_->lexeme();
+}
+
+// mutators
+auto parseme::set_parent(const_parseme_ref parent) -> void {
 	backend_->set_parent(parent.backend_);
 }
 
-
-sooty::parsing::parsemes_t& sooty::parsing::parseme::children()
-{
+auto parseme::children() -> sooty::parsing::parsemes_t& {
 	return backend_->children();
-}
-
-const sooty::parsing::parsemes_t& sooty::parsing::parseme::children() const {
-	return backend_->children();
-}
-
-const sooty::lexing::lexeme_t* sooty::parsing::parseme::lexeme() const
-{
-	return backend_->lexeme();
 }
