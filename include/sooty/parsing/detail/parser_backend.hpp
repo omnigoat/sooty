@@ -21,7 +21,7 @@ namespace detail {
 	//	return common::clone_tree(lhs)->append( common::clone_tree(rhs) );
 	//}
 	
-	parser_backend_ptr operator | (const_parser_backend_ptr_ref lhs, const_parser_backend_ptr_ref rhs) {
+	inline parser_backend_ptr operator | (const_parser_backend_ptr_ref lhs, const_parser_backend_ptr_ref rhs) {
 		parser_backend_ptr new_lhs = common::clone_tree(lhs);
 
 		//return new_lhs->merge( common::clone_tree(rhs) );

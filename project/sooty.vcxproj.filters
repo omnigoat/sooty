@@ -68,6 +68,9 @@
     <ClCompile Include="..\src\parsing\parsemes.cpp">
       <Filter>src\parsing</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\parsing\parser.cpp">
+      <Filter>src\parsing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\sooty\lexing\input_range.hpp">

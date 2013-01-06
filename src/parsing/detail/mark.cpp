@@ -4,7 +4,7 @@
 //=====================================================================
 using sooty::parsing::detail::mark_internal_t;
 using sooty::parsing::detail::const_mark_ref;
-
+using sooty::parsing::detail::command_t;
 
 mark_internal_t::mark_internal_t(size_t id)
 : id(id)

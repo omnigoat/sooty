@@ -22,48 +22,17 @@ namespace parsing {
 	
 	struct parser
 	{
-		/*parser()
-			: backend_()
-		{
-		}
-		*/
-		parser(const detail::parser_backend_ptr& backend)
-			: backend_(backend)
-		{
-		}
-	
-		const detail::parser_backend_ptr& backend() const {
-			return backend_;
-		}
+		parser(const detail::parser_backend_ptr& backend);
 		
-		parser operator >> (const parser& rhs) const
-		{
-			return parser(
-				common::clone_tree(backend_)->append( common::clone_tree(rhs.backend_) )
-			);
-		}
+		// accessors
+		auto backend() const -> detail::parser_backend_ptr const&;
+
+		// operators
+		auto operator >> (parser const&) const -> parser;
+		auto operator |  (parser const&) const -> parser;
+		auto operator [] (parser const&) const -> parser;
+
 		
-		parser operator | (const parser& rhs) const {
-			return parser (
-				common::clone_tree(backend_)->merge( common::clone_tree(rhs.backend_) )
-			);
-		}
-		
-		parser operator [] (const parser& rhs) const
-		{
-			detail::mark_t mark = detail::generate_mark();
-			
-			return parser (
-				detail::parser_backend_t::make()
-					->push_back_command(detail::command_t::make_add_marker(mark))
-					->push_back_failure(detail::command_t::make_rm_marker(mark))
-					->append(common::clone_tree(rhs.backend_))
-					->append(common::clone_tree(backend_))
-					->append(detail::parser_backend_t::make()
-						->push_back_command(detail::command_t(detail::command_t::combine, 0, 0, mark))
-					)
-			);
-		}
 	
 	private:
 		detail::parser_backend_ptr backend_;
