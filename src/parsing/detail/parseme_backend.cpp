@@ -2,79 +2,60 @@
 //=====================================================================
 #include <boost/lexical_cast.hpp>
 //=====================================================================
+using sooty::parsing::detail::parseme_backend;
 
-
-sooty::parsing::detail::parseme_backend::parseme_backend()
+parseme_backend::parseme_backend()
 	: id_(), lexeme_(), parent_()
 {	
 }
 
-sooty::parsing::detail::parseme_backend::parseme_backend( id_t id, const lexing::lexeme_t* lexeme )
+parseme_backend::parseme_backend( id_t id, const lexing::lexeme_t* lexeme )
 	: id_(id), lexeme_(lexeme), parent_()
 {
 }
 
-sooty::parsing::detail::parseme_backend::parseme_backend( parseme_backend_ptr parent, id_t id )
+parseme_backend::parseme_backend( parseme_backend_ptr parent, id_t id )
 	: id_(id), lexeme_(), parent_(parent)
 {	
 }
 
-sooty::parsing::detail::parseme_backend::parseme_backend( parseme_backend_ptr parent, id_t id, const lexing::lexeme_t* lexeme )
+parseme_backend::parseme_backend( parseme_backend_ptr parent, id_t id, const lexing::lexeme_t* lexeme )
 	: id_(id), lexeme_(lexeme), parent_(parent)
 {	
 }
-sooty::parsing::detail::parseme_backend::id_t sooty::parsing::detail::parseme_backend::id() const
-{
+
+auto parseme_backend::id() const -> parseme_backend::id_t {
 	return id_;
 }
 
-sooty::lexing::position_t sooty::parsing::detail::parseme_backend::position() const
-{
-	if (lexeme_)
-		return lexeme_->position();
-	else
-		return lexing::position_t();
+auto parseme_backend::position() const -> sooty::lexing::position_t {
+	return lexeme_ ? lexeme_->position() : sooty::lexing::position_t();
 }
 
-
-const sooty::lexing::lexeme_t* sooty::parsing::detail::parseme_backend::lexeme() const
-{
+auto parseme_backend::lexeme() const -> sooty::lexing::lexeme_t const* {
 	return lexeme_;
 }
 
-std::string sooty::parsing::detail::parseme_backend::text() const
-{
-	if (lexeme_)
-		return lexeme_->text();
-	else
-		return std::string();
+auto parseme_backend::text() const -> std::string {
+	return lexeme_ ? lexeme_->text() : std::string();
 }
 
-int sooty::parsing::detail::parseme_backend::integer() const
-{
-	if (lexeme_)
-		return boost::lexical_cast<int>( this->text() );
-	else
-		return 0;
+auto parseme_backend::integer() const -> int {
+	return lexeme_ ? boost::lexical_cast<int>(lexeme_->text()) : 0;
 }
 
-sooty::parsing::detail::parseme_backend_ptr sooty::parsing::detail::parseme_backend::parent() const
-{
+auto parseme_backend::parent() const -> sooty::parsing::detail::parseme_backend_ptr {
 	return parent_;
 }
 
-void sooty::parsing::detail::parseme_backend::set_parent( parseme_backend_ptr parent )
-{
+auto parseme_backend::set_parent( parseme_backend_ptr parent ) -> void {
 	parent_ = parent;
 }
 
-
-sooty::parsing::parsemes_t& sooty::parsing::detail::parseme_backend::children()
-{
+auto parseme_backend::children() -> sooty::parsing::parsemes_t& {
 	return children_;
 }
 
-const sooty::parsing::parsemes_t& sooty::parsing::detail::parseme_backend::children() const
-{
+auto parseme_backend::children() const -> sooty::parsing::parsemes_t const& {
 	return children_;
 }

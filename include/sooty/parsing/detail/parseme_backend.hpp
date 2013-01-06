@@ -20,38 +20,35 @@ namespace detail {
 //=====================================================================
 	
 	struct parseme_backend
-		: boost::enable_shared_from_this<parseme_backend>
+	: boost::enable_shared_from_this<parseme_backend>
 	{
-		friend struct parseme;
 		typedef size_t id_t;
 		
-	private:
-		id_t id_;
-		// parsemes created directly from lexems point to the lexeme
-		const lexing::lexeme_t* lexeme_;
-		parsemes_t children_;
-		parseme_backend_ptr parent_;
+		// accessors
+		auto id() const -> id_t;
+		auto position() const -> lexing::position_t;
+		auto lexeme() const -> lexing::lexeme_t const*;
+		auto text() const -> std::string;
+		auto integer() const -> int;
+		auto parent() const -> parseme_backend_ptr;
+		auto children() const -> parsemes_t const&;
+
+		// mutators
+		auto children() -> parsemes_t&;
+		auto set_parent(parseme_backend_ptr parent) -> void;
 		
-		// private constructors! :O
-		// only allowed to be created by friends (parseme)
+	private:
 		parseme_backend();
 		parseme_backend(id_t id, const lexing::lexeme_t* lexeme = NULL);
 		parseme_backend(parseme_backend_ptr parent, id_t id);
 		parseme_backend(parseme_backend_ptr parent, id_t id, const lexing::lexeme_t* lexeme);
-		
-	public:
-		id_t id() const;
-		lexing::position_t position() const;
-		const lexing::lexeme_t* lexeme() const;
-		
-		std::string text() const;
-		int integer() const;
-		
-		parseme_backend_ptr parent() const;
-		void set_parent(parseme_backend_ptr parent);
-		
-		parsemes_t& children();
-		const parsemes_t& children() const;
+
+		id_t id_;
+		const lexing::lexeme_t* lexeme_;
+		parsemes_t children_;
+		parseme_backend_ptr parent_;
+
+		friend struct parseme;
 	};
 	
 	typedef std::vector<parseme_backend_ptr> parseme_backends_t;
