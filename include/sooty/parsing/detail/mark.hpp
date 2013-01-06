@@ -22,26 +22,19 @@ namespace detail {
 	
 	struct mark_internal_t;
 	typedef boost::shared_ptr<mark_internal_t> mark_t;
-	typedef const mark_t& const_mark_ref;
+	typedef mark_t const& const_mark_ref;
 	
+
 	//=====================================================================
 	// mark
 	//=====================================================================
 	struct mark_internal_t
 	{
-		//friend bool operator == (const mark_internal_t&, const mark_internal_t&);
+		mark_internal_t(size_t id); 
 		
-		mark_internal_t(size_t id) : id(id) {}
-		
-		void add_command(command_t* const c) {
-			commands_.insert(c);
-		}
-		
-		void remove_command(command_t* const c) {
-			commands_.erase(c);
-		}
-		
-		void replace_self_with(const_mark_ref M);
+		auto add_command(command_t* const c) -> void;
+		auto remove_command(command_t* const c) -> void;
+		auto replace_self_with(const_mark_ref M) -> void;
 	
 	public:
 		const size_t id;
@@ -55,9 +48,7 @@ namespace detail {
 		return lhs.id == rhs.id;
 	}
 	
-	
-	
-	
+		
 	//=====================================================================
 	// generation functions
 	//=====================================================================

@@ -124,9 +124,6 @@
     <ClInclude Include="..\include\sooty\parsing\detail\parseme_backend.hpp">
       <Filter>include\parsing\detail</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\sooty\parsing\detail\parseme_backends.hpp">
-      <Filter>include\parsing\detail</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\sooty\parsing\detail\parser_backend.hpp">
       <Filter>include\parsing\detail</Filter>
     </ClInclude>

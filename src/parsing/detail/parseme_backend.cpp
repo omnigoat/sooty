@@ -3,13 +3,14 @@
 #include <boost/lexical_cast.hpp>
 //=====================================================================
 using sooty::parsing::detail::parseme_backend;
+using sooty::parsing::detail::parseme_backend_ptr;
 
 parseme_backend::parseme_backend()
 	: id_(), lexeme_(), parent_()
 {	
 }
 
-parseme_backend::parseme_backend( id_t id, const lexing::lexeme_t* lexeme )
+parseme_backend::parseme_backend( id_t id, sooty::lexing::lexeme_t const* lexeme )
 	: id_(id), lexeme_(lexeme), parent_()
 {
 }
@@ -19,7 +20,7 @@ parseme_backend::parseme_backend( parseme_backend_ptr parent, id_t id )
 {	
 }
 
-parseme_backend::parseme_backend( parseme_backend_ptr parent, id_t id, const lexing::lexeme_t* lexeme )
+parseme_backend::parseme_backend( parseme_backend_ptr parent, id_t id, const sooty::lexing::lexeme_t* lexeme )
 	: id_(id), lexeme_(lexeme), parent_(parent)
 {	
 }
