@@ -53,7 +53,8 @@ namespace common {
 		
 
 
-		// constructor
+		// constructors
+		node_t(bool is_terminal = false);
 		node_t(const node_t& rhs);
 		
 		static node_ptr make(bool is_terminal = false) {
@@ -86,9 +87,6 @@ namespace common {
 		}
 		
 	private:
-		// constructors
-		node_t(bool is_terminal = false);
-		
 		// mutators
 		auto append_impl(std::set<node_ptr>& visited, node_ptr node) -> node_ptr;
 		

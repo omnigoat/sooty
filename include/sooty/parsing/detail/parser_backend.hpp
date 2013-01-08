@@ -17,19 +17,6 @@ namespace detail {
 	typedef std::shared_ptr<parser_backend_t> parser_backend_ptr;
 	typedef const parser_backend_ptr& const_parser_backend_ptr_ref;
 	
-	//parser_backend_ptr operator >> (const_parser_backend_ptr_ref lhs, const_parser_backend_ptr_ref rhs) {
-	//	return common::clone_tree(lhs)->append( common::clone_tree(rhs) );
-	//}
-	
-	inline parser_backend_ptr operator | (const_parser_backend_ptr_ref lhs, const_parser_backend_ptr_ref rhs) {
-		parser_backend_ptr new_lhs = common::clone_tree(lhs);
-
-		//return new_lhs->merge( common::clone_tree(rhs) );
-		return new_lhs;
-	}
-	
-	
-	
 	
 //=====================================================================
 } // namespace detail

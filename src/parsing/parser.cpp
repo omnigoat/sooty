@@ -4,12 +4,12 @@ using sooty::parsing::parser;
 using sooty::parsing::detail::parser_backend_ptr;
 
 parser::parser()
-: backend_(new detail::parser_backend_t)
+: backend_(new detail::parser_backend_t), assigned_(false)
 {
 }
 
 parser::parser(const parser_backend_ptr& backend)
-: backend_(backend)
+: backend_(backend), assigned_(true)
 {
 }
 
@@ -45,8 +45,10 @@ auto parser::operator [] (const parser& rhs) const -> parser
 	);
 }
 
-auto parser::operator = (parser const& rhs) const -> parser&
+auto parser::operator = (parser const& rhs) -> parser&
 {
+	*backend_ = *rhs.backend();
+	return *this;
 }
 
 

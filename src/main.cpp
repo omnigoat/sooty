@@ -76,7 +76,8 @@ int main()
 		
 		using namespace sooty::parsing;
 		
-		parser K =
+		parser K;
+		K =
 			insert(10) [
 				match(1) >>
 				match(2, false) >>

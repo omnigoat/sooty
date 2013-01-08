@@ -33,9 +33,10 @@ namespace parsing {
 		auto operator |  (parser const&) const -> parser;
 		auto operator [] (parser const&) const -> parser;
 
-		auto operator = (parser const&) const -> parser&;
+		auto operator = (parser const&) -> parser&;
 	
 	private:
+		bool assigned_;
 		detail::parser_backend_ptr backend_;
 	};
 	
