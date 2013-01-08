@@ -29,6 +29,7 @@ namespace detail {
 	// mark
 	//=====================================================================
 	struct mark_internal_t
+	: std::enable_shared_from_this<mark_internal_t>
 	{
 		mark_internal_t(size_t id); 
 		

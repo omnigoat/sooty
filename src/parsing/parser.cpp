@@ -19,13 +19,15 @@ auto parser::backend() const -> parser_backend_ptr const& {
 
 auto parser::operator >> (parser const& rhs) const -> parser {
 	return parser(
-		common::clone_tree(backend_)->append( common::clone_tree(rhs.backend_) )
+		common::clone_tree(backend_)->add_child( common::clone_tree(rhs.backend_) )
+		//backend_->append(rhs.backend_)
 	);
 }
 		
 auto parser::operator | (parser const& rhs) const -> parser {
 	return parser (
 		common::clone_tree(backend_)->merge( common::clone_tree(rhs.backend_) )
+		//backend_->merge(rhs.backend_)
 	);
 }
 
@@ -39,6 +41,8 @@ auto parser::operator [] (const parser& rhs) const -> parser
 			->push_back_failure(detail::command_t::make_rm_marker(mark))
 			->append(common::clone_tree(rhs.backend_))
 			->append(common::clone_tree(backend_))
+			//->append(rhs.backend_)
+			//->append(backend_)
 			->append(detail::parser_backend_t::make()
 				->push_back_command(detail::command_t(detail::command_t::combine, 0, 0, mark))
 			)

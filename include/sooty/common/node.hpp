@@ -56,14 +56,15 @@ namespace common {
 		// constructors
 		node_t(bool is_terminal = false);
 		node_t(const node_t& rhs);
-		
+		~node_t();
+
 		static node_ptr make(bool is_terminal = false) {
 			return node_ptr(new node_t(is_terminal));
 		}
 
 
 		// pure
-		auto clone() const -> node_ptr;
+		auto clone() -> node_ptr;
 
 		
 		// mutators
@@ -75,6 +76,8 @@ namespace common {
 		auto append(const_node_ptr_ref) -> node_ptr;
 		auto append_self() -> node_ptr;
 		auto merge(const_node_ptr_ref) -> node_ptr;
+
+		auto operator = (node_t const&) -> node_t&;
 
 		
 		// predicates
@@ -99,6 +102,11 @@ namespace common {
 		commands_t commands_;
 		commands_t unchosen_;
 		children_t children_;
+
+		// what children have we cloned?
+		static std::map<node_t*, std::set<node_t*>> cloned_nodes_;
+		// reverse lookup so we can remove references to ourselves from our parents
+		static std::map<node_t*, node_t*> cloner_node_;
 
 		// friends
 		template <typename ExecutorT> friend struct performer_t;

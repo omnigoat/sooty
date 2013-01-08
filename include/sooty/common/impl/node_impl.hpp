@@ -1,4 +1,11 @@
 
+
+template <typename Command>
+std::map<node_t<Command>*, std::set<node_t<Command>*>> node_t<Command>::cloned_nodes_;
+
+template <typename Command>
+std::map<node_t<Command>*, node_t<Command>*> node_t<Command>::cloner_node_;
+
 // constructors
 template <typename Command>
 node_t<Command>::node_t(const node_t<Command>& rhs)
@@ -13,9 +20,48 @@ node_t<Command>::node_t(bool is_terminal)
 }
 
 template <typename Command>
-auto node_t<Command>::clone() const -> node_ptr {
-	// purposefully doesn't clone next_. use detail::clone_tree for that
+node_t<Command>::~node_t()
+{
+	if (cloner_node_.find(this) != cloner_node_.end()) {
+		cloned_nodes_[cloner_node_[this]].erase(this);
+	}
+
+	// tell all our children we no longer exist
+	if (cloned_nodes_.find(this) != cloned_nodes_.end()) {
+		for (auto& x : cloned_nodes_[this]) {
+			cloner_node_.erase(x);
+		}
+	}
+
+	cloned_nodes_.erase(this);
+}
+
+template <typename Command>
+auto node_t<Command>::operator = (node_t<Command> const& rhs) -> node_t<Command>& {
+	children_t tmp = children_;
+
+	children_ = rhs.children_;
+	commands_ = rhs.commands_;
+	
+	for (auto& x : tmp) {
+		append(x);
+	}
+
+	if (cloned_nodes_.find(this) != cloned_nodes_.end()) {
+		for (auto& x : cloned_nodes_[this]) {
+			*x = rhs;
+		}
+	}
+
+	return *this;
+}
+
+
+template <typename Command>
+auto node_t<Command>::clone() -> node_ptr {
 	node_ptr C(new node_t(*this));
+	cloned_nodes_[this].insert(C.get());
+	cloner_node_[C.get()] = this;
 	return C;
 }
 
@@ -70,9 +116,9 @@ auto node_t<Command>::append_impl(std::set<node_ptr>& visited, node_ptr node) ->
 	visited.insert(shared_from_this());
 			
 	if (children_.empty()) {
-		if (!node->commands_.empty() && node->children_.empty())
-			commands_.insert(commands_.end(), node->commands_.begin(), node->commands_.end());
-		else 
+		//if (!node->commands_.empty() && node->children_.empty())
+			//commands_.insert(commands_.end(), node->commands_.begin(), node->commands_.end());
+		//else 
 			children_.insert(node);
 	}
 	else {
@@ -121,18 +167,21 @@ auto node_t<Command>::merge(const_node_ptr_ref rhs) -> node_ptr
 		children_.swap(new_children);
 				
 		// the problem of merging has been pushed down one level. we're done!
-		if (i != children_.end())
+		if (new_children.empty())
 			return shared_from_this();
 	}
-			
+	
+	node_ptr result = make();
+	result->children_.insert(shared_from_this());
+	result->children_.insert(rhs);
+	
+	/*
 	// we now mutate lhs, because there's *still* stuff left, we're going to join it.
 	// the following code optimizes the join by combining one-nodes.
 	commands_.swap(new_lhs_commands);
-			
+	
 	rhs->commands_.swap(new_rhs_commands);
-			
-			
-	node_ptr result = make();
+	
 	result->commands_.swap(combined_commands);
 			
 	if (commands_.empty())
@@ -145,7 +194,7 @@ auto node_t<Command>::merge(const_node_ptr_ref rhs) -> node_ptr
 	else
 		result->children_.insert(rhs);
 				
-			
+			*/
 			
 	return result;
 }
