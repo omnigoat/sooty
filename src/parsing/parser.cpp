@@ -3,6 +3,11 @@
 using sooty::parsing::parser;
 using sooty::parsing::detail::parser_backend_ptr;
 
+parser::parser()
+: backend_(new detail::parser_backend_t)
+{
+}
+
 parser::parser(const parser_backend_ptr& backend)
 : backend_(backend)
 {
@@ -39,3 +44,10 @@ auto parser::operator [] (const parser& rhs) const -> parser
 			)
 	);
 }
+
+auto parser::operator = (parser const& rhs) const -> parser&
+{
+}
+
+
+

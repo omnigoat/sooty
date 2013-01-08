@@ -22,6 +22,7 @@ namespace parsing {
 	
 	struct parser
 	{
+		parser();
 		parser(const detail::parser_backend_ptr& backend);
 		
 		// accessors
@@ -32,7 +33,7 @@ namespace parsing {
 		auto operator |  (parser const&) const -> parser;
 		auto operator [] (parser const&) const -> parser;
 
-		
+		auto operator = (parser const&) const -> parser&;
 	
 	private:
 		detail::parser_backend_ptr backend_;
