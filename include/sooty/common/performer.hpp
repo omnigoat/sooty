@@ -24,7 +24,7 @@ namespace common {
 		template <typename StateT, typename InputT, typename NodePTR>
 		bool operator()(StateT& state, InputT& input, const NodePTR& node)
 		{
-			typedef NodePTR::value_type node_t;
+			typedef NodePTR::element_type node_t;
 		
 			typedef StateT state_t;
 			typedef state_t& state_ref;
@@ -58,7 +58,7 @@ namespace common {
 				
 				// there should not be any failure commands before the first good command
 				commands_t::const_iterator i = commands.begin();
-				assert(i == commands.end() || i->first);
+				//assert(i == commands.end() || i->first);
 				
 				commands_t::const_iterator ff
 					= std::find_if(commands.begin(), commands.end(), node_t::is_failure);
@@ -118,7 +118,7 @@ namespace common {
 	private:
 		template <typename StateT, typename InputT, typename NodePTR>
 		static void perform_unchosen(StateT& state, InputT& input, const NodePTR& N) {
-			typename NodePTR::value_type::commands_t::const_iterator begin = N->unchosen_.begin();
+			typename NodePTR::element_type::commands_t::const_iterator begin = N->unchosen_.begin();
 			for ( ; begin != N->unchosen_.end(); ++begin )
 				executor_t()(state, input, begin->second);
 				

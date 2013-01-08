@@ -15,7 +15,7 @@ namespace detail {
 	
 	// forward declares
 	struct abstract_walker_backend;
-	typedef boost::shared_ptr<abstract_walker_backend> abstract_walker_backend_ptr;
+	typedef std::shared_ptr<abstract_walker_backend> abstract_walker_backend_ptr;
 	
 	// the link between nodes (it contains extra data - how_to_traverse)
 	//typedef std::pair<abstract_walker_backend_ptr, how_to_traverse::Enum> link_t;

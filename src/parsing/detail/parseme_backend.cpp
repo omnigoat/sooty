@@ -1,6 +1,6 @@
 #include <sooty/parsing/detail/parseme_backend.hpp>
 //=====================================================================
-#include <boost/lexical_cast.hpp>
+#include <string>
 //=====================================================================
 using sooty::parsing::detail::parseme_backend;
 using sooty::parsing::detail::parseme_backend_ptr;
@@ -42,7 +42,7 @@ auto parseme_backend::text() const -> std::string {
 }
 
 auto parseme_backend::integer() const -> int {
-	return lexeme_ ? boost::lexical_cast<int>(lexeme_->text()) : 0;
+	return lexeme_ ? std::stoi(lexeme_->text()) : 0;
 }
 
 auto parseme_backend::parent() const -> sooty::parsing::detail::parseme_backend_ptr {

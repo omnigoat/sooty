@@ -8,7 +8,7 @@
 //=====================================================================
 #include <set>
 #include <map>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 //=====================================================================
 namespace sooty {
 namespace parsing {
@@ -21,7 +21,7 @@ namespace detail {
 	struct command_t;
 	
 	struct mark_internal_t;
-	typedef boost::shared_ptr<mark_internal_t> mark_t;
+	typedef std::shared_ptr<mark_internal_t> mark_t;
 	typedef mark_t const& const_mark_ref;
 	
 

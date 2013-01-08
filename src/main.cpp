@@ -4,15 +4,14 @@
 #include <set>
 #include <map>
 #include <iterator>
+#include <sstream>
 #include <stack>
 #include <algorithm>
 #include <iostream>
 //=====================================================================
 //#include <atma/assert.hpp>
 //=====================================================================
-#include <boost/shared_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/lexical_cast.hpp>
+//#include <boost/lexical_cast.hpp>
 //#include <boost/variant.hpp>
 //=====================================================================
 #include <sooty/common/performer.hpp>

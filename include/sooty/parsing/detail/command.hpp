@@ -8,8 +8,6 @@
 //=====================================================================
 #include <iomanip>
 #include <set>
-#include <boost/shared_ptr.hpp>
-#include <boost/optional.hpp>
 //=====================================================================
 #include <sooty/common/node.hpp>
 #include <sooty/lexing/lexemes.hpp>

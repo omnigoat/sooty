@@ -6,11 +6,10 @@
 #ifndef SOOTY_PARSING_PARSEME_HPP
 #define SOOTY_PARSING_PARSEME_HPP
 //=====================================================================
-#include <vector>
-//=====================================================================
-#include <boost/shared_ptr.hpp>
-//=====================================================================
 #include <sooty/lexing/lexeme.hpp>
+//=====================================================================
+#include <vector>
+#include <memory>
 //=====================================================================
 namespace sooty {
 namespace parsing {
@@ -21,7 +20,7 @@ namespace parsing {
 	//=====================================================================
 	namespace detail {
 		struct parseme_backend;
-		typedef boost::shared_ptr<parseme_backend> parseme_backend_ptr;
+		typedef std::shared_ptr<parseme_backend> parseme_backend_ptr;
 	}
 	
 	struct parseme;

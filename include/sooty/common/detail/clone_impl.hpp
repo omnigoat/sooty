@@ -31,7 +31,7 @@ namespace detail {
 		});
 
 		std::transform(new_node->commands_.begin(), new_node->commands_.end(), new_node->commands_.begin(),
-			std::bind(&typename NodePtr::value_type::clone_command, new_node, std::placeholders::_1));
+			&NodePtr::element_type::clone_command);
 		
 		return new_node;
 	}

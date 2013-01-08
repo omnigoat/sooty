@@ -7,8 +7,7 @@
 #define SOOTY_PARSING_DETAIL_PARSEME_BACKEND_HPP
 //=====================================================================
 #include <vector>
-//=====================================================================
-#include <boost/enable_shared_from_this.hpp>
+#include <memory>
 //=====================================================================
 #include <sooty/lexing/lexeme.hpp>
 //=====================================================================
@@ -20,7 +19,7 @@ namespace detail {
 //=====================================================================
 	
 	struct parseme_backend
-	: boost::enable_shared_from_this<parseme_backend>
+	: std::enable_shared_from_this<parseme_backend>
 	{
 		typedef size_t id_t;
 		

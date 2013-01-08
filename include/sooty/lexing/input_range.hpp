@@ -26,14 +26,14 @@ namespace lexing {
 		
 		// current value / clairvoyance
 		char cv() const {
-			assert( !is_exhausted() );
+			//assert( !is_exhausted() );
 			return *begin_;
 		}
 		
 		
 		// move forwards!~~
 		void advance() {
-			assert(!is_exhausted());
+			//assert(!is_exhausted());
 			++begin_;
 		}
 		

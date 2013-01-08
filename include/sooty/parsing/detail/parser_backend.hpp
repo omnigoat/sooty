@@ -14,7 +14,7 @@ namespace detail {
 //=====================================================================
 
 	typedef common::node_t<command_t> parser_backend_t;
-	typedef boost::shared_ptr<parser_backend_t> parser_backend_ptr;
+	typedef std::shared_ptr<parser_backend_t> parser_backend_ptr;
 	typedef const parser_backend_ptr& const_parser_backend_ptr_ref;
 	
 	//parser_backend_ptr operator >> (const_parser_backend_ptr_ref lhs, const_parser_backend_ptr_ref rhs) {

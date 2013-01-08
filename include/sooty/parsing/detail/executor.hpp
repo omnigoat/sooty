@@ -9,8 +9,6 @@
 #include <set>
 #include <map>
 //=====================================================================
-#include <boost/shared_ptr.hpp>
-//=====================================================================
 #include <sooty/common/node.hpp>
 #include <sooty/parsing/accumulator.hpp>
 #include <sooty/parsing/lexeme_range.hpp>

@@ -98,6 +98,7 @@
     <ClCompile Include="..\src\parsing\parser.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\sooty\common\impl\node_impl.hpp" />
     <ClInclude Include="..\include\sooty\lexing\input_range.hpp" />
     <ClInclude Include="..\include\sooty\lexing\iterator.hpp" />
     <ClInclude Include="..\include\sooty\lexing\lexeme.hpp" />

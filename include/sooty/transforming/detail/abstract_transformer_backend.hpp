@@ -19,7 +19,7 @@ namespace detail {
 	
 	// forward declares
 	struct abstract_transformer_backend;
-	typedef boost::shared_ptr<abstract_transformer_backend> abstract_transformer_backend_ptr;
+	typedef std::shared_ptr<abstract_transformer_backend> abstract_transformer_backend_ptr;
 	
 	typedef walking::detail::how_to_traverse how_to_traverse;
 	
