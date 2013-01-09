@@ -37,16 +37,30 @@ node_t<Command>::~node_t()
 }
 
 template <typename Command>
-auto node_t<Command>::operator = (node_t<Command> const& rhs) -> node_t<Command>& {
+auto node_t<Command>::operator = (node_t<Command> const& rhs) -> node_t<Command>&
+{
 	children_t tmp = children_;
+
+	std::set<node_ptr> visited;
+	node_ptr n = shared_from_this();
+	std::stack<node_ptr> nodes;
+	nodes.push(n);
+	while (!nodes.empty()) {
+		node_ptr n = nodes.top();
+		nodes.pop();
+		for (auto& x : n->children_) {
+			nodes.push(x->shared_from_this());
+		}
+		visited.insert(n);
+	}
 
 	children_ = rhs.children_;
 	commands_ = rhs.commands_;
-	
-	for (auto& x : tmp) {
-		append(x);
-	}
 
+	for (auto& x : tmp) {
+		append_impl(visited, x);
+	}
+	
 	if (cloned_nodes_.find(this) != cloned_nodes_.end()) {
 		for (auto& x : cloned_nodes_[this]) {
 			*x = rhs;
@@ -116,10 +130,7 @@ auto node_t<Command>::append_impl(std::set<node_ptr>& visited, node_ptr node) ->
 	visited.insert(shared_from_this());
 			
 	if (children_.empty()) {
-		//if (!node->commands_.empty() && node->children_.empty())
-			//commands_.insert(commands_.end(), node->commands_.begin(), node->commands_.end());
-		//else 
-			children_.insert(node);
+		children_.insert(node);
 	}
 	else {
 		std::for_each(children_.begin(), children_.end(), std::bind(&node_t::append_impl, std::placeholders::_1, std::ref(visited), std::ref(node)));
@@ -133,7 +144,7 @@ auto node_t<Command>::merge(const_node_ptr_ref rhs) -> node_ptr
 {
 	commands_t combined_commands;
 	commands_t new_lhs_commands, new_rhs_commands;
-			
+	
 	// perform a merge
 	merge_commands(
 		combined_commands,
@@ -142,7 +153,7 @@ auto node_t<Command>::merge(const_node_ptr_ref rhs) -> node_ptr
 		commands_,
 		rhs->commands_
 	);
-			
+	
 	// we merged all the commands @this has, so recurse into the children
 	if (!combined_commands.empty() && !new_rhs_commands.empty() && new_lhs_commands.empty())
 	{
@@ -171,35 +182,39 @@ auto node_t<Command>::merge(const_node_ptr_ref rhs) -> node_ptr
 			return shared_from_this();
 	}
 	
-	node_ptr result = make();
+	node_ptr result = node_t::make();
+	result->commands_.swap(combined_commands);
+
+	// we merged absolutely everything, so maybe we can merge our children?
+	if (!result->commands_.empty() && new_lhs_commands.empty() && new_rhs_commands.empty()
+	  && !children_.empty() && !rhs->children_.empty())
+	{
+		auto x = children_.begin();
+		while (x != children_.end()) {
+			auto y = rhs->children_.begin();
+			while (y != rhs->children_.end()) {
+				auto n = (*x)->merge(*y);
+				if (n) {
+					result->children_.insert(n);
+					break;
+				}
+				++y;
+			}
+			if (y == rhs->children_.end())
+				result->children_.insert(*x);
+			++x;
+		}
+
+		return result;
+	}
+
 	result->children_.insert(shared_from_this());
 	result->children_.insert(rhs);
 	
-	/*
-	// we now mutate lhs, because there's *still* stuff left, we're going to join it.
-	// the following code optimizes the join by combining one-nodes.
-	commands_.swap(new_lhs_commands);
-	
-	rhs->commands_.swap(new_rhs_commands);
-	
-	result->commands_.swap(combined_commands);
-			
-	if (commands_.empty())
-		result->children_.swap(children_);
-	else
-		result->children_.insert(shared_from_this()->clone());
-			
-	if (rhs->commands_.empty() && !rhs->children_.empty())
-		result->children_.insert(rhs->children_.begin(), rhs->children_.end());
-	else
-		result->children_.insert(rhs);
-				
-			*/
-			
 	return result;
 }
-		
-		
+
+
 template <typename Command>
 auto node_t<Command>::merge_commands(commands_ref combined, commands_ref new_lhs, commands_ref new_rhs, commands_ref lhs, commands_ref rhs) -> void
 {

@@ -11,6 +11,7 @@
 #include <functional>
 #include <memory>
 #include <algorithm>
+#include <stack>
 //=====================================================================
 #include <sooty/common/detail/clone_impl.hpp>
 //=====================================================================
