@@ -45,6 +45,7 @@ auto node_t<Command>::operator = (node_t<Command> const& rhs) -> node_t<Command>
 {
 	children_t tmp = children_;
 
+	// get set of nodes that have been cloned from us
 	std::set<node_ptr> visited;
 	node_ptr n = shared_from_this();
 	std::stack<node_ptr> nodes;
@@ -193,17 +194,13 @@ auto node_t<Command>::merge(const_node_ptr_ref rhs) -> node_ptr
 	if (!result->commands_.empty() && new_lhs_commands.empty() && new_rhs_commands.empty()
 	  && !children_.empty() && !rhs->children_.empty())
 	{
-		auto x = children_.begin();
-		auto y = rhs->children_.begin();
-
-		auto on_fail_merge = [&result](const_node_ptr_ref n) {result->children_.insert(n);};
-
 		atma::merge(
 			children_.begin(), children_.end(),
 			rhs->children_.begin(), rhs->children_.end(),
 			std::inserter(result->children_, result->children_.end()),
 			std::bind(&node_t<Command>::merge, std::placeholders::_1, std::placeholders::_2),
-			on_fail_merge, on_fail_merge
+			[&result](const_node_ptr_ref n) { result->children_.insert(n); },
+			[&result](const_node_ptr_ref n) { result->children_.insert(n); }
 		);
 
 		return result;
