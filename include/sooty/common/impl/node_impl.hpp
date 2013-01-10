@@ -41,7 +41,7 @@ node_t<Command>::~node_t()
 }
 
 template <typename Command>
-auto node_t<Command>::operator = (node_t<Command> const& rhs) -> node_t<Command>&
+auto node_t<Command>::operator = (node_t<Command>& rhs) -> node_t<Command>&
 {
 	children_t tmp = children_;
 
@@ -60,19 +60,17 @@ auto node_t<Command>::operator = (node_t<Command> const& rhs) -> node_t<Command>
 		}
 		cloned.insert(n);
 	}
-
-	for_all_depth_first(shared_from_this(), [&](const_node_ptr_ref n)
+	
+	for_all_depth_first<Command>(rhs.shared_from_this(), [&](const_node_ptr_ref n)
 	{
 		// split nodes into a list of left-recursive nodes, and nodes that are fine
 		children_t left_recursive, fine;
 		atma::seperate(
 			n->children_.begin(), n->children_.end(),
-			std::back_inserter(left_recursive),
-			std::back_inserter(fine),
+			std::inserter(left_recursive, left_recursive.end()),
+			std::inserter(fine, fine.end()),
 			[&cloned](const_node_ptr_ref n) { return cloned.find(n) != cloned.end(); }
 		);
-
-
 	});
 
 	children_ = rhs.children_;

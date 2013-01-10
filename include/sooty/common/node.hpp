@@ -79,7 +79,7 @@ namespace common {
 		auto append_self() -> node_ptr;
 		auto merge(const_node_ptr_ref) -> node_ptr;
 
-		auto operator = (node_t const&) -> node_t&;
+		auto operator = (node_t&) -> node_t&;
 
 		
 		// predicates
@@ -131,28 +131,31 @@ namespace common {
 	};
 
 	template <typename Command, typename FN>
-	void for_all_depth_first(const std::shared_ptr<node_t<Command>>& n, FN fn)
+	void for_all_depth_first(typename node_t<Command>::const_node_ptr_ref n, FN fn)
 	{
-		typedef shared_ptr<node_t<Command>> node_ptr;
+		typedef typename node_t<Command>::node_ptr node_ptr;
 
-		std::set<node_ptr> visited;
-		std::stack<node_ptr> node_stack;
-		node_stack.push(n);
-		visited.insert(n);
-		while (!node_stack.empty())
-		{
-			node_ptr n = node_stack.top();
-			if (n->children().empty()) {
-				node_stack.pop();
-				fn(n);
-			}
-			else {
-				for (auto& x : n->children()) {
-					if (visited.find(x) == visited.end()) {
-						node_stack.push(x);
-					}
+		// build depth-first tree
+		std::set<node_t<Command>*> visited;
+		visited.insert(n.get());
+		std::vector<decltype(&n)> nodes;
+		nodes.push_back(&n);
+		unsigned int i = 0;
+		while (i != nodes.size()) {
+			auto n = nodes[i++];
+			for (auto const& x : (*n)->children()) {
+				if (visited.find(x.get()) == visited.end()) {
+					visited.insert(x.get());
+					nodes.push_back(&x);
 				}
 			}
+		}
+
+		// now go "up" the stack
+		
+		while (!nodes.empty()) {
+			fn(*nodes.back());
+			nodes.pop_back();
 		}
 	}
 
