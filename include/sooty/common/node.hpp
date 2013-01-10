@@ -65,6 +65,7 @@ namespace common {
 
 
 		// pure
+		auto children() const -> const children_t& { return children_; }
 		auto clone() -> node_ptr;
 
 		
@@ -129,7 +130,35 @@ namespace common {
 		};
 	};
 
-	
+	template <typename Command, typename FN>
+	void for_all_depth_first(const std::shared_ptr<node_t<Command>>& n, FN fn)
+	{
+		typedef shared_ptr<node_t<Command>> node_ptr;
+
+		std::set<node_ptr> visited;
+		std::stack<node_ptr> node_stack;
+		node_stack.push(n);
+		visited.insert(n);
+		while (!node_stack.empty())
+		{
+			node_ptr n = node_stack.top();
+			if (n->children().empty()) {
+				node_stack.pop();
+				fn(n);
+			}
+			else {
+				for (auto& x : n->children()) {
+					if (visited.find(x) == visited.end()) {
+						node_stack.push(x);
+					}
+				}
+			}
+		}
+	}
+
+
+
+
 //=====================================================================
 } // namespace common
 } // namespace sooty

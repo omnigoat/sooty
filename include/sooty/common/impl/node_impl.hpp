@@ -46,24 +46,40 @@ auto node_t<Command>::operator = (node_t<Command> const& rhs) -> node_t<Command>
 	children_t tmp = children_;
 
 	// get set of nodes that have been cloned from us
-	std::set<node_ptr> visited;
+	std::set<node_ptr> cloned;
 	node_ptr n = shared_from_this();
 	std::stack<node_ptr> nodes;
 	nodes.push(n);
 	while (!nodes.empty()) {
 		node_ptr n = nodes.top();
 		nodes.pop();
-		for (auto& x : n->children_) {
-			nodes.push(x->shared_from_this());
+		if (cloned_nodes_.find(n.get()) != cloned_nodes_.end()) {
+			for (auto& x : cloned_nodes_[n.get()]) {
+				nodes.push(x->shared_from_this());
+			}
 		}
-		visited.insert(n);
+		cloned.insert(n);
 	}
+
+	for_all_depth_first(shared_from_this(), [&](const_node_ptr_ref n)
+	{
+		// split nodes into a list of left-recursive nodes, and nodes that are fine
+		children_t left_recursive, fine;
+		atma::seperate(
+			n->children_.begin(), n->children_.end(),
+			std::back_inserter(left_recursive),
+			std::back_inserter(fine),
+			[&cloned](const_node_ptr_ref n) { return cloned.find(n) != cloned.end(); }
+		);
+
+
+	});
 
 	children_ = rhs.children_;
 	commands_ = rhs.commands_;
 
 	for (auto& x : tmp) {
-		append_impl(visited, x);
+		append_impl(cloned, x);
 	}
 	
 	if (cloned_nodes_.find(this) != cloned_nodes_.end()) {
