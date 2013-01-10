@@ -77,6 +77,10 @@ namespace detail {
 		success = false;
 		return lhs;
 	}
+
+	inline bool operator < (const_command_ref lhs, const_command_ref rhs) {
+		return lhs.action < rhs.action || (rhs.action < lhs.action && lhs.from_id < rhs.from_id) || (rhs.from_id < lhs.from_id && lhs.to_id < rhs.to_id);
+	}
 	
 //=====================================================================
 } // namespace detail

@@ -1,4 +1,8 @@
-
+#include <atma/algorithm.hpp>
+//=====================================================================
+namespace sooty {
+namespace common {
+//=====================================================================
 
 template <typename Command>
 std::map<node_t<Command>*, std::set<node_t<Command>*>> node_t<Command>::cloned_nodes_;
@@ -190,20 +194,17 @@ auto node_t<Command>::merge(const_node_ptr_ref rhs) -> node_ptr
 	  && !children_.empty() && !rhs->children_.empty())
 	{
 		auto x = children_.begin();
-		while (x != children_.end()) {
-			auto y = rhs->children_.begin();
-			while (y != rhs->children_.end()) {
-				auto n = (*x)->merge(*y);
-				if (n) {
-					result->children_.insert(n);
-					break;
-				}
-				++y;
-			}
-			if (y == rhs->children_.end())
-				result->children_.insert(*x);
-			++x;
-		}
+		auto y = rhs->children_.begin();
+
+		auto on_fail_merge = [&result](const_node_ptr_ref n) {result->children_.insert(n);};
+
+		atma::merge(
+			children_.begin(), children_.end(),
+			rhs->children_.begin(), rhs->children_.end(),
+			std::inserter(result->children_, result->children_.end()),
+			std::bind(&node_t<Command>::merge, std::placeholders::_1, std::placeholders::_2),
+			on_fail_merge, on_fail_merge
+		);
 
 		return result;
 	}
@@ -262,3 +263,8 @@ template <typename Command>
 auto node_t<Command>::clone_command(const std::pair<bool, command_t>& C) -> std::pair<bool, command_t> {
 	return std::make_pair(C.first, C.second.clone());
 }
+
+//=====================================================================
+} // namespace common
+} // namespace sooty
+//=====================================================================

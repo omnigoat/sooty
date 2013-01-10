@@ -39,7 +39,7 @@ namespace common {
 		// node-ptr / command_t
 		typedef std::shared_ptr<node_t> node_ptr;
 		typedef node_ptr& node_ptr_ref;
-		typedef const node_ptr& const_node_ptr_ref;
+		typedef node_ptr const& const_node_ptr_ref;
 		typedef Command command_t;
 		
 		// commands
@@ -49,7 +49,7 @@ namespace common {
 
 		// children: sort by descending number of commands
 		struct ordering_t;
-		typedef std::multiset<node_ptr, ordering_t> children_t;
+		typedef std::set<node_ptr, ordering_t> children_t;
 		typedef const children_t& const_children_ref;
 		
 
@@ -112,24 +112,34 @@ namespace common {
 		// friends
 		template <typename ExecutorT> friend struct performer_t;
 		template <typename NodePtr> friend NodePtr detail::clone_tree_impl(std::map<NodePtr, NodePtr>& visited_nodes, const NodePtr& clonee);
+		//template <typename Command>
+		//friend auto operator < (node_t<Command> const& lhs, node_t<Command> const& rhs) -> bool;
 	};
 
+	// sort of commands first, then children
+	//template <typename Command>
+	//inline auto operator < (node_t<Command> const& lhs, node_t<Command> const& rhs) -> bool {
+	//	return lhs.commands_ < rhs.commands_;
+	//}
 
-	
 	template <typename Command>
 	struct node_t<Command>::ordering_t {
 		bool operator () (const_node_ptr_ref lhs, const_node_ptr_ref rhs) const {
-			return rhs->commands_.size() < lhs->commands_.size();
+			return lhs->commands_ < rhs->commands_;
 		};
 	};
 
+	
+//=====================================================================
+} // namespace common
+} // namespace sooty
+//=====================================================================
+
+	
 	// implementation
 	#include "impl/node_impl.hpp"
 
 
-//=====================================================================
-} // namespace common
-} // namespace sooty
 //=====================================================================
 #endif
 //=====================================================================
