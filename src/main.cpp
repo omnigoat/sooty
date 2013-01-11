@@ -75,14 +75,7 @@ int main()
 		using namespace sooty::parsing;
 		
 		parser K;
-		K = (K >> match(2)) | (match(1) >> match(3));
-		
-		
-		typedef sooty::common::performer_t<sooty::parsing::detail::executor_t> parsing_t;
-		sooty::parsing::accumulator pracc;
-		parsing_t()(pracc, sooty::parsing::lexeme_range_t(lexemes), K.backend());
-		
-		parsemes = pracc.container();
+		K = (K >> match(1)) | (match(2) >> match(3));
 	}
 	
 	std::cout << lexemes << std::endl;

@@ -13,15 +13,23 @@ std::map<node_t<Command>*, node_t<Command>*> node_t<Command>::cloner_node_;
 // constructors
 template <typename Command>
 node_t<Command>::node_t(const node_t<Command>& rhs)
-: is_terminal(rhs.is_terminal), commands_(rhs.commands_), unchosen_(rhs.unchosen_)
+: type_(rhs.type_), commands_(rhs.commands_), unchosen_(rhs.unchosen_)
 {	
 }
 
 template <typename Command>
-node_t<Command>::node_t(bool is_terminal)
-: is_terminal(false)
+node_t<Command>::node_t(type_t type)
+: type_(type)
 {
 }
+
+template <typename Command>
+sooty::common::node_t<Command>::node_t( type_t type, std::initializer_list<node_ptr> children )
+: type_(type), children_(children.begin(), children.end())
+{
+	std::sort(children_.begin(), children_.end(), ordering_t());
+}
+
 
 template <typename Command>
 node_t<Command>::~node_t()
@@ -40,51 +48,94 @@ node_t<Command>::~node_t()
 	cloned_nodes_.erase(this);
 }
 
+template <typename T>
+inline auto has(const std::set<T>& s, const T& t) -> bool {
+	return s.find(t) != s.end();
+}
+
 template <typename Command>
 auto node_t<Command>::operator = (node_t<Command>& rhs) -> node_t<Command>&
 {
-	children_t tmp = children_;
+	typedef node_t<Command> node_t;
+	typedef typename node_t::node_ptr node_ptr;
 
 	// get set of nodes that have been cloned from us
-	std::set<node_ptr> cloned;
-	node_ptr n = shared_from_this();
-	std::stack<node_ptr> nodes;
-	nodes.push(n);
-	while (!nodes.empty()) {
-		node_ptr n = nodes.top();
-		nodes.pop();
-		if (cloned_nodes_.find(n.get()) != cloned_nodes_.end()) {
-			for (auto& x : cloned_nodes_[n.get()]) {
-				nodes.push(x->shared_from_this());
+	
+
+	// as we go "down" the tree, build a set of cloned nodes. we'll remove entries when we go back up
+	std::set<node_ptr> visited;
+	std::map<node_ptr, std::set<node_ptr>> cloned_nodes;
+
+	// wrap all instances of ourselves in the existing tree with a dummy node
+	for_all_depth_first_with_parent<Command>
+	(
+		rhs.shared_from_this(),
+
+		// build cloned nodes, maintain list of visited nodes
+		[&](node_ptr const& parent, node_ptr const& x) -> bool
+		{
+			if (visited.find(x) != visited.end()) return false;
+			visited.insert(x);
+
+			std::stack<node_t*> nodes;
+			nodes.push(x.get());
+			while (!nodes.empty()) {
+				auto const& n = nodes.top();
+				nodes.pop();
+				for_all_cloned_nodes_of(n, [&nodes](node_t* clonee){nodes.push(clonee);});
+				cloned_nodes[x].insert(n->shared_from_this());
+			}
+			return true;
+		},
+
+		// for each node, go through anscestors and find any left-recursion
+		[&](node_ptr_ref parent, node_ptr_ref n) {
+			node_ptr ancestor = nullptr;
+			while (ancestor = find_left_recursive_pattern(cloned_nodes, n)) {
+				
 			}
 		}
-		cloned.insert(n);
-	}
-	
-	for_all_depth_first<Command>(rhs.shared_from_this(), [&](const_node_ptr_ref n)
-	{
-		// split nodes into a list of left-recursive nodes, and nodes that are fine
-		children_t left_recursive, fine;
-		atma::seperate(
-			n->children_.begin(), n->children_.end(),
-			std::inserter(left_recursive, left_recursive.end()),
-			std::inserter(fine, fine.end()),
-			[&cloned](const_node_ptr_ref n) { return cloned.find(n) != cloned.end(); }
-		);
-	});
+	);
 
-	children_ = rhs.children_;
-	commands_ = rhs.commands_;
 
-	for (auto& x : tmp) {
-		append_impl(cloned, x);
-	}
-	
-	if (cloned_nodes_.find(this) != cloned_nodes_.end()) {
-		for (auto& x : cloned_nodes_[this]) {
-			*x = rhs;
-		}
-	}
+
+
+	//
+	//for_all_depth_first<Command>(rhs.shared_from_this(), [&](const_node_ptr_ref n)
+	//{
+	//	
+
+	//	// split nodes into a list of left-recursive nodes, and nodes that are fine
+	//	children_t left_recursive, fine;
+	//	atma::seperate(
+	//		n->children_.begin(), n->children_.end(),
+	//		std::inserter(left_recursive, left_recursive.end()),
+	//		std::inserter(fine, fine.end()),
+	//		[&n](const_node_ptr_ref x) { return x == n; }
+	//	);
+
+	//	if (!left_recursive.empty()) {
+	//		for (auto& x : left_recursive) {
+	//			
+	//		}
+	//	}
+	//});
+
+	//children_t tmp = children_;
+	//children_ = rhs.children_;
+	//commands_ = rhs.commands_;
+
+	//
+
+	//for (auto& x : tmp) {
+	//	append_impl(cloned, x);
+	//}
+	//
+	//if (cloned_nodes_.find(this) != cloned_nodes_.end()) {
+	//	for (auto& x : cloned_nodes_[this]) {
+	//		*x = rhs;
+	//	}
+	//}
 
 	return *this;
 }
@@ -100,7 +151,8 @@ auto node_t<Command>::clone() -> node_ptr {
 
 template <typename Command>
 auto node_t<Command>::add_child(const_node_ptr_ref n) -> node_ptr {
-	children_.insert(n);
+	children_.push_back(n);
+	std::sort(children_.begin(), children_.end(), ordering_t());
 	return shared_from_this();
 }
 
@@ -149,12 +201,13 @@ auto node_t<Command>::append_impl(std::set<node_ptr>& visited, node_ptr node) ->
 	visited.insert(shared_from_this());
 			
 	if (children_.empty()) {
-		children_.insert(node);
+		children_.push_back(node);
 	}
 	else {
 		std::for_each(children_.begin(), children_.end(), std::bind(&node_t::append_impl, std::placeholders::_1, std::ref(visited), std::ref(node)));
 	}
-			
+	
+	std::sort(children_.begin(), children_.end(), ordering_t());
 	return shared_from_this();
 }
 
@@ -187,21 +240,23 @@ auto node_t<Command>::merge(const_node_ptr_ref rhs) -> node_ptr
 			// we successfully merged, so there's no need to process further.
 			// however, we need to insert remaining (untouched) children.
 			if (n) {
-				new_children.insert(n);
+				new_children.push_back(n);
 				std::copy(++i, children_.end(), std::inserter(new_children, new_children.end()));
 				break;
 			}
 
-			new_children.insert(*i);
+			new_children.push_back(*i);
 		}
 		children_.swap(new_children);
 				
 		// the problem of merging has been pushed down one level. we're done!
-		if (new_children.empty())
+		if (new_children.empty()) {
+			std::sort(children_.begin(), children_.end(), ordering_t());
 			return shared_from_this();
+		}
 	}
 	
-	node_ptr result = node_t::make();
+	node_ptr result = node_t::make(type_t::or_);
 	result->commands_.swap(combined_commands);
 
 	// we merged absolutely everything, so maybe we can merge our children?
@@ -211,18 +266,20 @@ auto node_t<Command>::merge(const_node_ptr_ref rhs) -> node_ptr
 		atma::merge(
 			children_.begin(), children_.end(),
 			rhs->children_.begin(), rhs->children_.end(),
-			std::inserter(result->children_, result->children_.end()),
+			std::back_inserter(result->children_),
 			std::bind(&node_t<Command>::merge, std::placeholders::_1, std::placeholders::_2),
-			[&result](const_node_ptr_ref n) { result->children_.insert(n); },
-			[&result](const_node_ptr_ref n) { result->children_.insert(n); }
+			std::bind(&node_t<Command>::add_child, std::ref(result), std::placeholders::_1),
+			std::bind(&node_t<Command>::add_child, std::ref(result), std::placeholders::_1)
 		);
 
+		std::sort(result->children_.begin(), result->children_.end(), ordering_t());
 		return result;
 	}
 
-	result->children_.insert(shared_from_this());
-	result->children_.insert(rhs);
+	result->children_.push_back(shared_from_this());
+	result->children_.push_back(rhs);
 	
+	std::sort(result->children_.begin(), result->children_.end(), ordering_t());
 	return result;
 }
 

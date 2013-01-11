@@ -42,7 +42,7 @@ namespace common {
 			typedef typename node_t::const_children_ref const_children_ref;
 			
 			children_t first_children;
-			first_children.insert(node);
+			first_children.push_back(node);
 			
 			size_t parent_child_count = 1;
 			children_t::const_iterator parent_child_begin = first_children.begin();

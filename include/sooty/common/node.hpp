@@ -12,6 +12,7 @@
 #include <memory>
 #include <algorithm>
 #include <stack>
+#include <initializer_list>
 //=====================================================================
 #include <sooty/common/detail/clone_impl.hpp>
 //=====================================================================
@@ -36,6 +37,14 @@ namespace common {
 	template <typename Command>
 	struct node_t : std::enable_shared_from_this<node_t<Command>>
 	{
+		// type
+		enum class type_t {
+			and_,
+			or_,
+			leaf,
+			terminal
+		};
+
 		// node-ptr / command_t
 		typedef std::shared_ptr<node_t> node_ptr;
 		typedef node_ptr& node_ptr_ref;
@@ -49,23 +58,27 @@ namespace common {
 
 		// children: sort by descending number of commands
 		struct ordering_t;
-		typedef std::set<node_ptr, ordering_t> children_t;
+		typedef std::vector<node_ptr> children_t;
 		typedef const children_t& const_children_ref;
 		
 
 
 		// constructors
-		node_t(bool is_terminal = false);
+		node_t(type_t type);
+		node_t(type_t type, std::initializer_list<node_ptr> children);
 		node_t(const node_t& rhs);
 		~node_t();
 
-		static node_ptr make(bool is_terminal = false) {
-			return node_ptr(new node_t(is_terminal));
+		static node_ptr make(type_t type) {
+			return node_ptr(new node_t(type));
 		}
 
+		static node_ptr make(type_t type, std::initializer_list<node_ptr> children) {
+			return node_ptr(new node_t(type, children));
+		}
 
 		// pure
-		auto children() const -> const children_t& { return children_; }
+		//auto children() const -> children_t const& { return children_; }
 		auto clone() -> node_ptr;
 
 		
@@ -78,6 +91,7 @@ namespace common {
 		auto append(const_node_ptr_ref) -> node_ptr;
 		auto append_self() -> node_ptr;
 		auto merge(const_node_ptr_ref) -> node_ptr;
+		auto children() -> children_t& { return children_; }
 
 		auto operator = (node_t&) -> node_t&;
 
@@ -100,7 +114,7 @@ namespace common {
 		static auto clone_command(const std::pair<bool, command_t>& C) -> std::pair<bool, command_t>;
 
 		// members
-		bool is_terminal;
+		type_t type_;
 		commands_t commands_;
 		commands_t unchosen_;
 		children_t children_;
@@ -110,11 +124,17 @@ namespace common {
 		// reverse lookup so we can remove references to ourselves from our parents
 		static std::map<node_t*, node_t*> cloner_node_;
 
+		template <typename FN>
+		static void for_all_cloned_nodes_of(node_t* n, FN fn) {
+			if (cloned_nodes_.find(n) != cloned_nodes_.end()) {
+				for (auto& x : cloned_nodes_[n])
+					fn(x);
+			}
+		}
+
 		// friends
 		template <typename ExecutorT> friend struct performer_t;
 		template <typename NodePtr> friend NodePtr detail::clone_tree_impl(std::map<NodePtr, NodePtr>& visited_nodes, const NodePtr& clonee);
-		//template <typename Command>
-		//friend auto operator < (node_t<Command> const& lhs, node_t<Command> const& rhs) -> bool;
 	};
 
 	// sort of commands first, then children
@@ -157,6 +177,28 @@ namespace common {
 			fn(*nodes.back());
 			nodes.pop_back();
 		}
+	}
+
+	namespace detail {
+		template <typename Command, typename FND, typename FNU>
+		void for_all_depth_first_with_parent_impl(typename node_t<Command>::node_ptr_ref parent, typename node_t<Command>::node_ptr_ref n, FND fn_down, FNU fn_up)
+		{
+			if (fn_down(parent, n)) {
+				for (auto& x : n->children()) {
+					for_all_depth_first_with_parent_impl<Command>(n, x, fn_down, fn_up);
+				}
+				fn_up(parent, n);
+			}
+		}
+	}
+
+	template <typename Command, typename FND, typename FNU>
+	void for_all_depth_first_with_parent(typename node_t<Command>::node_ptr_ref n, FND fn_down, FNU fn_up)
+	{
+		typedef node_t<Command> node_t;
+		typedef node_t::node_ptr node_ptr;
+
+		detail::for_all_depth_first_with_parent_impl<Command>(node_ptr(), n, fn_down, fn_up);
 	}
 
 

@@ -55,7 +55,7 @@ namespace lexing {
 	}
 	
 	inline lexer_t match(const std::string& str) {
-		detail::lexer_backend_ptr backend = detail::lexer_backend_t::make();
+		detail::lexer_backend_ptr backend = detail::lexer_backend_t::make(detail::lexer_backend_t::type_t::leaf);
 		for (std::string::const_iterator i = str.begin(); i != str.end(); ++i) {
 			backend->push_back_command( detail::command_t::match(*i, *i, true) );
 		}

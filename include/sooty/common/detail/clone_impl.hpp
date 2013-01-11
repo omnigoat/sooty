@@ -27,9 +27,9 @@ namespace detail {
 		
 		// recurse for children nodes
 		std::for_each(clonee->children_.begin(), clonee->children_.end(), [&](const NodePtr& x) {
-			new_node->children_.insert( clone_tree_impl(visited_nodes, x) );
+			new_node->add_child( clone_tree_impl(visited_nodes, x) );
 		});
-
+		
 		std::transform(new_node->commands_.begin(), new_node->commands_.end(), new_node->commands_.begin(),
 			&NodePtr::element_type::clone_command);
 		
