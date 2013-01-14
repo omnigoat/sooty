@@ -24,14 +24,18 @@ lexer_t lexer_t::operator + () const
 lexer_t sooty::lexing::operator >> ( const_lexer_ref lhs, const_lexer_ref rhs )
 {
 	return lexer_t(
-		clone_tree(lhs.backend())->append( clone_tree(rhs.backend()) )
+		detail::lexer_backend_t::make(detail::lexer_backend_t::type_t::and_)
+			->add_child(clone_tree(lhs.backend()))
+			->add_child(clone_tree(rhs.backend()))
 	);
 }
 
 lexer_t sooty::lexing::operator | ( const_lexer_ref lhs, const_lexer_ref rhs )
 {
 	return lexer_t(
-		clone_tree(lhs.backend())->merge(rhs.backend())
+		detail::lexer_backend_t::make(detail::lexer_backend_t::type_t::or_)
+			->add_child(clone_tree(lhs.backend()))
+			->add_child(clone_tree(rhs.backend()))
 	);
 }
 

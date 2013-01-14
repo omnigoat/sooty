@@ -27,7 +27,7 @@ namespace parsing {
 		
 		// accessors
 		auto backend() const -> detail::parser_backend_ptr const&;
-
+		
 		// operators
 		auto operator >> (parser const&) const -> parser;
 		auto operator |  (parser const&) const -> parser;

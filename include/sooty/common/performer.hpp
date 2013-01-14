@@ -33,8 +33,6 @@ namespace common {
 			typedef input_t& input_ref;
 			
 			typedef typename node_t::node_ptr node_ptr;
-			typedef typename node_t::node_ptr_ref node_ptr_ref;
-			typedef typename node_t::const_node_ptr_ref const_node_ptr_ref;
 			typedef typename node_t::command_t command_t;
 			typedef typename node_t::commands_t commands_t;
 			typedef typename node_t::const_commands_ref const_commands_ref;
@@ -51,7 +49,7 @@ namespace common {
 			
 			while (parent_child_iter != parent_child_end)
 			{
-				const_node_ptr_ref current_node = *parent_child_iter;
+				node_ptr const& current_node = *parent_child_iter;
 				
 				const_commands_ref commands = current_node->commands_;
 				const_children_ref children = current_node->children_;

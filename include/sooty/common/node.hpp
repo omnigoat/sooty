@@ -15,6 +15,7 @@
 #include <initializer_list>
 //=====================================================================
 #include <sooty/common/detail/clone_impl.hpp>
+#include <atma/assert.hpp>
 //=====================================================================
 namespace sooty {
 namespace common {
@@ -24,7 +25,45 @@ namespace common {
 	// forward declares
 	//=====================================================================
 	template <typename Command> struct node_t;
+	namespace detail {
+		template <typename Command>
+		struct node_wptr_is_ptr {
+			node_wptr_is_ptr(std::shared_ptr<node_t<Command>> const& n)
+			 : n(n)
+			{
+			}
 
+			bool operator ()(std::weak_ptr<node_t<Command>> const& lhs, std::shared_ptr<node_t<Command>> const& rhs) {
+				return (lhs.expired() && !rhs) || (lhs.lock() == rhs);
+			}
+			
+			std::shared_ptr<node_t<Command>> n;
+		};
+
+		template <typename Command>
+		void link(std::shared_ptr<node_t<Command>>& parent, std::shared_ptr<node_t<Command>>& child)
+		{
+			// there is never a need for duplicate children
+			ATMA_ASSERT( std::find(parent->children_.begin(), parent->children_.end(), child) == parent->children_.end() );
+			// our child doesn't already have a parent
+			ATMA_ASSERT( child->parent_.expired() );
+
+			parent->children_.push_back(child);
+			child->parent_ = parent;
+		}
+
+		template <typename Command>
+		void unlink(std::shared_ptr<node_t<Command>>& parent, std::shared_ptr<node_t<Command>>& child)
+		{
+			// we actually have the child
+			ATMA_ASSERT(std::find(parent->children_.begin(), parent->children_.end(), child) != parent->children_.end());
+			// child is a child of us
+			ATMA_ASSERT(child->parent() == parent);
+			
+			parent->children_.erase(std::remove(parent->children_.begin(), parent->children_.end(), child));
+			child->parent_ = std::shared_ptr<node_t<Command>>();
+		}
+	}
 	
 	//=====================================================================
 	// no_orders
@@ -47,8 +86,7 @@ namespace common {
 
 		// node-ptr / command_t
 		typedef std::shared_ptr<node_t> node_ptr;
-		typedef node_ptr& node_ptr_ref;
-		typedef node_ptr const& const_node_ptr_ref;
+		typedef std::weak_ptr<node_t> node_wptr;
 		typedef Command command_t;
 		
 		// commands
@@ -61,6 +99,7 @@ namespace common {
 		typedef std::vector<node_ptr> children_t;
 		typedef const children_t& const_children_ref;
 		
+
 
 
 		// constructors
@@ -77,20 +116,24 @@ namespace common {
 			return node_ptr(new node_t(type, children));
 		}
 
-		// pure
-		//auto children() const -> children_t const& { return children_; }
+		// accesors
+		auto type() const -> type_t { return type_; }
+		auto is_and_node() const -> bool { return type_ == type_t::and_; }
+		auto is_or_node() const -> bool { return type_ == type_t::or_; }
 		auto clone() -> node_ptr;
-
+		auto parent() const -> node_ptr { return parent_.expired() ? node_ptr() : parent_.lock(); }
 		
 		// mutators
 		auto push_back_command(const command_t&) -> node_ptr;
 		auto push_back_failure(const command_t&) -> node_ptr;
 		auto push_back_action(bool, const command_t&) -> node_ptr;
-		auto add_child(const_node_ptr_ref) -> node_ptr;
+		auto add_child(node_ptr&) -> node_ptr;
+		template <typename IT> auto add_children(IT begin, IT end) -> node_ptr;
 		auto add_self_as_child() -> node_ptr;
-		auto append(const_node_ptr_ref) -> node_ptr;
+		auto remove_child(node_ptr&) -> node_ptr;
+		auto append(node_ptr&) -> node_ptr;
 		auto append_self() -> node_ptr;
-		auto merge(const_node_ptr_ref) -> node_ptr;
+		auto merge(node_ptr const&) -> node_ptr;
 		auto children() -> children_t& { return children_; }
 
 		auto operator = (node_t&) -> node_t&;
@@ -105,6 +148,14 @@ namespace common {
 			return C.first;
 		}
 		
+		template <typename FN>
+		static void for_all_cloned_nodes_of(node_t* n, FN fn) {
+			if (cloned_nodes_.find(n) != cloned_nodes_.end()) {
+				for (auto& x : cloned_nodes_[n])
+					fn(x);
+			}
+		}
+
 	private:
 		// mutators
 		auto append_impl(std::set<node_ptr>& visited, node_ptr node) -> node_ptr;
@@ -118,23 +169,20 @@ namespace common {
 		commands_t commands_;
 		commands_t unchosen_;
 		children_t children_;
+		node_wptr parent_;
 
 		// what children have we cloned?
 		static std::map<node_t*, std::set<node_t*>> cloned_nodes_;
 		// reverse lookup so we can remove references to ourselves from our parents
 		static std::map<node_t*, node_t*> cloner_node_;
 
-		template <typename FN>
-		static void for_all_cloned_nodes_of(node_t* n, FN fn) {
-			if (cloned_nodes_.find(n) != cloned_nodes_.end()) {
-				for (auto& x : cloned_nodes_[n])
-					fn(x);
-			}
-		}
+		
 
 		// friends
 		template <typename ExecutorT> friend struct performer_t;
 		template <typename NodePtr> friend NodePtr detail::clone_tree_impl(std::map<NodePtr, NodePtr>& visited_nodes, const NodePtr& clonee);
+		template <typename Command> friend void detail::link(std::shared_ptr<node_t<Command>>&, std::shared_ptr<node_t<Command>>&);
+		template <typename Command> friend void detail::unlink(std::shared_ptr<node_t<Command>>&, std::shared_ptr<node_t<Command>>&);
 	};
 
 	// sort of commands first, then children
@@ -145,13 +193,13 @@ namespace common {
 
 	template <typename Command>
 	struct node_t<Command>::ordering_t {
-		bool operator () (const_node_ptr_ref lhs, const_node_ptr_ref rhs) const {
+		bool operator () (node_ptr const& lhs, node_ptr const& rhs) const {
 			return lhs->commands_ < rhs->commands_;
 		};
 	};
 
 	template <typename Command, typename FN>
-	void for_all_depth_first(typename node_t<Command>::const_node_ptr_ref n, FN fn)
+	void for_all_depth_first(typename node_t<Command>::node_ptr const& n, FN fn)
 	{
 		typedef typename node_t<Command>::node_ptr node_ptr;
 
@@ -172,7 +220,6 @@ namespace common {
 		}
 
 		// now go "up" the stack
-		
 		while (!nodes.empty()) {
 			fn(*nodes.back());
 			nodes.pop_back();
@@ -180,8 +227,10 @@ namespace common {
 	}
 
 	namespace detail {
+		
+
 		template <typename Command, typename FND, typename FNU>
-		void for_all_depth_first_with_parent_impl(typename node_t<Command>::node_ptr_ref parent, typename node_t<Command>::node_ptr_ref n, FND fn_down, FNU fn_up)
+		void for_all_depth_first_with_parent_impl(std::shared_ptr<node_t<Command>>& parent, std::shared_ptr<node_t<Command>>& n, FND fn_down, FNU fn_up)
 		{
 			if (fn_down(parent, n)) {
 				for (auto& x : n->children()) {
@@ -193,12 +242,12 @@ namespace common {
 	}
 
 	template <typename Command, typename FND, typename FNU>
-	void for_all_depth_first_with_parent(typename node_t<Command>::node_ptr_ref n, FND fn_down, FNU fn_up)
+	void for_all_depth_first_with_parent(std::shared_ptr<node_t<Command>>& n, FND fn_down, FNU fn_up)
 	{
 		typedef node_t<Command> node_t;
 		typedef node_t::node_ptr node_ptr;
 
-		detail::for_all_depth_first_with_parent_impl<Command>(node_ptr(), n, fn_down, fn_up);
+		//detail::for_all_depth_first_with_parent_impl<Command>(node_ptr(), n, fn_down, fn_up);
 	}
 
 
