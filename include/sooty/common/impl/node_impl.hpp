@@ -200,9 +200,8 @@ auto node_t<Command>::merge(node_ptr const& rhs) -> node_ptr
 	{
 		// create a clone of us with our commands and children
 		node_ptr sub_lhs = make();
-		//sub_lhs->commands_.swap(commands_);
-		//sub_lhs->children_.swap(children_);
-		std::swap(*sub_lhs, *this);
+		sub_lhs->commands_.swap(commands_);
+		sub_lhs->children_.swap(children_);
 		children_.insert(sub_lhs);
 		children_.insert(rhs);
 	}
@@ -212,8 +211,8 @@ auto node_t<Command>::merge(node_ptr const& rhs) -> node_ptr
 
 	return shared_from_this();
 }
-		
-		
+
+
 template <typename Command>
 auto node_t<Command>::merge_commands(commands_t& combined, commands_t& new_lhs, commands_t& new_rhs, commands_t& lhs, commands_t& rhs) -> void
 {

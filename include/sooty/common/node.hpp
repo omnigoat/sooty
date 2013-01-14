@@ -60,11 +60,7 @@ namespace common {
 		auto operator = (node_t const&) -> node_t&;
 		auto operator = (node_t&& rhs) -> node_t&;
 		
-		static node_ptr make() {
-			return node_ptr(new node_t);
-		}
-
-
+		
 		// pure
 		auto clone() -> node_ptr;
 
@@ -81,8 +77,10 @@ namespace common {
 
 		
 
-		
-		// predicates
+		static node_ptr make() {
+			return node_ptr(new node_t);
+		}
+
 		static bool is_failure(const std::pair<bool, command_t>& C) {
 			return !C.first;
 		}
