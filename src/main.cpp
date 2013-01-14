@@ -75,7 +75,20 @@ int main()
 		using namespace sooty::parsing;
 		
 		parser K;
-		K = (K >> match(2)) | match(1);
+		K = insert(10) [
+				match(1) >>
+				match(10) >>
+				match(1)
+			]
+			|
+			insert(11) [
+				match(1) >>
+				match(11) >>
+				match(1)
+			]
+			|
+			match(1)
+			;
 		
 		
 		typedef sooty::common::performer_t<sooty::parsing::detail::executor_t> parsing_t;

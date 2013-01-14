@@ -129,7 +129,7 @@ auto node_t<Command>::append_impl(std::set<node_ptr>& visited, node_ptr node) ->
 }
 
 template <typename Command>
-auto node_t<Command>::merge(const_node_ptr_ref rhs) -> node_ptr
+auto node_t<Command>::merge(node_ptr const& rhs) -> node_ptr
 {
 	commands_t combined_commands;
 	commands_t new_lhs_commands, new_rhs_commands;
@@ -142,61 +142,61 @@ auto node_t<Command>::merge(const_node_ptr_ref rhs) -> node_ptr
 		commands_,
 		rhs->commands_
 	);
-			
-	// we merged all the commands @this has, so recurse into the children
-	if (!combined_commands.empty() && !new_rhs_commands.empty() && new_lhs_commands.empty())
+	
+	// @lhs and @rhs were completely merged together, we can recurse through our children
+	if (!combined_commands.empty() && new_lhs_commands.empty() && new_rhs_commands.empty())
 	{
-		rhs->commands_.swap(new_rhs_commands);
-				
+		commands_.swap(combined_commands);
 		children_t new_children;
-		children_t::iterator i = children_.begin();
-		for (; i != children_.end(); ++i)
-		{
-			node_ptr n = (*i)->merge(rhs);
 
-			// we successfully merged, so there's no need to process further.
-			// however, we need to insert remaining (untouched) children.
-			if (n) {
-				new_children.insert(n);
-				std::copy(++i, children_.end(), std::inserter(new_children, new_children.end()));
-				break;
-			}
+		atma::merge(
+			children_.begin(), children_.end(),
+			rhs->children_.begin(), rhs->children_.end(),
+			std::inserter(new_children, new_children.end()),
+			std::bind(&node_t<Command>::merge, std::placeholders::_1, std::placeholders::_2),
+			[&new_children](node_ptr const& n){ new_children.insert(n); },
+			[&new_children](node_ptr const& n){ new_children.insert(n); },
+			ordering_t()
+		);
 
-			new_children.insert(*i);
-		}
 		children_.swap(new_children);
-				
-		// the problem of merging has been pushed down one level. we're done!
-		if (new_children.empty())
-			return shared_from_this();
 	}
-	
-	node_ptr result = make();
-	result->children_.insert(shared_from_this());
-	result->children_.insert(rhs);
-	
-	/*
-	// we now mutate lhs, because there's *still* stuff left, we're going to join it.
-	// the following code optimizes the join by combining one-nodes.
-	commands_.swap(new_lhs_commands);
-	
-	rhs->commands_.swap(new_rhs_commands);
-	
-	result->commands_.swap(combined_commands);
-			
-	if (commands_.empty())
-		result->children_.swap(children_);
-	else
-		result->children_.insert(shared_from_this()->clone());
-			
-	if (rhs->commands_.empty() && !rhs->children_.empty())
-		result->children_.insert(rhs->children_.begin(), rhs->children_.end());
-	else
-		result->children_.insert(rhs);
-				
-			*/
-			
-	return result;
+	// @rhs was completely merged into @lhs, but has commands left over. merge it into any of our children
+	else if (!combined_commands.empty() && new_lhs_commands.empty() && !new_rhs_commands.empty())
+	{
+		commands_.swap(combined_commands);
+		rhs->commands_.swap(new_rhs_commands);
+		
+		children_t new_children;
+		atma::merge(
+			children_.begin(), children_.end(),
+			rhs->children_.begin(), rhs->children_.end(),
+			std::inserter(new_children, new_children.end()),
+			std::bind(&node_t<Command>::merge, std::placeholders::_1, std::ref(rhs)),
+			[&new_children](node_ptr const& n){ new_children.insert(n); },
+			[&new_children](node_ptr const& n){ new_children.insert(n); },
+			ordering_t()
+		);
+
+		children_.swap(new_children);
+	}
+	// no merging took place. we're going to create a parent node and insert both
+	// @lhs and @rhs as children, then replace ourselves with the parent, careful to
+	// avoid cycles
+	else if (combined_commands.empty())
+	{
+		// create a clone of us with our commands and children
+		node_ptr sub_lhs = make();
+		sub_lhs->commands_.swap(commands_);
+		sub_lhs->children_.swap(children_);
+		children_.insert(sub_lhs);
+		children_.insert(rhs);
+	}
+	else {
+		ATMA_ASSERT(false && "yeah probs forgot a use-case");
+	}
+
+	return shared_from_this();
 }
 		
 		

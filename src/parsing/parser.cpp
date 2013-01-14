@@ -19,7 +19,7 @@ auto parser::backend() const -> parser_backend_ptr const& {
 
 auto parser::operator >> (parser const& rhs) const -> parser {
 	return parser(
-		common::clone_tree(backend_)->add_child( common::clone_tree(rhs.backend_) )
+		common::clone_tree(backend_)->append( common::clone_tree(rhs.backend_) )
 		//backend_->append(rhs.backend_)
 	);
 }

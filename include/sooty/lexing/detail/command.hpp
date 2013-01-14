@@ -69,6 +69,16 @@ namespace detail {
 	
 	typedef const command_t& const_command_ref;
 	
+	inline bool operator < (const_command_ref lhs, const_command_ref rhs) {
+		if (lhs.action != rhs.action)
+			return lhs.action < rhs.action;
+
+		if (lhs.from_id != rhs.from_id)
+			return lhs.from_id < rhs.from_id;
+
+		return lhs.to_id < rhs.to_id;
+	}
+
 	inline bool operator == (const_command_ref lhs, const_command_ref rhs) {
 		return lhs.action == rhs.action && lhs.from_id == rhs.from_id && lhs.to_id == rhs.to_id;
 	}

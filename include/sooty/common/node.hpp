@@ -12,6 +12,9 @@
 #include <memory>
 #include <algorithm>
 //=====================================================================
+#include <atma/algorithm.hpp>
+#include <atma/assert.hpp>
+//=====================================================================
 #include <sooty/common/detail/clone_impl.hpp>
 //=====================================================================
 namespace sooty {
@@ -118,7 +121,7 @@ namespace common {
 	template <typename Command>
 	struct node_t<Command>::ordering_t {
 		bool operator () (const_node_ptr_ref lhs, const_node_ptr_ref rhs) const {
-			return rhs->commands_.size() < lhs->commands_.size();
+			return rhs->commands_ < lhs->commands_;
 		};
 	};
 

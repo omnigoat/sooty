@@ -111,6 +111,20 @@ namespace detail {
 		detail::mark_t mark;
 		size_t lower_id, upper_id, insert_id;
 	};
+
+	inline bool operator < (command_t const& lhs, command_t const& rhs) {
+		if (lhs.action != rhs.action)
+			return lhs.action < rhs.action;
+
+		if (lhs.lower_id != rhs.lower_id)
+			return lhs.lower_id < rhs.lower_id;
+
+
+		if (lhs.upper_id != rhs.upper_id)
+			return lhs.upper_id < rhs.upper_id;
+
+		return lhs.insert_id < rhs.insert_id;
+	}
 	
 	inline command_t merged(command_t& lhs, command_t& rhs, bool& success) {
 		if ((lhs.action == command_t::add_marker)
