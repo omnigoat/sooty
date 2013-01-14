@@ -76,13 +76,13 @@ int main()
 		
 		parser K;
 		K = insert(10) [
-				match(1) >>
+				K >>
 				match(10) >>
 				match(1)
 			]
 			|
 			insert(11) [
-				match(1) >>
+				K >>
 				match(11) >>
 				match(1)
 			]

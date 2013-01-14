@@ -6,16 +6,23 @@ std::map<node_t<Command>*, std::set<node_t<Command>*>> node_t<Command>::cloned_n
 template <typename Command>
 std::map<node_t<Command>*, node_t<Command>*> node_t<Command>::cloner_node_;
 
+
+
 // constructors
 template <typename Command>
+node_t<Command>::node_t()
+{
+}
+
+template <typename Command>
 node_t<Command>::node_t(const node_t<Command>& rhs)
-: is_terminal(rhs.is_terminal), commands_(rhs.commands_), unchosen_(rhs.unchosen_)
+: commands_(rhs.commands_), unchosen_(rhs.unchosen_)
 {	
 }
 
 template <typename Command>
-node_t<Command>::node_t(bool is_terminal)
-: is_terminal(false)
+node_t<Command>::node_t(node_t<Command>&& rhs)
+: commands_(std::move(rhs.commands_)), children_(std::move(rhs.children_))
 {
 }
 
@@ -56,6 +63,12 @@ auto node_t<Command>::operator = (node_t<Command> const& rhs) -> node_t<Command>
 	return *this;
 }
 
+template <typename Command>
+auto node_t<Command>::operator = (node_t<Command>&& rhs) -> node_t<Command>& {
+	commands_.swap(rhs.commands_);
+	children_.swap(rhs.children_);
+	return *this;
+}
 
 template <typename Command>
 auto node_t<Command>::clone() -> node_ptr {
@@ -66,7 +79,7 @@ auto node_t<Command>::clone() -> node_ptr {
 }
 
 template <typename Command>
-auto node_t<Command>::add_child(const_node_ptr_ref n) -> node_ptr {
+auto node_t<Command>::add_child(node_ptr const& n) -> node_ptr {
 	children_.insert(n);
 	return shared_from_this();
 }
@@ -77,7 +90,7 @@ auto node_t<Command>::add_self_as_child() -> node_ptr {
 }
 
 template <typename Command>
-auto node_t<Command>::append(const_node_ptr_ref node) -> node_ptr
+auto node_t<Command>::append(node_ptr const& node) -> node_ptr
 {
 	std::set<node_ptr> visited;
 	return append_impl(visited, node);
@@ -187,8 +200,9 @@ auto node_t<Command>::merge(node_ptr const& rhs) -> node_ptr
 	{
 		// create a clone of us with our commands and children
 		node_ptr sub_lhs = make();
-		sub_lhs->commands_.swap(commands_);
-		sub_lhs->children_.swap(children_);
+		//sub_lhs->commands_.swap(commands_);
+		//sub_lhs->children_.swap(children_);
+		std::swap(*sub_lhs, *this);
 		children_.insert(sub_lhs);
 		children_.insert(rhs);
 	}
@@ -201,7 +215,7 @@ auto node_t<Command>::merge(node_ptr const& rhs) -> node_ptr
 		
 		
 template <typename Command>
-auto node_t<Command>::merge_commands(commands_ref combined, commands_ref new_lhs, commands_ref new_rhs, commands_ref lhs, commands_ref rhs) -> void
+auto node_t<Command>::merge_commands(commands_t& combined, commands_t& new_lhs, commands_t& new_rhs, commands_t& lhs, commands_t& rhs) -> void
 {
 	commands_t::iterator
 		lhsi = lhs.begin(),

@@ -33,13 +33,9 @@ namespace common {
 			typedef input_t& input_ref;
 			
 			typedef typename node_t::node_ptr node_ptr;
-			typedef typename node_t::node_ptr_ref node_ptr_ref;
-			typedef typename node_t::const_node_ptr_ref const_node_ptr_ref;
 			typedef typename node_t::command_t command_t;
 			typedef typename node_t::commands_t commands_t;
-			typedef typename node_t::const_commands_ref const_commands_ref;
 			typedef typename node_t::children_t children_t;
-			typedef typename node_t::const_children_ref const_children_ref;
 			
 			children_t first_children;
 			first_children.insert(node);
@@ -51,10 +47,10 @@ namespace common {
 			
 			while (parent_child_iter != parent_child_end)
 			{
-				const_node_ptr_ref current_node = *parent_child_iter;
+				node_ptr const& current_node = *parent_child_iter;
 				
-				const_commands_ref commands = current_node->commands_;
-				const_children_ref children = current_node->children_;
+				commands_t const& commands = current_node->commands_;
+				children_t const& children = current_node->children_;
 				
 				// there should not be any failure commands before the first good command
 				commands_t::const_iterator i = commands.begin();
