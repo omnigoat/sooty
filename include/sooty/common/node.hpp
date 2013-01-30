@@ -116,8 +116,24 @@ namespace common {
 	
 	template <typename Command>
 	struct node_t<Command>::ordering_t {
-		bool operator () (node_ptr const& lhs, node_ptr const& rhs) const {
-			return rhs->commands_ < lhs->commands_;
+		bool operator () (node_ptr const& lhs, node_ptr const& rhs) const
+		{
+			if (lhs->commands_ < rhs->commands_)
+				return true;
+			else if (rhs->commands_ < lhs->commands_)
+				return false;
+
+			/*if (lhs->children_ < rhs->children_)
+				return true;
+			else if (rhs->children_ < lhs->children_)
+				return false;*/
+
+			// both commands and children are the same
+			// nodes can only be the same if they were both cloned from the same node
+			auto const& cns = node_t<Command>::cloner_node_;
+			auto lhsi = cns.find(lhs.get());
+			auto rhsi = cns.find(rhs.get());
+			return (lhsi != cns.end() && rhsi != cns.end()) && *lhsi < *rhsi;
 		};
 	};
 

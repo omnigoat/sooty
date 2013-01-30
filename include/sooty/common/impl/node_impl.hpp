@@ -129,10 +129,7 @@ auto node_t<Command>::append_impl(std::set<node_ptr>& visited, node_ptr node) ->
 	visited.insert(shared_from_this());
 			
 	if (children_.empty()) {
-		//if (!node->commands_.empty() && node->children_.empty())
-			//commands_.insert(commands_.end(), node->commands_.begin(), node->commands_.end());
-		//else 
-			children_.insert(node);
+		children_.insert(node);
 	}
 	else {
 		std::for_each(children_.begin(), children_.end(), std::bind(&node_t::append_impl, std::placeholders::_1, std::ref(visited), std::ref(node)));

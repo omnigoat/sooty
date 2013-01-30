@@ -19,7 +19,7 @@ namespace detail {
 //=====================================================================
 
 	struct command_t {
-		enum Enum {
+		enum class action_t {
 			terminal,
 			add_marker,
 			rm_marker,
@@ -28,12 +28,12 @@ namespace detail {
 			combine
 		};
 		
-		command_t(Enum action, size_t lower_id, size_t upper_id, size_t insert_id = 0)
+		command_t(action_t action, size_t lower_id, size_t upper_id, size_t insert_id = 0)
 			: action(action), lower_id(lower_id), upper_id(upper_id), insert_id(insert_id)
 		{
 		}
 		
-		command_t(Enum action, size_t lower_id, size_t upper_id, detail::const_mark_ref mark)
+		command_t(action_t action, size_t lower_id, size_t upper_id, detail::const_mark_ref mark)
 			: action(action), lower_id(lower_id), upper_id(upper_id), insert_id(), mark(mark)
 		{
 			if (mark)
@@ -66,7 +66,7 @@ namespace detail {
 		}
 		
 		bool is_sentinel() const {
-			return action == add_marker || action == rm_marker;
+			return action == action_t::add_marker || action == action_t::rm_marker;
 		}
 		
 		command_t clone() const {
@@ -80,23 +80,23 @@ namespace detail {
 		}
 		
 		static command_t make_add_marker(detail::const_mark_ref mark) {
-			return command_t(add_marker, 0, 0, mark);
+			return command_t(action_t::add_marker, 0, 0, mark);
 		}
 		
 		static command_t make_rm_marker(detail::const_mark_ref mark) {
-			return command_t(rm_marker, 0, 0, mark);
+			return command_t(action_t::rm_marker, 0, 0, mark);
 		}
 		
 		static command_t make_match(size_t from_id, size_t to_id) {
-			return command_t(match, from_id, to_id);
+			return command_t(action_t::match, from_id, to_id);
 		}
 		
 		static command_t make_insert(size_t insert_id) {
-			return command_t(insert, 0, 0, insert_id);
+			return command_t(action_t::insert, 0, 0, insert_id);
 		}
 		
 		static command_t make_terminal() {
-			return command_t(terminal, 0, 0);
+			return command_t(action_t::terminal, 0, 0);
 		}
 		
 		bool operator == (const command_t& rhs) const {
@@ -107,7 +107,7 @@ namespace detail {
 		
 		
 		
-		Enum action;
+		action_t action;
 		detail::mark_t mark;
 		size_t lower_id, upper_id, insert_id;
 	};
@@ -127,7 +127,7 @@ namespace detail {
 	}
 	
 	inline command_t merged(command_t& lhs, command_t& rhs, bool& success) {
-		if ((lhs.action == command_t::add_marker)
+		if ((lhs.action == command_t::action_t::add_marker)
 		    && rhs.action == lhs.action)
 		{
 			success = true;

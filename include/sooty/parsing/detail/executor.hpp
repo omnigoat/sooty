@@ -27,15 +27,15 @@ namespace detail {
 		{
 			switch (command.action)
 			{
-				case command_t::add_marker:
+				case command_t::action_t::add_marker:
 					accumulator.add_marker(command.mark);
 					break;
 				
-				case command_t::rm_marker:
+				case command_t::action_t::rm_marker:
 					accumulator.rm_marker(command.mark);
 					break;
 				
-				case command_t::match:
+				case command_t::action_t::match:
 					if (input.is_exhausted() || input.cv().id() < command.lower_id || command.upper_id < input.cv().id())
 						return false;
 					else if (command.insert_id != 0) {
@@ -47,11 +47,11 @@ namespace detail {
 					}
 					break;
 				
-				case command_t::insert:
+				case command_t::action_t::insert:
 					accumulator.insert(command.insert_id);
 					break;
 				
-				case command_t::combine:
+				case command_t::action_t::combine:
 					accumulator.merge_into(command.mark);
 					break;
 			}

@@ -45,7 +45,7 @@ namespace parsing {
 		
 		return parser(
 			detail::parser_backend_t::make()
-				->push_back_command( command_t(command_t::match, id, id, insert ? id : 0) )
+				->push_back_command( command_t(command_t::action_t::match, id, id, insert ? id : 0) )
 		);
 	}
 	

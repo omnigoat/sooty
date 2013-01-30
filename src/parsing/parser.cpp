@@ -40,7 +40,7 @@ auto parser::operator [] (const parser& rhs) const -> parser
 			->append(common::clone_tree(rhs.backend_))
 			->append(common::clone_tree(backend_))
 			->append(detail::parser_backend_t::make()
-				->push_back_command(detail::command_t(detail::command_t::combine, 0, 0, mark))
+				->push_back_command(detail::command_t(detail::command_t::action_t::combine, 0, 0, mark))
 			)
 	);
 }
@@ -48,9 +48,6 @@ auto parser::operator [] (const parser& rhs) const -> parser
 auto parser::operator = (parser const& rhs) -> parser&
 {
 	
-
-
-
 	return *this;
 }
 
