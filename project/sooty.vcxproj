@@ -99,7 +99,7 @@
     <ClCompile Include="..\src\parsing\parser.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\sooty\common\impl\node_impl.hpp" />
+    <ClInclude Include="..\include\sooty\common\node_impl.hpp" />
     <ClInclude Include="..\include\sooty\lexing\input_range.hpp" />
     <ClInclude Include="..\include\sooty\lexing\iterator.hpp" />
     <ClInclude Include="..\include\sooty\lexing\lexeme.hpp" />
@@ -123,8 +123,6 @@
     <ClInclude Include="..\include\sooty\common\node.hpp" />
     <ClInclude Include="..\include\sooty\common\performer.hpp" />
     <ClInclude Include="..\include\sooty\common\detail\clone_impl.hpp" />
-    <ClInclude Include="..\include\sooty\common\detail\fold.hpp" />
-    <ClInclude Include="..\include\sooty\common\detail\layout.hpp" />
     <ClInclude Include="..\include\sooty\walking\placeholder.hpp" />
     <ClInclude Include="..\include\sooty\walking\walker.hpp" />
     <ClInclude Include="..\include\sooty\walking\detail\abstract_walker_backend.hpp" />

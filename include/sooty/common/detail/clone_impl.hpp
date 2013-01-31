@@ -8,8 +8,6 @@
 //=====================================================================
 #include <map>
 //=====================================================================
-#include <sooty/common/detail/layout.hpp>
-//=====================================================================
 namespace sooty {
 namespace common {
 namespace detail {
@@ -26,9 +24,9 @@ namespace detail {
 		visited_nodes[clonee] = new_node;
 		
 		// recurse for children nodes
-		std::for_each(clonee->children_.begin(), clonee->children_.end(), [&](const NodePtr& x) {
+		for (auto const& x : clonee->children_) {
 			new_node->children_.insert( clone_tree_impl(visited_nodes, x) );
-		});
+		};
 
 		std::transform(new_node->commands_.begin(), new_node->commands_.end(), new_node->commands_.begin(),
 			&NodePtr::element_type::clone_command);

@@ -6,9 +6,6 @@
 #ifndef SOOTY_LEXING_LEXER_HPP
 #define SOOTY_LEXING_LEXER_HPP
 //=====================================================================
-#include <sooty/common/detail/fold.hpp>
-#include <sooty/common/detail/append_success.hpp>
-//=====================================================================
 #include <sooty/lexing/detail/lexer_backend.hpp>
 #include <sooty/lexing/detail/command.hpp>
 //=====================================================================

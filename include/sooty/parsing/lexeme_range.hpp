@@ -6,6 +6,8 @@
 #ifndef SOOTY_PARSING_INPUT_RANGE_HPP
 #define SOOTY_PARSING_INPUT_RANGE_HPP
 //=====================================================================
+#include <atma/assert.hpp>
+//=====================================================================
 namespace sooty {
 namespace parsing {
 //=====================================================================
@@ -23,14 +25,14 @@ namespace parsing {
 		
 		// current value / clairvoyance
 		lexing::const_lexeme_ref cv() const {
-			assert( !is_exhausted() );
+			ATMA_ASSERT( !is_exhausted() );
 			return *begin_;
 		}
 		
 		
 		// move forwards!~~
 		void advance() {
-			assert(!is_exhausted());
+			ATMA_ASSERT(!is_exhausted());
 			++begin_;
 		}
 		

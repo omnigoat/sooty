@@ -140,7 +140,7 @@ namespace common {
 	};
 
 	// implementation
-	#include "impl/node_impl.hpp"
+	#include "node_impl.hpp"
 
 
 //=====================================================================

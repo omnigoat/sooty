@@ -112,7 +112,7 @@ namespace parsing {
 		{
 			if (parsemes.size() == 0)
 				return;
-			assert(parsemes.back().children().size() > 0);
+			ATMA_ASSERT(parsemes.back().children().size() > 0);
 			
 			parsemes.insert(parsemes.end() - 1,
 				parsemes.back().children().begin(),

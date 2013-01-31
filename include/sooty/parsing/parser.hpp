@@ -7,7 +7,6 @@
 #define SOOTY_PARSING_PARSER_HPP
 //=====================================================================
 #include <sooty/common/clone.hpp>
-#include <sooty/common/detail/fold.hpp>
 //=====================================================================
 #include <sooty/lexing/lexemes.hpp>
 //=====================================================================

@@ -45,9 +45,6 @@
     <Filter Include="include\transforming\detail">
       <UniqueIdentifier>{767825bb-5b8a-4278-8a13-61aeb44a3d1c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\common\impl">
-      <UniqueIdentifier>{7948511b-52b5-4ac1-b0c0-af2fc75e9049}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\main.cpp">
@@ -145,12 +142,6 @@
     <ClInclude Include="..\include\sooty\common\detail\clone_impl.hpp">
       <Filter>include\common\detail</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\sooty\common\detail\fold.hpp">
-      <Filter>include\common\detail</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\sooty\common\detail\layout.hpp">
-      <Filter>include\common\detail</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\sooty\walking\placeholder.hpp">
       <Filter>include\walking</Filter>
     </ClInclude>
@@ -199,8 +190,8 @@
     <ClInclude Include="..\include\sooty\transforming\detail\mk_transformer_backend.hpp">
       <Filter>include\transforming\detail</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\sooty\common\impl\node_impl.hpp">
-      <Filter>include\common\impl</Filter>
+    <ClInclude Include="..\include\sooty\common\node_impl.hpp">
+      <Filter>include\common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
