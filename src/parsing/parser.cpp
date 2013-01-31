@@ -47,7 +47,9 @@ auto parser::operator [] (const parser& rhs) const -> parser
 
 auto parser::operator = (parser const& rhs) -> parser&
 {
-	
+	// yay!
+	//backend_ = common::remove_left_recursion(rhs, shared_from_this());
+
 	return *this;
 }
 

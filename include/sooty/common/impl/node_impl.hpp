@@ -7,8 +7,9 @@ template <typename Command>
 std::map<node_t<Command>*, node_t<Command>*> node_t<Command>::cloner_node_;
 
 
-
+//
 // constructors
+//
 template <typename Command>
 node_t<Command>::node_t()
 {
@@ -29,17 +30,22 @@ node_t<Command>::node_t(node_t<Command>&& rhs)
 template <typename Command>
 node_t<Command>::~node_t()
 {
-	if (cloner_node_.find(this) != cloner_node_.end()) {
-		cloned_nodes_[cloner_node_[this]].erase(this);
-	}
-
-	// tell all our children we no longer exist
+	// if we have clones, for each clone, go and remove the ancestry
+	// from us, to the beginning of time.
 	if (cloned_nodes_.find(this) != cloned_nodes_.end()) {
-		for (auto& x : cloned_nodes_[this]) {
-			cloner_node_.erase(x);
+		for (auto const& x : cloned_nodes_[this]) {
+			auto i = std::find(x->ancestry_.begin(), x->ancestry_.end(), this);
+			ATMA_ASSERT(i != x->ancestry_.end());
+			x->ancestry_.erase(i, x->ancestry_.end());
 		}
 	}
 
+	// for each node in our ancestry, tell it that we are no longer one of its clones
+	for (auto const& ancestor : ancestry_) {
+		ATMA_ASSERT(cloned_nodes_.find(ancestor) != cloned_nodes_.end());
+		cloned_nodes_[ancestor].erase(this);
+	}
+	
 	cloned_nodes_.erase(this);
 }
 
@@ -71,10 +77,19 @@ auto node_t<Command>::operator = (node_t<Command>&& rhs) -> node_t<Command>& {
 }
 
 template <typename Command>
-auto node_t<Command>::clone() -> node_ptr {
+auto node_t<Command>::clone() -> node_ptr
+{
+	// clone node
 	node_ptr C(new node_t(*this));
+
+	// remember that we cloned that nopde
 	cloned_nodes_[this].insert(C.get());
-	cloner_node_[C.get()] = this;
+
+	// our clone's ancestry is our ancestry with us at the front
+	C->ancestry_.reserve(1 + ancestry_.size());
+	C->ancestry_.push_back(this);
+	C->ancestry_.insert(C->ancestry_.end(), ancestry_.begin(), ancestry_.end());
+
 	return C;
 }
 
@@ -153,8 +168,14 @@ auto node_t<Command>::merge(node_ptr const& rhs) -> node_ptr
 		rhs->commands_
 	);
 	
+	// neither @lhs and @rhs actually had any commands, and yet we are being told to merge
+	// them. thus, combine the children.
+	if (combined_commands.empty() && new_lhs_commands.empty() && new_rhs_commands.empty())
+	{
+		children_.insert(rhs->children_.begin(), rhs->children_.end());
+	}
 	// @lhs and @rhs were completely merged together, we can recurse through our children
-	if (!combined_commands.empty() && new_lhs_commands.empty() && new_rhs_commands.empty())
+	else if (!combined_commands.empty() && new_lhs_commands.empty() && new_rhs_commands.empty())
 	{
 		commands_.swap(combined_commands);
 		children_t new_children;
@@ -178,13 +199,13 @@ auto node_t<Command>::merge(node_ptr const& rhs) -> node_ptr
 		rhs->commands_.swap(new_rhs_commands);
 		
 		children_t new_children;
+		auto merge_failer = [&new_children](node_ptr const& n){ new_children.insert(n); };
 		atma::merge(
 			children_.begin(), children_.end(),
 			rhs->children_.begin(), rhs->children_.end(),
 			std::inserter(new_children, new_children.end()),
 			std::bind(&node_t<Command>::merge, std::placeholders::_1, std::ref(rhs)),
-			[&new_children](node_ptr const& n){ new_children.insert(n); },
-			[&new_children](node_ptr const& n){ new_children.insert(n); },
+			merge_failer, merge_failer,
 			ordering_t()
 		);
 

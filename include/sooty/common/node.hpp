@@ -102,6 +102,9 @@ namespace common {
 		commands_t unchosen_;
 		children_t children_;
 
+		std::vector<node_t*> ancestry_;
+
+
 		// what children have we cloned?
 		static std::map<node_t*, std::set<node_t*>> cloned_nodes_;
 		// reverse lookup so we can remove references to ourselves from our parents
@@ -123,17 +126,16 @@ namespace common {
 			else if (rhs->commands_ < lhs->commands_)
 				return false;
 
-			/*if (lhs->children_ < rhs->children_)
-				return true;
-			else if (rhs->children_ < lhs->children_)
-				return false;*/
+			// if the two nodes share part of their ancestry
+			for (auto& x : lhs->ancestry_) {
+				if (std::find(rhs->ancestry_.begin(), rhs->ancestry_.end(), x) != rhs->ancestry_.end())
+					return false;
+			}
+			/*if (!lhs->ancestry_.empty() && !rhs->ancestry_.empty())
+				if (lhs->ancestry_[0] == rhs->ancestry_[0])
+					return false;*/
 
-			// both commands and children are the same
-			// nodes can only be the same if they were both cloned from the same node
-			auto const& cns = node_t<Command>::cloner_node_;
-			auto lhsi = cns.find(lhs.get());
-			auto rhsi = cns.find(rhs.get());
-			return (lhsi != cns.end() && rhsi != cns.end()) && *lhsi < *rhsi;
+			return lhs.get() < rhs.get();
 		};
 	};
 
