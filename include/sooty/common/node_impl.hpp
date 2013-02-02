@@ -1,11 +1,5 @@
 
 
-template <typename Command>
-std::map<node_t<Command>*, std::set<node_t<Command>*>> node_t<Command>::cloned_nodes_;
-
-template <typename Command>
-std::map<node_t<Command>*, node_t<Command>*> node_t<Command>::cloner_node_;
-
 
 //
 // constructors
@@ -21,60 +15,44 @@ node_t<Command>::node_t(const node_t<Command>& rhs)
 {	
 }
 
-template <typename Command>
-node_t<Command>::node_t(node_t<Command>&& rhs)
-: commands_(std::move(rhs.commands_)), children_(std::move(rhs.children_))
-{
-}
+//
+//template <typename Command>
+//node_t<Command>::node_t(node_t<Command>&& rhs)
+//: commands_(std::move(rhs.commands_)), children_(std::move(rhs.children_))
+//{
+//}
 
 template <typename Command>
 node_t<Command>::~node_t()
 {
-	// if we have clones, for each clone, go and remove the ancestry
-	// from us, to the beginning of time.
-	if (cloned_nodes_.find(this) != cloned_nodes_.end()) {
-		for (auto const& x : cloned_nodes_[this]) {
-			auto i = std::find(x->ancestry_.begin(), x->ancestry_.end(), this);
-			ATMA_ASSERT(i != x->ancestry_.end());
-			x->ancestry_.erase(i, x->ancestry_.end());
-		}
+	// if we have clones, for each clone, go and remove us from the ancestry
+	for (auto const& x : clones_) {
+		auto i = std::find(x->ancestry_.begin(), x->ancestry_.end(), this);
+		ATMA_ASSERT(i != x->ancestry_.end());
+		x->ancestry_.erase(i);
 	}
 
-	// for each node in our ancestry, tell it that we are no longer one of its clones
-	for (auto const& ancestor : ancestry_) {
-		ATMA_ASSERT(cloned_nodes_.find(ancestor) != cloned_nodes_.end());
-		cloned_nodes_[ancestor].erase(this);
+	// our direct parent will consider us a clone. remove that reference
+	if (!ancestry_.empty()) {
+		ATMA_ASSERT(ancestry_.front()->clones_.find(this) != ancestry_.front()->clones_.end());
+		// tell our parent that it nows looks after our clones
+		ancestry_.front()->clones_.erase(this);
+		ancestry_.front()->clones_.insert(clones_.begin(), clones_.end());
 	}
-	
-	cloned_nodes_.erase(this);
 }
 
 template <typename Command>
 auto node_t<Command>::operator = (node_t<Command> const& rhs) -> node_t<Command>& {
-	children_t tmp = children_;
-
-	children_ = rhs.children_;
-	commands_ = rhs.commands_;
-	
-	for (auto& x : tmp) {
-		append(x);
-	}
-
-	if (cloned_nodes_.find(this) != cloned_nodes_.end()) {
-		for (auto& x : cloned_nodes_[this]) {
-			*x = rhs;
-		}
-	}
-
+	ATMA_ASSERT(false && "not yet implemented");
 	return *this;
 }
 
-template <typename Command>
-auto node_t<Command>::operator = (node_t<Command>&& rhs) -> node_t<Command>& {
-	commands_.swap(rhs.commands_);
-	children_.swap(rhs.children_);
-	return *this;
-}
+//template <typename Command>
+//auto node_t<Command>::operator = (node_t<Command>&& rhs) -> node_t<Command>& {
+//	commands_.swap(rhs.commands_);
+//	children_.swap(rhs.children_);
+//	return *this;
+//}
 
 template <typename Command>
 auto node_t<Command>::clone() -> node_ptr
@@ -82,8 +60,8 @@ auto node_t<Command>::clone() -> node_ptr
 	// clone node
 	node_ptr C(new node_t(*this));
 
-	// remember that we cloned that nopde
-	cloned_nodes_[this].insert(C.get());
+	// remember that we cloned that node
+	clones_.insert(C.get());
 
 	// our clone's ancestry is our ancestry with us at the front
 	C->ancestry_.reserve(1 + ancestry_.size());
@@ -168,7 +146,9 @@ auto node_t<Command>::merge(node_ptr const& rhs) -> node_ptr
 		rhs->commands_
 	);
 	
-	// neither @lhs and @rhs actually had any commands, and yet we are being told to merge
+	node_ptr result = shared_from_this();
+
+	// neither @lhs nor @rhs actually had any commands, and yet we are being told to merge
 	// them. thus, combine the children.
 	if (combined_commands.empty() && new_lhs_commands.empty() && new_rhs_commands.empty())
 	{
@@ -217,17 +197,26 @@ auto node_t<Command>::merge(node_ptr const& rhs) -> node_ptr
 	else if (combined_commands.empty())
 	{
 		// create a clone of us with our commands and children
-		node_ptr sub_lhs = make();
-		sub_lhs->commands_.swap(commands_);
-		sub_lhs->children_.swap(children_);
-		children_.insert(sub_lhs);
-		children_.insert(rhs);
+		//node_ptr sub_lhs = make();
+		//sub_lhs->commands_.swap(commands_);
+		//sub_lhs->children_.swap(children_);
+
+		result = make();
+		result->children_.insert(shared_from_this());
+		result->children_.insert(rhs);
+
+		// 
+		//sub_lhs->ancestry_.swap(ancestry_);
+		
+		
+		//children_.insert(sub_lhs);
+		//children_.insert(rhs);
 	}
 	else {
 		ATMA_ASSERT(false && "yeah probs forgot a use-case");
 	}
-
-	return shared_from_this();
+	
+	return result;
 }
 
 
