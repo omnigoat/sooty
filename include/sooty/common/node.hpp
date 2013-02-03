@@ -109,11 +109,12 @@ namespace common {
 		// friends
 		template <typename ExecutorT> friend struct performer_t;
 		template <typename NodePtr> friend NodePtr detail::clone_tree_impl(std::map<NodePtr, NodePtr>& visited_nodes, const NodePtr& clonee);
+
+		template <typename node_ptr_tm, typename accumulator_tm, typename FN>
+		friend void accumulate_depth_first(node_ptr_tm const& root, accumulator_tm acc, FN fn);
 	};
 
-
-	
-	template <typename Command>
+template <typename Command>
 	struct node_t<Command>::ordering_t {
 		bool operator () (node_ptr const& lhs, node_ptr const& rhs) const
 		{
@@ -127,13 +128,41 @@ namespace common {
 				if (std::find(rhs->ancestry_.begin(), rhs->ancestry_.end(), x) != rhs->ancestry_.end())
 					return false;
 			}
-			/*if (!lhs->ancestry_.empty() && !rhs->ancestry_.empty())
-				if (lhs->ancestry_[0] == rhs->ancestry_[0])
-					return false;*/
 
 			return lhs.get() < rhs.get();
 		};
 	};
+
+
+
+
+	template <typename node_ptr_tm, typename acc_tm, typename FN>
+	void accumulate_depth_first(node_ptr_tm const& root, acc_tm acc, FN fn)
+	{
+		typedef std::tuple<node_ptr_tm, acc_tm> value_t;
+		std::stack<value_t> nodes;
+		nodes.push(std::make_tuple(root, acc));
+
+		while (!nodes.empty())
+		{
+			auto x = nodes.top();
+			auto const& xn = std::get<0>(x);
+			auto const& xa = std::get<1>(x);
+			nodes.pop();
+			
+			typename node_ptr_tm::element_type::children_t children = xn->children_;
+			
+			// call fn, which returns the new acc
+			acc_tm combined_acc = fn(xa, xn);
+
+			for (auto const& y : children) {
+				nodes.push( std::make_tuple(y, combined_acc) );
+			}
+		}
+	}
+
+
+
 
 	// implementation
 	#include "node_impl.hpp"

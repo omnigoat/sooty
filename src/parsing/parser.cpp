@@ -56,19 +56,29 @@ namespace sooty { namespace parsing {
 
 auto parser::operator [] (const parser& rhs) const -> parser
 {
-	//detail::mark_t mark = detail::generate_mark();
-	unsigned int inserts = insert_count(rhs.backend_);
+	detail::parser_backend_ptr p = common::clone_tree(rhs.backend_);
 
-	return parser (
-		detail::parser_backend_t::make()
-			->append(common::clone_tree(rhs.backend_))
-			->append(common::clone_tree(backend_))
+	common::accumulate_depth_first(p, 0, [&](unsigned int inserts, detail::parser_backend_ptr const& x) -> unsigned int {
+		if (x->commands_.empty()) {
+			++inserts;
+		}
+		else if (x->commands_.front().second.insert_id != 0) {
+			ATMA_ASSERT(x->commands_.front().second.action != detail::command_t::action_t::combine);
+			++inserts;
+		}
 
-			// count how many inserts happen in rhs, and reduce by that many
-			->append(detail::parser_backend_t::make()
+		// if this is a leaf node, append @this' backend, and the combine
+		if (x->children_.empty()) {
+			x->add_child( common::clone_tree(backend_) );
+			x->append(detail::parser_backend_t::make()
 				->push_back_command(detail::command_t(detail::command_t::action_t::combine, 0, 0, inserts))
-			)
-	);
+			);
+		}
+
+		return inserts;
+	});
+
+	return parser(p);
 }
 
 auto parser::operator = (parser const& rhs) -> parser&
