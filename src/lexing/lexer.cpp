@@ -5,6 +5,16 @@
 using namespace sooty::lexing;
 using sooty::common::clone_tree;
 
+lexer_t::lexer_t(lexer_t const& rhs)
+	: backend_(rhs.backend_)
+{
+}
+
+lexer_t::lexer_t(detail::const_lexer_backend_ptr_ref backend)
+: backend_(backend)
+{
+}
+
 lexer_t lexer_t::operator * () const
 {
 	detail::lexer_backend_ptr B = detail::lexer_backend_t::make();
@@ -31,7 +41,7 @@ lexer_t sooty::lexing::operator >> ( const_lexer_ref lhs, const_lexer_ref rhs )
 lexer_t sooty::lexing::operator | ( const_lexer_ref lhs, const_lexer_ref rhs )
 {
 	return lexer_t(
-		clone_tree(lhs.backend())->merge(rhs.backend())
+		clone_tree(lhs.backend())->merge(clone_tree(rhs.backend()))
 	);
 }
 

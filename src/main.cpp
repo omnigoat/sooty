@@ -42,7 +42,8 @@ int main()
 		input_range_t input_range(input);
 		
 		// have a banana
-		lexer_t BANANA = +(
+		lexer_t BANANA =
+		+(
 			insert(1, match("ba"))
 			|
 			insert(2, match("na"))

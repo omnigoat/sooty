@@ -29,18 +29,44 @@ auto parser::operator | (parser const& rhs) const -> parser {
 	);
 }
 
+namespace sooty { namespace parsing {
+	unsigned int insert_count(parser_backend_ptr const& head)
+	{
+		unsigned int result = 0;
+
+		std::stack<parser_backend_ptr> nodes;
+		nodes.push(head);
+		while (!nodes.empty()) {
+			parser_backend_ptr x = nodes.top();
+			nodes.pop();
+			if (x->commands_.empty())
+				++result;
+			else if (x->commands_.front().second.action != detail::command_t::action_t::combine &&
+			  x->commands_.front().second.insert_id != 0)
+				++result;
+			
+			for (auto const& y : x->children_) {
+				nodes.push(y);
+			}
+		}
+
+		return result;
+	}
+} }
+
 auto parser::operator [] (const parser& rhs) const -> parser
 {
-	detail::mark_t mark = detail::generate_mark();
-			
+	//detail::mark_t mark = detail::generate_mark();
+	unsigned int inserts = insert_count(rhs.backend_);
+
 	return parser (
 		detail::parser_backend_t::make()
-			->push_back_command(detail::command_t::make_add_marker(mark))
-			->push_back_failure(detail::command_t::make_rm_marker(mark))
 			->append(common::clone_tree(rhs.backend_))
 			->append(common::clone_tree(backend_))
+
+			// count how many inserts happen in rhs, and reduce by that many
 			->append(detail::parser_backend_t::make()
-				->push_back_command(detail::command_t(detail::command_t::action_t::combine, 0, 0, mark))
+				->push_back_command(detail::command_t(detail::command_t::action_t::combine, 0, 0, inserts))
 			)
 	);
 }

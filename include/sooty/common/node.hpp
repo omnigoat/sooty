@@ -11,6 +11,7 @@
 #include <functional>
 #include <memory>
 #include <algorithm>
+#include <stack>
 //=====================================================================
 #include <atma/algorithm.hpp>
 #include <atma/assert.hpp>
@@ -58,7 +59,7 @@ namespace common {
 		~node_t();
 
 		auto operator = (node_t const&) -> node_t&;
-		auto operator = (node_t&& rhs) -> node_t&;
+		//auto operator = (node_t&& rhs) -> node_t&;
 		
 		
 		// pure
@@ -89,7 +90,7 @@ namespace common {
 			return C.first;
 		}
 		
-	private:
+	public:
 		// mutators
 		auto append_impl(std::set<node_ptr>& visited, node_ptr node) -> node_ptr;
 		
@@ -102,13 +103,8 @@ namespace common {
 		commands_t unchosen_;
 		children_t children_;
 
+		std::set<node_t*> clones_;
 		std::vector<node_t*> ancestry_;
-
-
-		// what children have we cloned?
-		static std::map<node_t*, std::set<node_t*>> cloned_nodes_;
-		// reverse lookup so we can remove references to ourselves from our parents
-		static std::map<node_t*, node_t*> cloner_node_;
 
 		// friends
 		template <typename ExecutorT> friend struct performer_t;

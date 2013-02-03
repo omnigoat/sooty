@@ -18,10 +18,15 @@ namespace lexing {
 	
 	struct lexer_t
 	{
+		lexer_t(lexer_t const&);
+
+		auto operator = (lexer_t const& rhs) -> lexer_t& {
+			backend_ = rhs.backend_;
+		}
+
 		friend lexer_t match(char, char, bool);
 		friend lexer_t match(const std::string&);
 		friend lexer_t insert(size_t, const_lexer_ref);
-		
 		
 		friend lexer_t operator >> (const_lexer_ref, const_lexer_ref);
 		friend lexer_t operator | (const_lexer_ref, const_lexer_ref);
@@ -32,10 +37,7 @@ namespace lexing {
 		lexer_t operator + () const;
 		
 	private:
-		lexer_t(detail::const_lexer_backend_ptr_ref backend)
-			: backend_(backend)
-		{
-		}
+		lexer_t(detail::const_lexer_backend_ptr_ref);
 		
 		detail::lexer_backend_ptr backend_;
 	};
