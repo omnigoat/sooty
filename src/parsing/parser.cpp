@@ -22,6 +22,10 @@ auto parser::operator >> (parser const& rhs) const -> parser {
 		common::clone_tree(backend_)->append( common::clone_tree(rhs.backend_) )
 	);
 }
+
+auto parser::operator , (parser const& rhs) const -> parser {
+	return *this >> rhs;
+}
 		
 auto parser::operator | (parser const& rhs) const -> parser {
 	return parser (
@@ -83,8 +87,9 @@ auto parser::operator [] (const parser& rhs) const -> parser
 			++inserts;
 		}
 		else if (x->commands_.front().second.insert_id != 0) {
-			ATMA_ASSERT(x->commands_.front().second.action != detail::command_t::action_t::combine);
-			++inserts;
+			if (x->commands_.front().second.action != detail::command_t::action_t::combine) {
+				++inserts;
+			}
 		}
 
 		// if this is a leaf node, append @this' backend, and the combine

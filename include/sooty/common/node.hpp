@@ -159,14 +159,17 @@ namespace common {
 		typedef std::tuple<node_ptr_tm, acc_tm> value_t;
 		std::stack<value_t> nodes;
 		nodes.push(std::make_tuple(root, acc));
-
+		std::set<node_ptr_tm> visited;
 		while (!nodes.empty())
 		{
 			auto x = nodes.top();
 			auto const& xn = std::get<0>(x);
 			auto const& xa = std::get<1>(x);
 			nodes.pop();
-			
+			if (visited.find(xn) != visited.end())
+				continue;
+			visited.insert(xn);
+
 			typename node_ptr_tm::element_type::children_t children = xn->children_;
 			
 			// call fn, which returns the new acc

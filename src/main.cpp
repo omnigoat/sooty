@@ -28,7 +28,7 @@
 
 int main()
 {
-	std::string input_string = "1 + 1 - 1";
+	std::string input_string = "1 + 1 - 1 * 1";
 	sooty::lexing::lexemes_t lexemes;
 	sooty::lexing::detail::accumulator_t acc(lexemes, input_string.size());
 	{
@@ -49,6 +49,8 @@ int main()
 			insert(10, match("+"))
 			|
 			insert(11, match("-"))
+			|
+			insert(12, match("*"))
 			|
 			match(' ', false)
 		);
@@ -77,26 +79,40 @@ int main()
 		
 		using namespace sooty::parsing;
 		
-		parser K;
-		K = insert(10) [
-				K >>
-				match(10, false) >>
+		parser
+		  additive_expr,
+		  multiplicative_expr
+		  ;
+		
+		additive_expr = insert(10) [
+				additive_expr,
+				match(10, false),
 				match(1)
 			]
 			|
 			insert(11) [
-				K >>
-				match(11, false) >>
+				additive_expr,
+				match(11, false),
 				match(1)
 			]
 			|
 			match(1)
 			;
 		
+		multiplicative_expr =
+			insert(12) [
+				multiplicative_expr,
+				match(12, false),
+				additive_expr
+			]
+			|
+			additive_expr
+			;
+
 		
 		typedef sooty::common::performer_t<sooty::parsing::detail::executor_t> parsing_t;
 		sooty::parsing::accumulator pracc;
-		parsing_t()(pracc, sooty::parsing::lexeme_range_t(lexemes), K.backend());
+		parsing_t()(pracc, sooty::parsing::lexeme_range_t(lexemes), multiplicative_expr.backend());
 		
 		parsemes = pracc.container();
 	}

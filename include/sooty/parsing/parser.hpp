@@ -29,6 +29,7 @@ namespace parsing {
 
 		// operators
 		auto operator >> (parser const&) const -> parser;
+		auto operator ,  (parser const&) const -> parser;
 		auto operator |  (parser const&) const -> parser;
 		auto operator [] (parser const&) const -> parser;
 
