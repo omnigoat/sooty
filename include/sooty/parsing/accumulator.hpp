@@ -129,14 +129,18 @@ namespace parsing {
 			return markers[mark->id].second;
 		}
 		
-		void merge_into(const mark_t& mark) {
+		void merge_into(unsigned int count)
+		{
+			ATMA_ASSERT(parsemes.size() >= 1 + count);
+
 			parseme parent = parsemes.back();
 			parent.children().insert(
 				parent.children().end(),
-				parsemes.begin() + markers[mark->id].first.top(),
+				parsemes.end() - 1 - count,
 				parsemes.end() - 1
 			);
-			parsemes.erase(parsemes.begin() + markers[mark->id].first.top(), parsemes.end() - 1);
+
+			parsemes.erase(parsemes.end() - 1 - count, parsemes.end() - 1);
 		}
 		
 		/*static mark_t combined_mark(const mark_t& lhs, const mark_t& rhs) {

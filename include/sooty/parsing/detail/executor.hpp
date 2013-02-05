@@ -52,7 +52,7 @@ namespace detail {
 					break;
 				
 				case command_t::action_t::combine:
-					accumulator.merge_into(command.mark);
+					accumulator.merge_into(command.insert_id);
 					break;
 			}
 			

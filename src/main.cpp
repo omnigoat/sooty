@@ -28,7 +28,7 @@
 
 int main()
 {
-	std::string input_string = "bana";
+	std::string input_string = "1 + 1 - 1";
 	sooty::lexing::lexemes_t lexemes;
 	sooty::lexing::detail::accumulator_t acc(lexemes, input_string.size());
 	{
@@ -44,9 +44,11 @@ int main()
 		// have a banana
 		lexer_t BANANA =
 		+(
-			insert(1, match("ba"))
+			insert(1, match("1"))
 			|
-			insert(2, match("na"))
+			insert(10, match("+"))
+			|
+			insert(11, match("-"))
 			|
 			match(' ', false)
 		);
@@ -78,13 +80,13 @@ int main()
 		parser K;
 		K = insert(10) [
 				K >>
-				match(10) >>
+				match(10, false) >>
 				match(1)
 			]
 			|
 			insert(11) [
 				K >>
-				match(11) >>
+				match(11, false) >>
 				match(1)
 			]
 			|
