@@ -30,27 +30,47 @@ auto parser::operator | (parser const& rhs) const -> parser {
 }
 
 namespace sooty { namespace parsing {
-	unsigned int insert_count(parser_backend_ptr const& head)
-	{
-		unsigned int result = 0;
+	using detail::parser_backend_ptr;
+	using detail::parser_backend_t;
 
-		std::stack<parser_backend_ptr> nodes;
-		nodes.push(head);
-		while (!nodes.empty()) {
-			parser_backend_ptr x = nodes.top();
+	parser_backend_ptr remove_left_recursion(parser_backend_ptr const& root, detail::parser_backend_ptr const& niq)
+	{
+		std::stack<std::tuple<parser_backend_ptr, parser_backend_ptr>> nodes;
+		nodes.push(std::make_pair(parser_backend_ptr(), root));
+		while (!nodes.empty()) 
+		{
+			auto x = nodes.top();
 			nodes.pop();
-			if (x->commands_.empty())
-				++result;
-			else if (x->commands_.front().second.action != detail::command_t::action_t::combine &&
-			  x->commands_.front().second.insert_id != 0)
-				++result;
-			
-			for (auto const& y : x->children_) {
-				nodes.push(y);
+			auto& xp = std::get<0>(x);
+			auto& xn = std::get<1>(x);
+
+			// if this node is us (or a clone of us)
+			if (parser_backend_t::equal_or_clone(niq, xn))
+			{
+				// create A'  (a1 A' | a2 A' | a3 A')
+				parser_backend_ptr A_stroke = parser_backend_t::make();
+				A_stroke->children_ = xn->children_;
+				A_stroke->append(A_stroke);
+
+				// rewrite parent
+				if (xp)
+				{
+					unsigned int rm_count = xp->children_.erase(xn);
+					ATMA_ASSERT(rm_count == 1);
+
+					for (auto& B : xp->children_) {
+						B->append(A_stroke);
+					}
+				}
+			}
+			// we need to continue recursing only for "empty" nodes
+			else if (xn->commands_.empty()) {
+				for (auto const& n : xn->children_)
+					nodes.push(std::make_tuple(xn, n));
 			}
 		}
 
-		return result;
+		return root;
 	}
 } }
 
@@ -84,7 +104,9 @@ auto parser::operator [] (const parser& rhs) const -> parser
 auto parser::operator = (parser const& rhs) -> parser&
 {
 	// yay!
-	//backend_ = common::remove_left_recursion(rhs, shared_from_this());
+	backend_ = remove_left_recursion(rhs.backend_, backend_);
+
+
 
 	return *this;
 }

@@ -21,7 +21,7 @@ lexer_t lexer_t::operator * () const
 	
 	return lexer_t(
 		B->add_child(clone_tree(backend_)->append(B))
-		 ->add_child( detail::lexer_backend_t::make() )
+		 //->add_child( detail::lexer_backend_t::make() )
 	);
 }
 

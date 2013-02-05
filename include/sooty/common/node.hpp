@@ -90,6 +90,23 @@ namespace common {
 			return C.first;
 		}
 		
+		static bool equal_or_clone(node_ptr const& lhs, node_ptr const& rhs)
+		{
+			std::stack<node_t*> nodes;
+			nodes.push(lhs.get());
+			while (!nodes.empty()) {
+				auto x = nodes.top();
+				nodes.pop();
+				if (x == rhs.get())
+					return true;
+				for (auto& y : x->clones_)
+					nodes.push(y);
+			}
+
+			return false;
+		}
+
+
 	public:
 		// mutators
 		auto append_impl(std::set<node_ptr>& visited, node_ptr node) -> node_ptr;
@@ -114,13 +131,14 @@ namespace common {
 		friend void accumulate_depth_first(node_ptr_tm const& root, accumulator_tm acc, FN fn);
 	};
 
-template <typename Command>
+	template <typename Command>
 	struct node_t<Command>::ordering_t {
 		bool operator () (node_ptr const& lhs, node_ptr const& rhs) const
 		{
-			if (lhs->commands_ < rhs->commands_)
+			// descending order of commands
+			if (lhs->commands_ > rhs->commands_)
 				return true;
-			else if (rhs->commands_ < lhs->commands_)
+			else if (rhs->commands_ > lhs->commands_)
 				return false;
 
 			// if the two nodes share part of their ancestry
@@ -133,8 +151,7 @@ template <typename Command>
 		};
 	};
 
-
-
+	
 
 	template <typename node_ptr_tm, typename acc_tm, typename FN>
 	void accumulate_depth_first(node_ptr_tm const& root, acc_tm acc, FN fn)
