@@ -97,13 +97,31 @@ auto parser::operator [] (const parser& rhs) const -> parser
 	//  make it another alternative. consider chronological ordering children?
 	//
 	//
-	common::accumulate_depth_first(p, 0, [&](unsigned int inserts, detail::parser_backend_ptr const& x) -> unsigned int {
+	using detail::parser_backend_ptr;
+
+	std::map<parser_backend_ptr, unsigned int> visited;
+	std::stack<parser_backend_ptr> nodes;
+	std::map<parser_backend_ptr, unsigned int> inserts;
+	nodes.push(p);
+	inserts[p] = 0;
+	while (!nodes.empty())
+	{
+		auto x = nodes.top();
+		nodes.pop();
+
+		if (++visited[x] > 1)
+			continue;
+
+		unsigned int ii = inserts[x];
+		detail::parser_backend_t::children_t children = x->children_;
+
+		// count number of insertions
 		if (x->commands_.empty()) {
-			++inserts;
+			++ii;
 		}
 		else if (x->commands_.front().second.insert_id != 0) {
 			if (x->commands_.front().second.action != detail::command_t::action_t::combine) {
-				++inserts;
+				++ii;
 			}
 		}
 
@@ -111,12 +129,46 @@ auto parser::operator [] (const parser& rhs) const -> parser
 		if (x->children_.empty()) {
 			x->add_child( common::clone_tree(backend_) );
 			x->append(detail::parser_backend_t::make()
-				->push_back_command(detail::command_t(detail::command_t::action_t::combine, 0, 0, inserts))
+				->push_back_command(detail::command_t(detail::command_t::action_t::combine, 0, 0, ii))
 			);
 		}
 
-		return inserts;
-	});
+		for (auto y : children) {
+			inserts[y] = ii;
+			nodes.push(y);
+		}
+	}
+
+	for (auto const& x : visited) {
+		if (x.second > 1) {
+			x.first->add_child(
+				common::clone_tree(backend_)->append(detail::parser_backend_t::make()
+					->push_back_command(detail::command_t(detail::command_t::action_t::combine, 0, 0, 2))
+				)
+			);
+		}
+	}
+
+	//common::accumulate_depth_first(p, 0, [&](unsigned int inserts, detail::parser_backend_ptr const& x) -> unsigned int {
+	//	if (x->commands_.empty()) {
+	//		++inserts;
+	//	}
+	//	else if (x->commands_.front().second.insert_id != 0) {
+	//		if (x->commands_.front().second.action != detail::command_t::action_t::combine) {
+	//			++inserts;
+	//		}
+	//	}
+
+	//	// if this is a leaf node, append @this' backend, and the combine
+	//	if (x->children_.empty()) {
+	//		x->add_child( common::clone_tree(backend_) );
+	//		x->append(detail::parser_backend_t::make()
+	//			->push_back_command(detail::command_t(detail::command_t::action_t::combine, 0, 0, inserts))
+	//		);
+	//	}
+
+	//	return inserts;
+	//});
 
 	return parser(p);
 }
