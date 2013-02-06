@@ -39,6 +39,12 @@ namespace common {
 	template <typename Command>
 	struct node_t : std::enable_shared_from_this<node_t<Command>>
 	{
+		enum class type_t {
+			placeholder,
+			control,
+			actor
+		};
+
 		// node-ptr / command_t
 		typedef std::shared_ptr<node_t> node_ptr;
 		typedef Command command_t;
@@ -48,12 +54,13 @@ namespace common {
 
 		// children: sort by descending number of commands
 		struct ordering_t;
-		typedef std::multiset<node_ptr, ordering_t> children_t;
+		typedef std::set<node_ptr, ordering_t> children_t;
 		
+		struct merged_ordering_t;
 
 
 		// constructors
-		node_t();
+		node_t(type_t);
 		node_t(node_t const& rhs);
 		node_t(node_t&& rhs);
 		~node_t();
@@ -63,6 +70,7 @@ namespace common {
 		
 		
 		// pure
+		auto type() const -> type_t { return type_; }
 		auto clone() -> node_ptr;
 
 		
@@ -78,9 +86,8 @@ namespace common {
 
 		
 
-		static node_ptr make() {
-			return node_ptr(new node_t);
-		}
+		static auto make_placeholder() -> node_ptr {  return node_ptr(new node_t(type_t::placeholder));  }
+		static auto make() -> node_ptr {  return node_ptr(new node_t(type_t::control));  }
 
 		static bool is_failure(const std::pair<bool, command_t>& C) {
 			return !C.first;
@@ -106,20 +113,24 @@ namespace common {
 			return false;
 		}
 
+		static bool share_ancestry(node_ptr const& lhs, node_ptr const& rhs)
+		{
+			return !lhs->ancestry_.empty() && !rhs->ancestry_.empty() && lhs->ancestry_.back() == rhs->ancestry_.back();
+		}
+
 
 	public:
 		// mutators
-		auto append_impl(std::set<node_ptr>& visited, node_ptr node) -> node_ptr;
+		auto append_impl(std::map<node_ptr, int>& visited, node_ptr node) -> node_ptr;
 		
 		// statics
 		static auto merge_commands(commands_t& combined, commands_t& new_lhs, commands_t& new_rhs, commands_t& lhs, commands_t& rhs) -> void;
 		static auto clone_command(const std::pair<bool, command_t>& C) -> std::pair<bool, command_t>;
 
 		// members
+		type_t type_;
 		commands_t commands_;
-		commands_t unchosen_;
 		children_t children_;
-
 		std::set<node_t*> clones_;
 		std::vector<node_t*> ancestry_;
 
@@ -129,10 +140,27 @@ namespace common {
 
 		template <typename node_ptr_tm, typename accumulator_tm, typename FN>
 		friend void accumulate_depth_first(node_ptr_tm const& root, accumulator_tm acc, FN fn);
+
+		template <typename node_ptr_tm, typename FN>
+		void for_each_depth_first(node_ptr_tm const& root, FN fn);
 	};
 
 	template <typename Command>
 	struct node_t<Command>::ordering_t {
+		bool operator () (node_ptr const& lhs, node_ptr const& rhs) const
+		{
+			// descending order of commands
+			if (lhs->commands_ > rhs->commands_)
+				return true;
+			else if (rhs->commands_ > lhs->commands_)
+				return false;
+
+			return lhs.get() < rhs.get();
+		};
+	};
+
+	template <typename Command>
+	struct node_t<Command>::merged_ordering_t {
 		bool operator () (node_ptr const& lhs, node_ptr const& rhs) const
 		{
 			// descending order of commands
@@ -150,8 +178,6 @@ namespace common {
 			return lhs.get() < rhs.get();
 		};
 	};
-
-	
 
 	template <typename node_ptr_tm, typename acc_tm, typename FN>
 	void accumulate_depth_first(node_ptr_tm const& root, acc_tm acc, FN fn)
@@ -181,6 +207,28 @@ namespace common {
 		}
 	}
 
+	template <typename node_ptr_tm, typename FN>
+	void for_each_depth_first(node_ptr_tm const& root, FN fn)
+	{
+		std::stack<node_ptr_tm> nodes;
+		nodes.push(root);
+		std::set<node_ptr_tm> visited;
+		while (!nodes.empty())
+		{
+			auto x = nodes.top();
+			nodes.pop();
+			if (visited.find(x) != visited.end())
+				continue;
+			visited.insert(x);
+			typename node_ptr_tm::element_type::children_t children = x->children_;
+			// call fn, which returns the new acc
+			fn(x);
+
+			for (auto const& y : children) {
+				nodes.push(y);
+			}
+		}
+	}
 
 
 

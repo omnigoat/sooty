@@ -113,7 +113,7 @@ int main()
 		typedef sooty::common::performer_t<sooty::parsing::detail::executor_t> parsing_t;
 		sooty::parsing::accumulator pracc;
 		parsing_t()(pracc, sooty::parsing::lexeme_range_t(lexemes), multiplicative_expr.backend());
-		
+
 		parsemes = pracc.container();
 	}
 	

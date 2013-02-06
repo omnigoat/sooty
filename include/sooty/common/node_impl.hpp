@@ -5,14 +5,15 @@
 // constructors
 //
 template <typename Command>
-node_t<Command>::node_t()
+node_t<Command>::node_t(type_t type)
+	: type_(type)
 {
 }
 
 template <typename Command>
 node_t<Command>::node_t(const node_t<Command>& rhs)
-: commands_(rhs.commands_), unchosen_(rhs.unchosen_)
-{	
+	: type_(rhs.type_), commands_(rhs.commands_)
+{
 }
 
 //
@@ -97,8 +98,19 @@ auto node_t<Command>::add_self_as_child() -> node_ptr {
 template <typename Command>
 auto node_t<Command>::append(node_ptr const& node) -> node_ptr
 {
-	std::set<node_ptr> visited;
-	return append_impl(visited, node);
+	std::map<node_ptr, int> visited;
+
+	// regular append (when children_ is empty)
+	append_impl(visited, node);
+
+	// also find nodes that are backreferenced and add to them
+	for (auto const& x : visited) {
+		if (x.second > 1) {
+			x.first->add_child(node);
+		}
+	}
+
+	return shared_from_this();
 }
 
 template <typename Command>
@@ -109,38 +121,48 @@ auto node_t<Command>::append_self() -> node_ptr {
 // adding commands
 template <typename Command>
 auto node_t<Command>::push_back_command(const command_t& command) -> node_ptr {
+	ATMA_ASSERT(type_ != type_t::placeholder);
+	type_ = type_t::actor;
 	commands_.push_back( std::make_pair(true, command) );
 	return shared_from_this();
 }
 		
 template <typename Command>
 auto node_t<Command>::push_back_failure(const command_t& command) -> node_ptr {
+	ATMA_ASSERT(type_ != type_t::placeholder);
+	type_ = type_t::actor;
 	commands_.push_back( std::make_pair(false, command) );
 	return shared_from_this();
 }
 
 template <typename Command>
 auto node_t<Command>::push_back_action(bool good, const command_t& command) -> node_ptr {
+	ATMA_ASSERT(type_ != type_t::placeholder);
+	type_ = type_t::actor;
 	commands_.push_back( std::make_pair(good, command) );
 	return shared_from_this();
 }
 
 template <typename Command>
-auto node_t<Command>::append_impl(std::set<node_ptr>& visited, node_ptr node) -> node_ptr
+auto node_t<Command>::append_impl(std::map<node_ptr, int>& visited, node_ptr node) -> node_ptr
 {
-	if (visited.find(shared_from_this()) != visited.end())
-		return shared_from_this();
-			
-	visited.insert(shared_from_this());
-			
+	node_ptr us = shared_from_this();
+
+	if (visited.find(us) != visited.end()) {
+		++visited[us];
+		return us;
+	}
+	
+	visited.insert( std::make_pair(us, 1) );
+	
 	if (children_.empty()) {
 		children_.insert(node);
 	}
 	else {
 		std::for_each(children_.begin(), children_.end(), std::bind(&node_t::append_impl, std::placeholders::_1, std::ref(visited), std::ref(node)));
 	}
-			
-	return shared_from_this();
+	
+	return us;
 }
 
 template <typename Command>
@@ -160,9 +182,12 @@ auto node_t<Command>::merge(node_ptr const& rhs) -> node_ptr
 	
 	node_ptr result = shared_from_this();
 
-	// neither @lhs nor @rhs actually had any commands, and yet we are being told to merge
-	// them. thus, combine the children.
-	if (combined_commands.empty() && new_lhs_commands.empty() && new_rhs_commands.empty())
+	// neither @lhs nor @rhs actually had any commands
+	if (combined_commands.empty() && new_lhs_commands.empty() && new_rhs_commands.empty() &&
+	// they can be merged if they're not placeholders
+	((type_ == type_t::control && rhs->type_ == type_t::control) ||
+	// or if they're placeholders but share ancestry
+	node_t::share_ancestry(result, rhs)))
 	{
 		children_.insert(rhs->children_.begin(), rhs->children_.end());
 	}
@@ -179,7 +204,7 @@ auto node_t<Command>::merge(node_ptr const& rhs) -> node_ptr
 			std::bind(&node_t<Command>::merge, std::placeholders::_1, std::placeholders::_2),
 			[&new_children](node_ptr const& n){ new_children.insert(n); },
 			[&new_children](node_ptr const& n){ new_children.insert(n); },
-			ordering_t()
+			merged_ordering_t()
 		);
 
 		children_.swap(new_children);
@@ -198,7 +223,7 @@ auto node_t<Command>::merge(node_ptr const& rhs) -> node_ptr
 			std::inserter(new_children, new_children.end()),
 			std::bind(&node_t<Command>::merge, std::placeholders::_1, std::ref(rhs)),
 			merge_failer, merge_failer,
-			ordering_t()
+			merged_ordering_t()
 		);
 
 		children_.swap(new_children);

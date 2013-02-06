@@ -4,7 +4,7 @@ using sooty::parsing::parser;
 using sooty::parsing::detail::parser_backend_ptr;
 
 parser::parser()
-: backend_(new detail::parser_backend_t), assigned_(false)
+: backend_(detail::parser_backend_t::make_placeholder()), assigned_(false)
 {
 }
 
@@ -74,7 +74,13 @@ namespace sooty { namespace parsing {
 			}
 		}
 
-		return root;
+		// sometimes we end up with control nodes at the front with just one child. they are
+		// useless to us and increase nosie. so skip them!
+		parser_backend_ptr n = root;
+		while (n->type() == parser_backend_t::type_t::control && n->children_.size() == 1)
+			n = *n->children_.begin();
+
+		return n;
 	}
 } }
 
@@ -82,6 +88,15 @@ auto parser::operator [] (const parser& rhs) const -> parser
 {
 	detail::parser_backend_ptr p = common::clone_tree(rhs.backend_);
 
+	//
+	//
+	//    JONATHAN, LISTEN
+	//
+	//  we need to append the insert+combine in a smarter way, as currently
+	//  it appends to nothing if there's backreferences. so find them, and
+	//  make it another alternative. consider chronological ordering children?
+	//
+	//
 	common::accumulate_depth_first(p, 0, [&](unsigned int inserts, detail::parser_backend_ptr const& x) -> unsigned int {
 		if (x->commands_.empty()) {
 			++inserts;

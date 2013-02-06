@@ -114,9 +114,9 @@ namespace common {
 	private:
 		template <typename StateT, typename InputT, typename NodePTR>
 		static void perform_unchosen(StateT& state, InputT& input, const NodePTR& N) {
-			typename NodePTR::element_type::commands_t::const_iterator begin = N->unchosen_.begin();
-			for ( ; begin != N->unchosen_.end(); ++begin )
-				executor_t()(state, input, begin->second);
+			//typename NodePTR::element_type::commands_t::const_iterator begin = N->unchosen_.begin();
+			//for ( ; begin != N->unchosen_.end(); ++begin )
+				//executor_t()(state, input, begin->second);
 				
 			/*std::for_each(N->unchosen_.begin(), N->unchosen_.end(), 
 				boost::bind(executor_t(), boost::ref(state), boost::ref(input), _1));*/
