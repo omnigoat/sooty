@@ -26,10 +26,22 @@ template <typename Command>
 node_t<Command>::~node_t()
 {
 	// if we have clones, for each clone, go and remove us from the ancestry
-	for (auto const& x : clones_) {
-		auto i = std::find(x->ancestry_.begin(), x->ancestry_.end(), this);
-		ATMA_ASSERT(i != x->ancestry_.end());
-		x->ancestry_.erase(i);
+	// of all cloned nodes in this clone-node-tree
+	std::stack<node_t*> nodes;
+	nodes.push(this);
+	while (!nodes.empty())
+	{
+		auto n = nodes.top();
+		nodes.pop();
+		
+		if (n != this) {
+			auto i = std::find(n->ancestry_.begin(), n->ancestry_.end(), this);
+			ATMA_ASSERT(i != n->ancestry_.end());
+			n->ancestry_.erase(i);
+		}
+
+		for (auto const& y : n->clones_)
+			nodes.push(y);
 	}
 
 	// our direct parent will consider us a clone. remove that reference

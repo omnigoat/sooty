@@ -45,8 +45,8 @@ namespace sooty { namespace parsing {
 		{
 			auto x = nodes.top();
 			nodes.pop();
-			auto& xp = std::get<0>(x);
-			auto& xn = std::get<1>(x);
+			auto xp = std::get<0>(x);
+			auto xn = std::get<1>(x);
 
 			// if this node is us (or a clone of us)
 			if (parser_backend_t::equal_or_clone(niq, xn))
@@ -109,6 +109,7 @@ auto parser::operator [] (const parser& rhs) const -> parser
 auto parser::operator = (parser const& rhs) -> parser&
 {
 	// yay!
+	detail::parser_backend_ptr hold = backend_;
 	backend_ = remove_left_recursion(rhs.backend_, backend_);
 
 
