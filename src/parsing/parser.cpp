@@ -34,6 +34,7 @@ auto parser::operator | (parser const& rhs) const -> parser {
 }
 
 namespace sooty { namespace parsing {
+
 	using detail::parser_backend_ptr;
 	using detail::parser_backend_t;
 

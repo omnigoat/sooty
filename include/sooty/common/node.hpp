@@ -40,9 +40,9 @@ namespace common {
 	struct node_t : std::enable_shared_from_this<node_t<Command>>
 	{
 		enum class type_t {
-			placeholder,
+			actor,
 			control,
-			actor
+			placeholder
 		};
 
 		// node-ptr / command_t
@@ -149,10 +149,12 @@ namespace common {
 	struct node_t<Command>::ordering_t {
 		bool operator () (node_ptr const& lhs, node_ptr const& rhs) const
 		{
-			// descending order of commands
-			if (lhs->commands_ > rhs->commands_)
+			if (lhs->type_ != rhs->type_)
+				return lhs->type_ < rhs->type_;
+			
+			if (lhs->commands_ < rhs->commands_)
 				return true;
-			else if (rhs->commands_ > lhs->commands_)
+			else if (rhs->commands_ < lhs->commands_)
 				return false;
 
 			return lhs.get() < rhs.get();

@@ -28,28 +28,24 @@ namespace detail {
 			combine
 		};
 		
-		command_t(action_t action, size_t lower_id, size_t upper_id, size_t insert_id = 0)
-			: action(action), lower_id(lower_id), upper_id(upper_id), insert_id(insert_id)
+		command_t(action_t action, size_t lower_id, size_t upper_id, size_t insert_id)
+		: action(action), lower_id(lower_id), upper_id(upper_id), insert_id(insert_id)
 		{
 		}
 		
-		command_t(action_t action, size_t lower_id, size_t upper_id, detail::const_mark_ref mark)
-			: action(action), lower_id(lower_id), upper_id(upper_id), insert_id(), mark(mark)
+		command_t(action_t action, size_t lower_id, size_t upper_id)
+		: command_t(action, lower_id, upper_id, 0)
 		{
-			if (mark)
-				mark->add_command(this);
 		}
+		
 		
 		command_t(const command_t& rhs)
-			: action(rhs.action), lower_id(rhs.lower_id), upper_id(rhs.upper_id), insert_id(rhs.insert_id), mark(rhs.mark)
+			: action(rhs.action), lower_id(rhs.lower_id), upper_id(rhs.upper_id), insert_id(rhs.insert_id)
 		{
-			if (mark)
-				mark->add_command(this);
 		}
 		
-		~command_t() {
-			if (mark)
-				mark->remove_command(this);
+		~command_t()
+		{
 		}
 		
 		command_t& operator = (const command_t& rhs) {
@@ -57,10 +53,6 @@ namespace detail {
 			lower_id = rhs.lower_id;
 			upper_id = rhs.upper_id;
 			insert_id = rhs.insert_id;
-			mark = rhs.mark;
-			
-			if (mark)
-				mark->add_command(this);
 			
 			return *this;
 		}
@@ -71,20 +63,7 @@ namespace detail {
 		
 		command_t clone() const {
 			command_t result(*this);
-			if (result.mark) {
-				result.mark->remove_command(&result);
-				result.mark = detail::mapped_mark(result.mark);
-				result.mark->add_command(&result);
-			}
 			return result;
-		}
-		
-		static command_t make_add_marker(detail::const_mark_ref mark) {
-			return command_t(action_t::add_marker, 0, 0, mark);
-		}
-		
-		static command_t make_rm_marker(detail::const_mark_ref mark) {
-			return command_t(action_t::rm_marker, 0, 0, mark);
 		}
 		
 		static command_t make_match(size_t from_id, size_t to_id) {
@@ -100,25 +79,21 @@ namespace detail {
 		}
 		
 		bool operator == (const command_t& rhs) const {
-			return action == rhs.action && lower_id == rhs.lower_id && upper_id == rhs.upper_id
-				&& insert_id == rhs.insert_id
-				&& (mark ? (rhs.mark ? *mark == *rhs.mark : false) : !rhs.mark);
+			return action == rhs.action && lower_id == rhs.lower_id && upper_id == rhs.upper_id && insert_id == rhs.insert_id;
 		}
 		
 		
-		
 		action_t action;
-		detail::mark_t mark;
 		size_t lower_id, upper_id, insert_id;
 	};
 
-	inline bool operator < (command_t const& lhs, command_t const& rhs) {
+	inline bool operator < (command_t const& lhs, command_t const& rhs)
+	{
 		if (lhs.action != rhs.action)
 			return lhs.action < rhs.action;
 
 		if (lhs.lower_id != rhs.lower_id)
 			return lhs.lower_id < rhs.lower_id;
-
 
 		if (lhs.upper_id != rhs.upper_id)
 			return lhs.upper_id < rhs.upper_id;
@@ -131,10 +106,7 @@ namespace detail {
 		    && rhs.action == lhs.action)
 		{
 			success = true;
-			mark_t m = generate_mark();
-			lhs.mark->replace_self_with(m);
-			rhs.mark->replace_self_with(m);
-			return command_t(lhs.action, lhs.lower_id, lhs.upper_id, m);
+			return command_t(lhs.action, lhs.lower_id, lhs.upper_id);
 		}
 		else {
 			success = lhs == rhs;

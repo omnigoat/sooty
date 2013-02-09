@@ -27,14 +27,6 @@ namespace detail {
 		{
 			switch (command.action)
 			{
-				case command_t::action_t::add_marker:
-					accumulator.add_marker(command.mark);
-					break;
-				
-				case command_t::action_t::rm_marker:
-					accumulator.rm_marker(command.mark);
-					break;
-				
 				case command_t::action_t::match:
 					if (input.is_exhausted() || input.cv().id() < command.lower_id || command.upper_id < input.cv().id())
 						return false;
