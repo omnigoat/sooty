@@ -28,7 +28,7 @@
 
 int main()
 {
-	std::string input_string = "1 * 1 + 1 - 1 * 1 - 1";
+	std::string input_string = "(1 + 3) * 143 - 6";
 	sooty::lexing::lexemes_t lexemes;
 	sooty::lexing::detail::accumulator_t acc(lexemes, input_string.size());
 	{
@@ -44,13 +44,17 @@ int main()
 		// have a banana
 		lexer_t BANANA =
 		+(
-			insert(1, match("1"))
+			insert(1, +match('0', '9'))
 			|
 			insert(10, match("+"))
 			|
 			insert(11, match("-"))
 			|
 			insert(12, match("*"))
+			|
+			insert(20, match("("))
+			|
+			insert(21, match(")"))
 			|
 			match(' ', false)
 		);
@@ -88,6 +92,8 @@ int main()
 		multiplicative_expr = 
 			insert(12) [ multiplicative_expr, match(12, false), match(1) ]
 			|
+			(match(20, false), additive_expr, match(21, false))
+			|
 			match(1)
 			;
 
@@ -111,7 +117,7 @@ int main()
 	
 	std::cout << lexemes << std::endl;
 	//additive_expr.backend()->debug_print();
-	//std::cout << parsemes << std::endl;
+	std::cout << parsemes << std::endl;
 }
 
 

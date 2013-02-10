@@ -55,6 +55,8 @@ namespace parsing {
 		friend struct detail::parseme_backend;
 		friend struct parseme;
 	};
+
+	auto operator << (std::ostream&, parsemes_t const&) -> std::ostream&;
 	
 //=====================================================================
 } // namespace parsing

@@ -1,6 +1,9 @@
 #include <sooty/parsing/parseme.hpp>
 //=====================================================================
+#include <sooty/parsing/parseme.hpp>
 #include <sooty/parsing/detail/parseme_backend.hpp>
+//=====================================================================
+#include <string>
 //=====================================================================
 using sooty::parsing::parseme;
 using sooty::parsing::const_parseme_ref;
@@ -65,4 +68,11 @@ auto parseme::set_parent(const_parseme_ref parent) -> void {
 
 auto parseme::children() -> sooty::parsing::parsemes_t& {
 	return backend_->children();
+}
+
+
+auto sooty::parsing::operator << (std::ostream& out, parseme const& p) -> std::ostream&
+{
+	out << p.id() << ": " << p.text() << std::endl;
+	return out;
 }

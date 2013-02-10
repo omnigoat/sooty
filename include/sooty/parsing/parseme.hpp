@@ -68,6 +68,8 @@ namespace parsing {
 
 		friend struct parsemes_t;
 	};
+
+	auto operator << (std::ostream&, parseme const&) -> std::ostream&;
 	
 //=====================================================================
 } // namespace parsing

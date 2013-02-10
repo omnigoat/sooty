@@ -183,11 +183,10 @@ auto node_t<Command>::merge(node_ptr const& rhs) -> node_ptr
 	node_ptr result = shared_from_this();
 
 	// neither @lhs nor @rhs actually had any commands
+	// they can be merged if they're not placeholders or if they're placeholders but share ancestry
 	if (combined_commands.empty() && new_lhs_commands.empty() && new_rhs_commands.empty() &&
-	// they can be merged if they're not placeholders
-	((type_ == type_t::control && rhs->type_ == type_t::control) ||
-	// or if they're placeholders but share ancestry
-	node_t::share_ancestry(result, rhs)))
+	  ((type_ == type_t::control && rhs->type_ == type_t::control) ||
+	  node_t::share_ancestry(result, rhs)))
 	{
 		children_.insert(rhs->children_.begin(), rhs->children_.end());
 	}
@@ -233,21 +232,19 @@ auto node_t<Command>::merge(node_ptr const& rhs) -> node_ptr
 	// avoid cycles
 	else if (combined_commands.empty())
 	{
-		// create a clone of us with our commands and children
-		//node_ptr sub_lhs = make();
-		//sub_lhs->commands_.swap(commands_);
-		//sub_lhs->children_.swap(children_);
-
-		result = make();
-		result->children_.insert(shared_from_this());
-		result->children_.insert(rhs);
-
-		// 
-		//sub_lhs->ancestry_.swap(ancestry_);
-		
-		
-		//children_.insert(sub_lhs);
-		//children_.insert(rhs);
+		if (type_ == type_t::control) {
+			if (rhs->type_ == type_t::control) {
+				children_.insert(rhs->children_.begin(), rhs->children_.end());
+			}
+			else {
+				children_.insert(rhs);
+			}
+		}
+		else {
+			result = make();
+			result->children_.insert(shared_from_this());
+			result->children_.insert(rhs);
+		}
 	}
 	else {
 		ATMA_ASSERT(false && "yeah probs forgot a use-case");

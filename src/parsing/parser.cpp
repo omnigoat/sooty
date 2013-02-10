@@ -178,6 +178,7 @@ auto parser::operator = (parser const& rhs) -> parser&
 {
 	// yay!
 	detail::parser_backend_ptr hold = backend_;
+
 	backend_ = remove_left_recursion(rhs.backend_, backend_);
 
 
