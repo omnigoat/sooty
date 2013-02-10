@@ -2,6 +2,7 @@
 
 using sooty::parsing::parser;
 using sooty::parsing::detail::parser_backend_ptr;
+using sooty::parsing::detail::parser_backend_t;
 
 parser::parser()
 : backend_(detail::parser_backend_t::make_placeholder()), assigned_(false)
@@ -174,12 +175,36 @@ auto parser::operator [] (const parser& rhs) const -> parser
 	return parser(p);
 }
 
+
+
+// @rhs is a tree that may contain a placeholder node that is
+// equivalent (might be a clone) of our local @backend_
 auto parser::operator = (parser const& rhs) -> parser&
 {
 	// yay!
 	detail::parser_backend_ptr hold = backend_;
-
+	
 	backend_ = remove_left_recursion(rhs.backend_, backend_);
+
+	std::vector<parser_backend_t*> clones(hold->clones_.begin(), hold->clones_.end());
+
+	// for each clone of our @backend_ (which must be a hanging placeholder node)
+	// go and change it to be like us
+	for (auto& x : hold->clones_)
+	{
+		ATMA_ASSERT(x->type_ == parser_backend_t::type_t::placeholder);
+
+		x->type_ = parser_backend_t::type_t::control;
+		parser_backend_t::children_t x_children = x->children_;
+		x->children_.clear();
+		x->children_.insert(common::clone_tree(backend_));
+
+		for (auto const& y : x_children) {
+			x->append(y, false);
+		}
+	}
+	
+
 
 
 

@@ -80,7 +80,7 @@ namespace common {
 		auto push_back_action(bool, const command_t&) -> node_ptr;
 		auto add_child(node_ptr const&) -> node_ptr;
 		auto add_self_as_child() -> node_ptr;
-		auto append(node_ptr const&) -> node_ptr;
+		auto append(node_ptr const&, bool append_to_backreference = true) -> node_ptr;
 		auto append_self() -> node_ptr;
 		auto merge(node_ptr const&) -> node_ptr;
 
