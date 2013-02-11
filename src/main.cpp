@@ -97,6 +97,7 @@ int main()
 			match(1)
 			;
 
+		
 
 		additive_expr = 
 			insert(10) [ additive_expr, match(10, false), multiplicative_expr ]
@@ -107,6 +108,7 @@ int main()
 			;
 			
 
+		multiplicative_expr.debug_print();
 		
 		typedef sooty::common::performer_t<sooty::parsing::detail::executor_t> parsing_t;
 		sooty::parsing::accumulator pracc;
