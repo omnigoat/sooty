@@ -42,7 +42,8 @@ namespace common {
 		enum class type_t {
 			actor,
 			control,
-			placeholder
+			placeholder,
+			backreference
 		};
 
 		// node-ptr / command_t
@@ -85,7 +86,7 @@ namespace common {
 		auto merge(node_ptr const&) -> node_ptr;
 
 		
-
+		static auto make_backreference() -> node_ptr {  return node_ptr(new node_t(type_t::backreference));  }
 		static auto make_placeholder() -> node_ptr {  return node_ptr(new node_t(type_t::placeholder));  }
 		static auto make() -> node_ptr {  return node_ptr(new node_t(type_t::control));  }
 

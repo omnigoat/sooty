@@ -107,8 +107,8 @@ int main()
 			multiplicative_expr
 			;
 			
-
-		multiplicative_expr.debug_print();
+		additive_expr.debug_print();
+		
 		
 		typedef sooty::common::performer_t<sooty::parsing::detail::executor_t> parsing_t;
 		sooty::parsing::accumulator pracc;

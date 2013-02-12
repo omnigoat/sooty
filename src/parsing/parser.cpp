@@ -35,63 +35,11 @@ auto parser::operator | (parser const& rhs) const -> parser {
 	);
 }
 
-std::set<parser_backend_ptr> visited;
+
 void parser::debug_print(int spaces) const
 {
-	if (visited.find(backend_) != visited.end()) {
-		for (int i = 0; i != spaces; ++i)
-			std::cout << " ";
-		std::cout << "back-ref " << atma::console::fg_yellow << backend_.get() << std::endl << atma::console::reset;
-		return;
-	}
-	visited.insert(backend_);
-
-	for (int i = 0; i != spaces; ++i)
-		std::cout << " ";
-	std::cout << backend_.get() << " ";
-
-	switch (this->backend()->type_)
-	{
-		case parser_backend_t::type_t::actor:
-		{
-			std::cout << "actor: ";
-			for (auto& x : this->backend()->commands_) {
-				switch (x.second.action)
-				{
-				case detail::command_t::action_t::match:
-					std::cout << atma::console::foreground_color_t(2) << "match " << x.second.lower_id << atma::console::reset;
-					break;
-
-				case detail::command_t::action_t::insert:
-					std::cout << "insert";
-					break;
-
-				case detail::command_t::action_t::combine:
-					std::cout << "combine";
-					break;
-				}
-				std::cout << ", ";
-			}
-			break;
-		}
-
-		case parser_backend_t::type_t::control:
-			{
-				std::cout << "control";
-				break;
-			}
-
-		case parser_backend_t::type_t::placeholder:
-			{
-				std::cout << atma::console::fg_blue << "placeholder" << atma::console::reset;
-				break;
-			}
-	}
-	
-	
-	std::cout << std::endl;
-	for (auto& x: this->backend()->children_)
-		parser(x).debug_print(spaces + 1);
+	std::set<parser_backend_ptr> visited;
+	debug_print_impl(visited, resolved_backend_, 0);
 
 }
 
@@ -115,7 +63,7 @@ namespace sooty { namespace parsing {
 			if (parser_backend_t::equal_or_clone(niq, xn))
 			{
 				// create A'  (a1 A' | a2 A' | a3 A')
-				parser_backend_ptr A_stroke = parser_backend_t::make();
+				parser_backend_ptr A_stroke = parser_backend_t::make_backreference();
 				A_stroke->children_ = xn->children_;
 				A_stroke->append(A_stroke);
 
@@ -146,6 +94,74 @@ namespace sooty { namespace parsing {
 		return n;
 	}
 
+
+
+	void parser::debug_print_impl( std::set<detail::parser_backend_ptr>& visited, detail::parser_backend_ptr const& backend, int spaces ) const
+	{
+		if (visited.find(backend) != visited.end()) {
+			for (int i = 0; i != spaces; ++i)
+				std::cout << " ";
+			std::cout << "back-ref " << atma::console::fg_yellow << backend.get() << std::endl << atma::console::reset;
+			return;
+		}
+		visited.insert(backend);
+
+		for (int i = 0; i != spaces; ++i)
+			std::cout << " ";
+		if (backend->type_ == parser_backend_t::type_t::backreference)
+			std::cout << atma::console::foreground_color_t(0xc);
+		std::cout << backend_.get() << " ";
+
+		switch (backend->type_)
+		{
+			case parser_backend_t::type_t::actor:
+			{
+				std::cout << "actor: ";
+				for (auto& x : backend->commands_) {
+					switch (x.second.action)
+					{
+					case detail::command_t::action_t::match:
+						std::cout << atma::console::foreground_color_t(2) << "match " << x.second.lower_id << atma::console::reset;
+						break;
+
+					case detail::command_t::action_t::insert:
+						std::cout << "insert";
+						break;
+
+					case detail::command_t::action_t::combine:
+						std::cout << "combine";
+						break;
+					}
+					std::cout << ", ";
+				}
+				break;
+			}
+
+			case parser_backend_t::type_t::control:
+				{
+					std::cout << "control";
+					break;
+				}
+
+			case parser_backend_t::type_t::placeholder:
+				{
+					std::cout << atma::console::fg_blue << "placeholder" << atma::console::reset;
+					break;
+				}
+
+			case parser_backend_t::type_t::backreference:
+				{
+					std::cout << atma::console::fg_red << "backreference" << atma::console::reset;
+					break;
+				}
+		}
+	
+	
+		std::cout << std::endl;
+		for (auto& x: backend->children_)
+			parser(x).debug_print_impl(visited, x, spaces + 1);
+		
+	}
 
 } }
 
@@ -247,33 +263,33 @@ auto parser::operator = (parser const& rhs) -> parser&
 	// yay!
 	detail::parser_backend_ptr hold = backend_;
 	
-	backend_ = remove_left_recursion(rhs.backend_, backend_);
+	resolved_backend_ = remove_left_recursion(rhs.backend_, backend_);
 
-	std::vector<parser_backend_t*> clones(hold->clones_.begin(), hold->clones_.end());
+	//std::vector<parser_backend_t*> clones(hold->clones_.begin(), hold->clones_.end());
 
-	// for each clone of our @backend_ (which must be a hanging placeholder node)
-	// go and change it to be like us
-	for (auto& x : clones)
-	{
-		if (hold->clones_.find(x) == hold->clones_.end())
-			continue;
-		ATMA_ASSERT(x->type_ == parser_backend_t::type_t::placeholder);
+	//// for each clone of our @backend_ (which must be a hanging placeholder node)
+	//// go and change it to be like us
+	//for (auto& x : clones)
+	//{
+	//	if (hold->clones_.find(x) == hold->clones_.end())
+	//		continue;
+	//	ATMA_ASSERT(x->type_ == parser_backend_t::type_t::placeholder);
 
-		//x->type_ = parser_backend_t::type_t::control;
-		parser_backend_t::children_t x_children = x->children_;
-		x->children_.clear();
-		x->children_.insert(backend_);
+	//	//x->type_ = parser_backend_t::type_t::control;
+	//	parser_backend_t::children_t x_children = x->children_;
+	//	x->children_.clear();
+	//	x->children_.insert(backend_);
 
-		parser_backend_ptr p = parser_backend_t::make();
-		
-		for (auto const& y : x_children) {
-			p->add_child(y);
-		}
+	//	parser_backend_ptr p = parser_backend_t::make();
+	//	
+	//	for (auto const& y : x_children) {
+	//		p->add_child(y);
+	//	}
 
-		x->append(p, true);
-		//x->append(x->shared_from_this(), true);
-	}
-	
+	//	//x->append(p, true);
+	//	//x->append(x->shared_from_this(), true);
+	//}
+	//
 
 
 
