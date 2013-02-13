@@ -46,6 +46,54 @@ auto node_t<Command>::operator = (node_t<Command> const& rhs) -> node_t<Command>
 }
 
 template <typename Command>
+auto node_t<Command>::assume(node_t&& rhs) -> node_ptr
+{
+	type_ = rhs.type_;
+	//commands_ = std::move(rhs.commands_);
+	//children_ = std::move(rhs.children_);
+	commands_.swap(rhs.commands_);
+	children_.swap(rhs.children_);
+
+	// if we have clones, for each clone, go and remove us from the ancestry
+	for (auto const& n : clones_)
+	{
+		auto i = std::find(n->ancestry_.begin(), n->ancestry_.end(), this);
+		ATMA_ASSERT(i != n->ancestry_.end());
+		n->ancestry_.erase(i);
+	}
+
+	// remove ourselves from our ancestry's clones
+	for (auto const& x : ancestry_)
+	{
+		ATMA_ASSERT(x->clones_.find(this) != x->clones_.end());
+		x->clones_.erase(this);
+	}
+
+
+	clones_ = std::move(rhs.clones_);
+	ancestry_ = std::move(rhs.ancestry_);
+	
+	rhs.ancestry_.clear();
+	rhs.clones_.clear();
+
+	// for each clone, update it so it knows we're its new ancestor
+	for (auto const& n : clones_) {
+		auto i = std::find(n->ancestry_.begin(), n->ancestry_.end(), &rhs);
+		ATMA_ASSERT(i != n->ancestry_.end());
+		*i = this;
+	}
+
+	// update our ancestors to know we conceptually cloned from them
+	for (auto const& x : ancestry_) {
+		ATMA_ASSERT(x->clones_.find(&rhs) != x->clones_.end());
+		x->clones_.erase(&rhs);
+		x->clones_.insert(this);
+	}
+
+	return shared_from_this();
+}
+
+template <typename Command>
 auto node_t<Command>::clone() -> node_ptr
 {
 	// clone node

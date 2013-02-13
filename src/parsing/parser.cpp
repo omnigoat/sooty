@@ -68,14 +68,23 @@ namespace sooty { namespace parsing {
 				A_stroke->append(A_stroke);
 
 				// rewrite parent
+				
 				if (xp)
 				{
-					unsigned int rm_count = xp->children_.erase(xn);
-					ATMA_ASSERT(rm_count == 1);
+					xp->assume(std::move(*xn));
+					parser_backend_t::children_t xp_children = std::move(xp->children_);
+					xp->children_.clear();
 
-					for (auto& B : xp->children_) {
-						B->append(A_stroke);
+					for (auto const& B : xn->children_) {
+						xp->add_child( B->append(A_stroke) );
 					}
+
+					//unsigned int rm_count = xp->children_.erase(xn);
+					//ATMA_ASSERT(rm_count == 1);
+
+					//for (auto& B : xp->children_) {
+						//B->append(A_stroke);
+					//}
 				}
 			}
 			// we need to continue recursing only for "empty" nodes
@@ -110,7 +119,7 @@ namespace sooty { namespace parsing {
 			std::cout << " ";
 		if (backend->type_ == parser_backend_t::type_t::backreference)
 			std::cout << atma::console::foreground_color_t(0xc);
-		std::cout << backend_.get() << " ";
+		std::cout << backend.get() << " ";
 
 		switch (backend->type_)
 		{

@@ -68,6 +68,7 @@ namespace common {
 
 		auto operator = (node_t const&) -> node_t&;
 		//auto operator = (node_t&& rhs) -> node_t&;
+		auto assume(node_t&&) -> node_ptr;
 		
 		
 		// pure
