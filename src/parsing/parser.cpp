@@ -56,6 +56,7 @@ namespace sooty { namespace parsing {
 	{
 		std::stack<std::tuple<parser_backend_ptr, parser_backend_ptr>> nodes;
 		nodes.push(std::make_pair(parser_backend_ptr(), root));
+		bool did_work = false;
 		while (!nodes.empty()) 
 		{
 			auto x = nodes.top();
@@ -86,6 +87,9 @@ namespace sooty { namespace parsing {
 						B->append(A_stroke, false);
 					}
 				}
+
+				did_work = true;
+				break;
 			}
 			// we need to continue recursing only for "empty" nodes
 			else if (xn->commands_.empty()) {
@@ -94,8 +98,14 @@ namespace sooty { namespace parsing {
 			}
 		}
 
-		// sometimes we end up with control nodes at the front with just one child. they are
-		// useless to us and increase nosie. so skip them!
+		// JONATHAN, SERIOUSLY
+		// if we didn't do any work, it means resolved_backend_ and backend_ aren't related
+		// in any way, which is bad. need to add dummy ancestor?
+		if (!did_work) {
+			
+			niq->clones_.insert(root.get());
+		}
+
 		parser_backend_ptr n = root;
 		//while (n->type() == parser_backend_t::type_t::control && n->children_.size() == 1)
 			//n = *n->children_.begin();
@@ -258,6 +268,8 @@ auto parser::operator = (parser const& rhs) -> parser&
 	detail::parser_backend_ptr hold = backend_;
 	
 	resolved_backend_ = remove_left_recursion(rhs.backend_, backend_);
+
+	//backend_.swap(resolved_backend_);
 
 	return *this;
 }

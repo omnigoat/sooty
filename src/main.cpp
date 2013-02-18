@@ -28,7 +28,7 @@
 
 int main()
 {
-	std::string input_string = "(1 + 3) * 143 - 6";
+	std::string input_string = "(1 + 3 * 47) * 143 - 6";
 	sooty::lexing::lexemes_t lexemes;
 	sooty::lexing::detail::accumulator_t acc(lexemes, input_string.size());
 	{
@@ -85,16 +85,22 @@ int main()
 		
 		parser
 		  additive_expr,
-		  multiplicative_expr
+		  multiplicative_expr,
+		  unary_expr
 		  ;
 		
-		
-		multiplicative_expr = 
-			insert(12) [ multiplicative_expr, match(12, false), match(1) ]
-			|
+		unary_expr =
 			(match(20, false), additive_expr, match(21, false))
 			|
 			match(1)
+			;
+
+		unary_expr.debug_print();
+
+		multiplicative_expr = 
+			insert(12) [ multiplicative_expr, match(12, false), unary_expr ]
+			|
+			unary_expr
 			;
 
 		multiplicative_expr.debug_print();
@@ -112,7 +118,7 @@ int main()
 		
 		typedef sooty::common::performer_t<sooty::parsing::detail::executor_t> parsing_t;
 		sooty::parsing::accumulator pracc;
-		parsing_t()(pracc, sooty::parsing::lexeme_range_t(lexemes), additive_expr.resolved_backend());
+		parsing_t()(pracc, sooty::parsing::lexeme_range_t(lexemes), additive_expr.backend());
 
 		parsemes = pracc.container();
 	}
