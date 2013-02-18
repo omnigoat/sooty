@@ -95,6 +95,7 @@ auto sooty::parsing::operator << (std::ostream& out, parsemes_t const& parsemes)
 		out << xn << std::endl;
 
 		std::vector<parseme> tmp(xn.children().begin(), xn.children().end());
+		std::reverse(tmp.begin(), tmp.end());
 		for (auto y : tmp)
 			nodes.push(std::make_tuple(y, xd + 1));
 	}

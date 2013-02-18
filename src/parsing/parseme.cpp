@@ -73,6 +73,6 @@ auto parseme::children() -> sooty::parsing::parsemes_t& {
 
 auto sooty::parsing::operator << (std::ostream& out, parseme const& p) -> std::ostream&
 {
-	out << p.id() << ": " << p.text() << std::endl;
+	out << p.id() << ": " << p.text();
 	return out;
 }
