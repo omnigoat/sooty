@@ -6,12 +6,12 @@ using sooty::parsing::detail::parser_backend_ptr;
 using sooty::parsing::detail::parser_backend_t;
 
 parser::parser()
-: backend_(detail::parser_backend_t::make_placeholder()), assigned_(false)
+: backend_(detail::parser_backend_t::make_placeholder())
 {
 }
 
 parser::parser(const parser_backend_ptr& backend)
-: backend_(backend), assigned_(true)
+: backend_(backend)
 {
 }
 
@@ -67,24 +67,17 @@ namespace sooty { namespace parsing {
 				A_stroke->children_ = xn->children_;
 				A_stroke->append(A_stroke);
 
-				// rewrite parent
-				
+				// rewrite parent				
 				if (xp)
 				{
-					xp->assume(std::move(*xn));
-					parser_backend_t::children_t xp_children = std::move(xp->children_);
-					xp->children_.clear();
+					// remove A
+					unsigned int rm_count = xp->children_.erase(xn);
+					ATMA_ASSERT(rm_count == 1);
 
-					for (auto const& B : xn->children_) {
-						xp->add_child( B->append(A_stroke) );
+					// append A' to all B
+					for (auto const& B : xp->children_) {
+						B->append(A_stroke, false);
 					}
-
-					//unsigned int rm_count = xp->children_.erase(xn);
-					//ATMA_ASSERT(rm_count == 1);
-
-					//for (auto& B : xp->children_) {
-						//B->append(A_stroke);
-					//}
 				}
 			}
 			// we need to continue recursing only for "empty" nodes
@@ -154,7 +147,7 @@ namespace sooty { namespace parsing {
 
 			case parser_backend_t::type_t::placeholder:
 				{
-					std::cout << atma::console::fg_blue << "placeholder" << atma::console::reset;
+					std::cout << atma::console::fg_blue << "placeholder " << (backend->ancestry_.empty() ? nullptr : backend->ancestry_.back()) << atma::console::reset;
 					break;
 				}
 
@@ -274,6 +267,7 @@ auto parser::operator = (parser const& rhs) -> parser&
 	
 	resolved_backend_ = remove_left_recursion(rhs.backend_, backend_);
 
+	//*resolved_backend_->ancestry_.back() = *resolved_backend_;
 	//std::vector<parser_backend_t*> clones(hold->clones_.begin(), hold->clones_.end());
 
 	//// for each clone of our @backend_ (which must be a hanging placeholder node)

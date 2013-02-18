@@ -40,7 +40,6 @@ namespace parsing {
 	private:
 		void debug_print_impl(std::set<detail::parser_backend_ptr>& visited, detail::parser_backend_ptr const&, int spaces) const;
 
-		bool assigned_;
 		detail::parser_backend_ptr resolved_backend_;
 		detail::parser_backend_ptr backend_;
 	};

@@ -97,7 +97,7 @@ int main()
 			match(1)
 			;
 
-		
+		multiplicative_expr.debug_print();
 
 		additive_expr = 
 			insert(10) [ additive_expr, match(10, false), multiplicative_expr ]
