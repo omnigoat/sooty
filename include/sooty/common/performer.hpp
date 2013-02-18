@@ -7,6 +7,7 @@
 #define SOOTY_COMMON_PERFORMER_HPP
 //=====================================================================
 #include <algorithm>
+#include <atma/assert.hpp>
 //=====================================================================
 namespace sooty {
 namespace common {
@@ -48,34 +49,57 @@ namespace common {
 			while (parent_child_iter != parent_child_end)
 			{
 				node_ptr const& current_node = *parent_child_iter;
-				
 				commands_t const& commands = current_node->commands_;
 				children_t const& children = current_node->children_;
-				
-				// there should not be any failure commands before the first good command
-				commands_t::const_iterator i = commands.begin();
-				//assert(i == commands.end() || i->first);
-				
-				commands_t::const_iterator ff
-					= std::find_if(commands.begin(), commands.end(), node_t::is_failure);
-				
-				commands_t::const_reverse_iterator first_failure
-					= (ff == commands.end()) ? commands.rend() : commands_t::const_reverse_iterator(ff);
-				
-				
-				// perform all commands until we fail one
-				while (i != commands.end())
+				bool success = true;
+
+				if (current_node->type() == node_t::type_t::placeholder)
 				{
-					if (!executor_(state, input, i->second))
-						break;
-					
-					i = std::find_if(i + 1, commands.end(), node_t::is_command);
+					ATMA_ASSERT(!current_node->ancestry_.empty());
+
+					std::vector<node_t*> clones(
+						current_node->ancestry_.back()->clones_.begin(),
+						current_node->ancestry_.back()->clones_.end()
+					);
+
+					ATMA_ASSERT( std::partition(clones.begin(), clones.end(), [](node_t* x) -> bool {
+						return x->type_ == node_t::type_t::control;
+					}) == clones.begin() + 1);
+
+					success = this->operator ()(state, input, (*clones.begin())->shared_from_this());
 				}
-				
-				// if we failed, perform all failures
-				if (i != commands.end())
+				else
 				{
-					commands_t::const_iterator next_command
+					
+				
+					// there should not be any failure commands before the first good command
+					commands_t::const_iterator i = commands.begin();
+				
+					commands_t::const_iterator ff
+						= std::find_if(commands.begin(), commands.end(), node_t::is_failure);
+				
+					commands_t::const_reverse_iterator first_failure
+						= (ff == commands.end()) ? commands.rend() : commands_t::const_reverse_iterator(ff);
+				
+				
+					// perform all commands until we fail one
+					while (i != commands.end())
+					{
+						if (!executor_(state, input, i->second))
+							break;
+					
+						i = std::find_if(i + 1, commands.end(), node_t::is_command);
+					}
+
+					success = i == commands.end();
+				}
+					
+				
+
+				// if we failed, perform all failures
+				if (!success)
+				{
+					/*commands_t::const_iterator next_command
 						= std::find_if(i + 1, commands.end(), node_t::is_command);
 					
 					commands_t::const_reverse_iterator failure =
@@ -84,7 +108,7 @@ namespace common {
 					while (failure != first_failure) {
 						executor_(state, input, failure->second);
 						failure = std::find_if(failure, first_failure, node_t::is_failure);
-					}
+					}*/
 					
 					// move onto our sibling
 					++parent_child_iter;
@@ -108,6 +132,8 @@ namespace common {
 				}
 			}
 			
+			// HEY  JONATHAN
+			// FIX THIS, THIS WILL NEVER RETURN GOOD RESULTS
 			return parent_child_count == 0 || parent_child_iter != parent_child_end;
 		}
 	

@@ -19,6 +19,10 @@ auto parser::backend() const -> parser_backend_ptr const& {
 	return backend_;
 }
 
+auto parser::resolved_backend() const -> parser_backend_ptr const& {
+	return resolved_backend_;
+}
+
 auto parser::operator >> (parser const& rhs) const -> parser {
 	return parser(
 		common::clone_tree(backend_)->append( common::clone_tree(rhs.backend_) )
@@ -93,8 +97,8 @@ namespace sooty { namespace parsing {
 		// sometimes we end up with control nodes at the front with just one child. they are
 		// useless to us and increase nosie. so skip them!
 		parser_backend_ptr n = root;
-		while (n->type() == parser_backend_t::type_t::control && n->children_.size() == 1)
-			n = *n->children_.begin();
+		//while (n->type() == parser_backend_t::type_t::control && n->children_.size() == 1)
+			//n = *n->children_.begin();
 
 		return n;
 	}
@@ -241,27 +245,6 @@ auto parser::operator [] (const parser& rhs) const -> parser
 		}
 	}
 
-	//common::accumulate_depth_first(p, 0, [&](unsigned int inserts, detail::parser_backend_ptr const& x) -> unsigned int {
-	//	if (x->commands_.empty()) {
-	//		++inserts;
-	//	}
-	//	else if (x->commands_.front().second.insert_id != 0) {
-	//		if (x->commands_.front().second.action != detail::command_t::action_t::combine) {
-	//			++inserts;
-	//		}
-	//	}
-
-	//	// if this is a leaf node, append @this' backend, and the combine
-	//	if (x->children_.empty()) {
-	//		x->add_child( common::clone_tree(backend_) );
-	//		x->append(detail::parser_backend_t::make()
-	//			->push_back_command(detail::command_t(detail::command_t::action_t::combine, 0, 0, inserts))
-	//		);
-	//	}
-
-	//	return inserts;
-	//});
-
 	return parser(p);
 }
 
@@ -275,36 +258,6 @@ auto parser::operator = (parser const& rhs) -> parser&
 	detail::parser_backend_ptr hold = backend_;
 	
 	resolved_backend_ = remove_left_recursion(rhs.backend_, backend_);
-
-	//*resolved_backend_->ancestry_.back() = *resolved_backend_;
-	//std::vector<parser_backend_t*> clones(hold->clones_.begin(), hold->clones_.end());
-
-	//// for each clone of our @backend_ (which must be a hanging placeholder node)
-	//// go and change it to be like us
-	//for (auto& x : clones)
-	//{
-	//	if (hold->clones_.find(x) == hold->clones_.end())
-	//		continue;
-	//	ATMA_ASSERT(x->type_ == parser_backend_t::type_t::placeholder);
-
-	//	//x->type_ = parser_backend_t::type_t::control;
-	//	parser_backend_t::children_t x_children = x->children_;
-	//	x->children_.clear();
-	//	x->children_.insert(backend_);
-
-	//	parser_backend_ptr p = parser_backend_t::make();
-	//	
-	//	for (auto const& y : x_children) {
-	//		p->add_child(y);
-	//	}
-
-	//	//x->append(p, true);
-	//	//x->append(x->shared_from_this(), true);
-	//}
-	//
-
-
-
 
 	return *this;
 }
