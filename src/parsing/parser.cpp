@@ -74,6 +74,9 @@ namespace sooty { namespace parsing {
 					unsigned int rm_count = xp->children_.erase(xn);
 					ATMA_ASSERT(rm_count == 1);
 
+					xp->assume(std::move(*xn));
+					xp->type_ = parser_backend_t::type_t::control;
+
 					// append A' to all B
 					for (auto const& B : xp->children_) {
 						B->append(A_stroke, false);
@@ -144,6 +147,12 @@ namespace sooty { namespace parsing {
 					std::cout << "control";
 					break;
 				}
+
+			/*case parser_backend_t::type_t::anchor:
+				{
+					std::cout << "anchor";
+					break;
+				}*/
 
 			case parser_backend_t::type_t::placeholder:
 				{
