@@ -28,7 +28,7 @@
 
 int main()
 {
-	std::string input_string = "(1 + 3 * 47) * 143 - 6";
+	std::string input_string = "(1 + 3 * (4 + 5)) * 143 - 6";
 	sooty::lexing::lexemes_t lexemes;
 	sooty::lexing::detail::accumulator_t acc(lexemes, input_string.size());
 	{
@@ -118,7 +118,7 @@ int main()
 		
 		typedef sooty::common::performer_t<sooty::parsing::detail::executor_t> parsing_t;
 		sooty::parsing::accumulator pracc;
-		parsing_t()(pracc, sooty::parsing::lexeme_range_t(lexemes), additive_expr.backend());
+		parsing_t()(pracc, sooty::parsing::lexeme_range_t(lexemes), additive_expr.resolved_backend());
 
 		parsemes = pracc.container();
 	}

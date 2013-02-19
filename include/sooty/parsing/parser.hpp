@@ -41,8 +41,11 @@ namespace parsing {
 	private:
 		void debug_print_impl(std::set<detail::parser_backend_ptr>& visited, detail::parser_backend_ptr const&, int spaces) const;
 
+		//auto remove_left_recursion(parser_backend_ptr const& root, detail::parser_backend_ptr const& niq) -> void;
+
 		detail::parser_backend_ptr resolved_backend_;
 		detail::parser_backend_ptr backend_;
+		detail::parser_backend_ptr backend_ancestor_;
 	};
 	
 	inline parser match(size_t id, bool insert = true) {

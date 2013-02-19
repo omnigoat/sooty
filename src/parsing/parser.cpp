@@ -52,67 +52,7 @@ namespace sooty { namespace parsing {
 	using detail::parser_backend_ptr;
 	using detail::parser_backend_t;
 
-	parser_backend_ptr remove_left_recursion(parser_backend_ptr const& root, detail::parser_backend_ptr const& niq)
-	{
-		std::stack<std::tuple<parser_backend_ptr, parser_backend_ptr>> nodes;
-		nodes.push(std::make_pair(parser_backend_ptr(), root));
-		bool did_work = false;
-		while (!nodes.empty()) 
-		{
-			auto x = nodes.top();
-			nodes.pop();
-			auto xp = std::get<0>(x);
-			auto xn = std::get<1>(x);
-
-			// if this node is us (or a clone of us)
-			if (parser_backend_t::equal_or_clone(niq, xn))
-			{
-				// create A'  (a1 A' | a2 A' | a3 A')
-				parser_backend_ptr A_stroke = parser_backend_t::make_backreference();
-				A_stroke->children_ = xn->children_;
-				A_stroke->append(A_stroke);
-
-				// rewrite parent				
-				if (xp)
-				{
-					// remove A
-					unsigned int rm_count = xp->children_.erase(xn);
-					ATMA_ASSERT(rm_count == 1);
-
-					xp->assume(std::move(*xn));
-					xp->type_ = parser_backend_t::type_t::control;
-
-					// append A' to all B
-					for (auto const& B : xp->children_) {
-						B->append(A_stroke, false);
-					}
-				}
-
-				did_work = true;
-				break;
-			}
-			// we need to continue recursing only for "empty" nodes
-			else if (xn->commands_.empty()) {
-				for (auto const& n : xn->children_)
-					nodes.push(std::make_tuple(xn, n));
-			}
-		}
-
-		// JONATHAN, SERIOUSLY
-		// if we didn't do any work, it means resolved_backend_ and backend_ aren't related
-		// in any way, which is bad. need to add dummy ancestor?
-		if (!did_work) {
-			
-			niq->clones_.insert(root.get());
-		}
-
-		parser_backend_ptr n = root;
-		//while (n->type() == parser_backend_t::type_t::control && n->children_.size() == 1)
-			//n = *n->children_.begin();
-
-		return n;
-	}
-
+	
 
 
 	void parser::debug_print_impl( std::set<detail::parser_backend_ptr>& visited, detail::parser_backend_ptr const& backend, int spaces ) const
@@ -264,15 +204,73 @@ auto parser::operator [] (const parser& rhs) const -> parser
 // equivalent (might be a clone) of our local @backend_
 auto parser::operator = (parser const& rhs) -> parser&
 {
-	// yay!
-	detail::parser_backend_ptr hold = backend_;
-	
-	resolved_backend_ = remove_left_recursion(rhs.backend_, backend_);
+	using detail::parser_backend_ptr;
+	using detail::parser_backend_t;
 
-	//backend_.swap(resolved_backend_);
+	std::stack<std::tuple<parser_backend_ptr, parser_backend_ptr>> nodes;
+	nodes.push(std::make_tuple(parser_backend_ptr(), rhs.backend_));
+	bool did_work = false;
+	while (!nodes.empty()) 
+	{
+		auto x = nodes.top();
+		nodes.pop();
+		auto xp = std::get<0>(x);
+		auto xn = std::get<1>(x);
+
+		// if this node is us (or a clone of us)
+		if (parser_backend_t::equal_or_clone(backend_, xn))
+		{
+			// create A'  (a1 A' | a2 A' | a3 A')
+			parser_backend_ptr A_stroke = parser_backend_t::make_backreference();
+			A_stroke->children_ = std::move(xn->children_);
+			A_stroke->append(A_stroke);
+
+			// rewrite parent				
+			if (xp)
+			{
+				// remove A
+				unsigned int rm_count = xp->children_.erase(xn);
+				ATMA_ASSERT(rm_count == 1);
+
+				xp->type_ = parser_backend_t::type_t::control;
+
+				// append A' to all B
+				for (auto const& B : xp->children_) {
+					B->append(A_stroke, false);
+				}
+			}
+
+			did_work = true;
+			break;
+		}
+		// we need to continue recursing only for "empty" nodes
+		else if (xn->commands_.empty()) {
+			for (auto const& n : xn->children_)
+				nodes.push(std::make_tuple(xn, n));
+		}
+	}
+
+	resolved_backend_ = rhs.backend_;
+
+	// stay a while and listen:
+	//  - placeholder nodes look at their eldest ancestsor to find the
+	//    definition they should match.
+	//  - the eldest ancestor has a set of every node cloned directly/indirectly
+	//    from it - one of these will be a non-placeholder node
+	//  - that non-placeholder node will be a @resolved_backend_ somewhere
+	//  - we need to manually make @resolved_backend_ a clone of @backend_
+	//  - we need to correctly disentangle @resovled_backend_ from ITS clones/ancestors
+	//  - we actually have a method to do this, called "assume", which assumes the
+	//    clone/ancestor identity of a node
+	parser_backend_ptr tmp = common::clone_tree(backend_);
+	resolved_backend_->assume( std::move(*tmp) );
 
 	return *this;
 }
 
 
-
+//auto parser::remove_left_recursion(parser_backend_ptr const& root, detail::parser_backend_ptr const& niq) -> void
+//{
+//	
+//}
+//

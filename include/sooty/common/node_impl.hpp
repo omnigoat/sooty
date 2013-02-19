@@ -48,12 +48,6 @@ auto node_t<Command>::operator = (node_t<Command> const& rhs) -> node_t<Command>
 template <typename Command>
 auto node_t<Command>::assume(node_t&& rhs) -> node_ptr
 {
-	type_ = rhs.type_;
-	//commands_ = std::move(rhs.commands_);
-	//children_ = std::move(rhs.children_);
-	//commands_.swap(rhs.commands_);
-	//children_.swap(rhs.children_);
-
 	// if we have clones, for each clone, go and remove us from the ancestry
 	for (auto const& n : clones_)
 	{
