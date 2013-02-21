@@ -28,7 +28,7 @@
 
 int main()
 {
-	std::string input_string = "(1 + 3 * (4 + 5)) * 143 - 6";
+	std::string input_string = "(1 - 3 / (my_variable + 5)) + 143 - 6";
 	sooty::lexing::lexemes_t lexemes;
 	sooty::lexing::detail::accumulator_t acc(lexemes, input_string.size());
 	{
@@ -46,11 +46,15 @@ int main()
 		+(
 			insert(1, +match('0', '9'))
 			|
+			insert(2, match('a', 'z') >> +(match('a', 'z') | match('_')) )
+			|
 			insert(10, match("+"))
 			|
 			insert(11, match("-"))
 			|
 			insert(12, match("*"))
+			|
+			insert(13, match("/"))
 			|
 			insert(20, match("("))
 			|
@@ -64,23 +68,6 @@ int main()
 	
 	sooty::parsing::parsemes_t parsemes;
 	{
-		/*
-		           add_mark M
-		           -rm_mark M
-		           match number
-		* match plus       * match dash       * e
-		* match number     * match number
-		* combine add      * combine sub
-		* rm_mark M        * rm_mark M
-		
-		
-		           match N
-		* match plus       * match dash
-		* match number     * match number
-		* combine add      * combine sub
-		
-		*/
-		
 		using namespace sooty::parsing;
 		
 		parser
@@ -93,12 +80,16 @@ int main()
 			(match(20, false), additive_expr, match(21, false))
 			|
 			match(1)
+			|
+			match(2)
 			;
 
 		unary_expr.debug_print();
 
 		multiplicative_expr = 
 			insert(12) [ multiplicative_expr, match(12, false), unary_expr ]
+			|
+			insert(13) [ multiplicative_expr, match(13, false), unary_expr ]
 			|
 			unary_expr
 			;
@@ -124,7 +115,7 @@ int main()
 	}
 	
 	std::cout << lexemes << std::endl;
-	//additive_expr.backend()->debug_print();
+	
 	std::cout << parsemes << std::endl;
 }
 
