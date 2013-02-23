@@ -20,21 +20,20 @@ namespace lexing {
 	{
 		lexer_t(lexer_t const&);
 
-		auto operator = (lexer_t const& rhs) -> lexer_t& {
-			backend_ = rhs.backend_;
-		}
+		auto operator = (lexer_t const& rhs) -> lexer_t&;
 
-		friend lexer_t match(char, char, bool);
-		friend lexer_t match(const std::string&);
-		friend lexer_t insert(size_t, const_lexer_ref);
+		auto operator * () const -> lexer_t;
+		auto operator + () const -> lexer_t;
+
+		auto backend() const -> detail::const_lexer_backend_ptr_ref;
 		
-		friend lexer_t operator >> (const_lexer_ref, const_lexer_ref);
-		friend lexer_t operator | (const_lexer_ref, const_lexer_ref);
 		
-		detail::const_lexer_backend_ptr_ref backend() const { return backend_; }
-		
-		lexer_t operator * () const;
-		lexer_t operator + () const;
+		friend auto match(char, char, bool) -> lexer_t;
+		friend auto match(const std::string& -> lexer_t);
+		friend auto insert(size_t, const_lexer_ref) -> lexer_t;
+
+		friend auto operator >> (const_lexer_ref, const_lexer_ref) -> lexer_t;
+		friend auto operator | (const_lexer_ref, const_lexer_ref) -> lexer_t;
 		
 	private:
 		lexer_t(detail::const_lexer_backend_ptr_ref);
@@ -42,26 +41,11 @@ namespace lexing {
 		detail::lexer_backend_ptr backend_;
 	};
 	
-	// operators
-	lexer_t operator >> (const_lexer_ref, const_lexer_ref);
-	lexer_t operator |  (const_lexer_ref, const_lexer_ref);
 	
-	
-	lexer_t match(char from, char to, bool should_insert = true);
-	
-	inline lexer_t match(char c, bool should_insert = true) {
-		return match(c, c, should_insert);
-	}
-	
-	inline lexer_t match(const std::string& str) {
-		detail::lexer_backend_ptr backend = detail::lexer_backend_t::make();
-		for (std::string::const_iterator i = str.begin(); i != str.end(); ++i) {
-			backend->push_back_command( detail::command_t::match(*i, *i, true) );
-		}
-		
-		return lexer_t(backend);
-	}
-	
+	auto match(char from, char to, bool should_insert = true) -> lexer_t;
+	auto match(char c, bool should_insert = true) -> lexer_t;
+	auto match(std::string const& str) -> lexer_t;
+
 	
 	lexer_t insert(size_t insert_id, const_lexer_ref L);
 

@@ -73,6 +73,7 @@ namespace common {
 		
 		// pure
 		auto type() const -> type_t { return type_; }
+		auto terminal() const -> bool { return terminal_; }
 		auto clone() -> node_ptr;
 
 		
@@ -85,7 +86,7 @@ namespace common {
 		auto append(node_ptr const&, bool append_to_backreference = true) -> node_ptr;
 		auto append_self() -> node_ptr;
 		auto merge(node_ptr const&) -> node_ptr;
-
+		auto set_as_terminator() -> void { terminal_ = true; }
 		
 		static auto make_backreference() -> node_ptr {  return node_ptr(new node_t(type_t::backreference));  }
 		static auto make_placeholder() -> node_ptr {  return node_ptr(new node_t(type_t::placeholder));  }
@@ -135,6 +136,7 @@ namespace common {
 		children_t children_;
 		std::set<node_t*> clones_;
 		std::vector<node_t*> ancestry_;
+		bool terminal_;
 
 		// friends
 		template <typename ExecutorT> friend struct performer_t;

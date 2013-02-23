@@ -6,13 +6,13 @@
 //
 template <typename Command>
 node_t<Command>::node_t(type_t type)
-	: type_(type)
+	: type_(type), terminal_()
 {
 }
 
 template <typename Command>
 node_t<Command>::node_t(const node_t<Command>& rhs)
-	: type_(rhs.type_), commands_(rhs.commands_)
+	: type_(rhs.type_), commands_(rhs.commands_), terminal_(rhs.terminal_)
 {
 }
 
@@ -41,7 +41,8 @@ auto node_t<Command>::operator = (node_t<Command> const& rhs) -> node_t<Command>
 	type_ = rhs.type_;
 	commands_ = rhs.commands_;
 	children_ = rhs.children_;
-	
+	termianl_ = rhs.terminal_;
+
 	return *this;
 }
 

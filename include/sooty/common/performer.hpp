@@ -105,8 +105,14 @@ namespace common {
 				}
 			}
 			
-			// we succeeded if we didn't exhaust our child-options, or if we're a backreference, or if we didn't even have children
-			return parent_child_iter != parent_child_end || parent->type() == node_t::type_t::backreference || std::distance(parent_child_begin, parent_child_end) == 0;
+			// we succeeded if we didn't exhaust our child-options, or if we're a backreference,
+			// or if we didn't even have children, or we are a terminal node
+			return
+				parent_child_iter != parent_child_end ||
+				parent->type() == node_t::type_t::backreference ||
+				std::distance(parent_child_begin, parent_child_end) == 0 ||
+				parent->terminal()
+				;
 		}
 
 	private:
