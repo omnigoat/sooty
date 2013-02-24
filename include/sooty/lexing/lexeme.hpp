@@ -19,10 +19,12 @@ namespace lexing {
 	struct position_t
 	{
 		position_t() : row(), column() {}
+
 		position_t(int row, int column)
 			: row(row), column(column)
 		{
 		}
+
 		int row, column;
 	};
 	
@@ -37,13 +39,12 @@ namespace lexing {
 		static std::string empty_text;
 		
 		lexeme_t(id_t, const_characters_iterator_ref begin, const_characters_iterator_ref end, const position_t&);
-		id_t id() const;
-		
-		const_characters_iterator_ref begin() const { return begin_; }
-		const_characters_iterator_ref end() const { return end_; }
-		
-		const position_t& position() const;
-		std::string text() const;
+
+		auto id() const -> id_t const&;
+		auto position() const -> const position_t&;
+		auto begin() const -> const_characters_iterator_ref;
+		auto end() const -> const_characters_iterator_ref;
+		auto text() const -> std::string;
 		
 	private:
 		id_t id_;

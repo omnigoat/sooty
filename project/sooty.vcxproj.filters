@@ -56,9 +56,6 @@
     <ClCompile Include="..\src\lexing\lexer.cpp">
       <Filter>src\lexing</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\parsing\detail\mark.cpp">
-      <Filter>src\parsing</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\parsing\parseme.cpp">
       <Filter>src\parsing</Filter>
     </ClCompile>

@@ -53,14 +53,15 @@ auto lexer_t::backend() const -> detail::lexer_backend_ptr const& {
 }
 
 
-
 auto sooty::lexing::operator >> ( const_lexer_ref lhs, const_lexer_ref rhs ) -> lexer_t {
 	return lexer_t( clone_tree(lhs.backend())->append(clone_tree(rhs.backend())) );
 }
 
+
 auto sooty::lexing::operator | ( const_lexer_ref lhs, const_lexer_ref rhs ) -> lexer_t {
 	return lexer_t( clone_tree(lhs.backend())->merge(clone_tree(rhs.backend())) );
 }
+
 
 auto sooty::lexing::match(char from, char to, bool should_insert) -> lexer_t {
 	return lexer_t(

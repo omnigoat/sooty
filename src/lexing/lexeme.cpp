@@ -1,28 +1,38 @@
 #include <sooty/lexing/lexeme.hpp>
 //=====================================================================
-using namespace sooty::lexing;
+using sooty::lexing::lexeme_t;
+using sooty::lexing::position_t;
+using sooty::lexing::const_characters_iterator_ref;
 //=====================================================================
 
-
-
-//=====================================================================
 lexeme_t::lexeme_t( id_t id, const_characters_iterator_ref begin, const_characters_iterator_ref end, const position_t& position )
 	: id_(id), begin_(begin), end_(end), position_(position)
 {
 }
 
-lexeme_t::id_t lexeme_t::id() const
+auto lexeme_t::id() const -> lexeme_t::id_t const&
 {
 	return id_;
 }
 
-std::string lexeme_t::text() const
+auto lexeme_t::position() const -> position_t const&
+{
+	return position_;
+}
+
+auto lexeme_t::begin() const -> const_characters_iterator_ref
+{
+	return begin_;
+}
+
+auto lexeme_t::end() const -> const_characters_iterator_ref
+{
+	return end_;
+}
+
+auto lexeme_t::text() const -> std::string
 {
 	std::string result(begin_, end_);
 	return result;
 }
 
-const position_t& lexeme_t::position() const
-{
-	return position_;
-}
