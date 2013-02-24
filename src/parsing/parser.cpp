@@ -178,17 +178,16 @@ auto parser::operator = (parser const& rhs) -> parser&
 }
 
 
-void parser::debug_print(int spaces) const
+auto parser::debug_print(int spaces) const -> void
 {
 	std::set<parser_backend_ptr> visited;
-	debug_print_impl(visited, resolved_backend_, 0);
-
+	debug_print_impl(visited, resolved_backend_, spaces);
 }
 
 
 
 
-void parser::debug_print_impl( std::set<parser_backend_ptr>& visited, parser_backend_ptr const& backend, int spaces ) const
+auto parser::debug_print_impl( std::set<parser_backend_ptr>& visited, parser_backend_ptr const& backend, int spaces ) const -> void
 {
 	if (visited.find(backend) != visited.end()) {
 		for (int i = 0; i != spaces; ++i)
@@ -235,12 +234,6 @@ void parser::debug_print_impl( std::set<parser_backend_ptr>& visited, parser_bac
 				break;
 			}
 
-		/*case parser_backend_t::type_t::anchor:
-			{
-				std::cout << "anchor";
-				break;
-			}*/
-
 		case parser_backend_t::type_t::placeholder:
 			{
 				std::cout << atma::console::fg_blue << "placeholder " << (backend->ancestry_.empty() ? nullptr : backend->ancestry_.back()) << atma::console::reset;
@@ -258,5 +251,4 @@ void parser::debug_print_impl( std::set<parser_backend_ptr>& visited, parser_bac
 	std::cout << std::endl;
 	for (auto& x: backend->children_)
 		parser(x).debug_print_impl(visited, x, spaces + 1);
-		
 }

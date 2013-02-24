@@ -28,27 +28,19 @@ namespace lexing {
 		auto backend() const -> detail::const_lexer_backend_ptr_ref;
 		
 		
-		friend auto match(char, char, bool) -> lexer_t;
-		friend auto match(const std::string& -> lexer_t);
-		friend auto insert(size_t, const_lexer_ref) -> lexer_t;
-
 		friend auto operator >> (const_lexer_ref, const_lexer_ref) -> lexer_t;
 		friend auto operator | (const_lexer_ref, const_lexer_ref) -> lexer_t;
+
+		friend auto match(char, bool should_insert = true) -> lexer_t;
+		friend auto match(char, char, bool should_insert = true) -> lexer_t;
+		friend auto match(std::string const&) -> lexer_t;
+		friend auto insert(size_t, const_lexer_ref) -> lexer_t;
 		
 	private:
 		lexer_t(detail::const_lexer_backend_ptr_ref);
 		
 		detail::lexer_backend_ptr backend_;
 	};
-	
-	
-	auto match(char from, char to, bool should_insert = true) -> lexer_t;
-	auto match(char c, bool should_insert = true) -> lexer_t;
-	auto match(std::string const& str) -> lexer_t;
-
-	
-	lexer_t insert(size_t insert_id, const_lexer_ref L);
-
 
 //=====================================================================
 } // namespace lexing

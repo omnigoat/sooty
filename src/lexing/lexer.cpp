@@ -17,6 +17,7 @@ lexer_t::lexer_t(detail::const_lexer_backend_ptr_ref backend)
 
 auto lexer_t::operator = (lexer_t const& rhs) -> lexer_t& {
 	backend_ = rhs.backend_;
+	return *this;
 }
 
 auto lexer_t::operator * () const -> lexer_t
@@ -46,6 +47,12 @@ auto lexer_t::operator + () const -> lexer_t {
 	// this might be the best line of code I've ever written.
 	return *this >> **this;
 }
+
+auto lexer_t::backend() const -> detail::lexer_backend_ptr const& {
+	return backend_;
+}
+
+
 
 auto sooty::lexing::operator >> ( const_lexer_ref lhs, const_lexer_ref rhs ) -> lexer_t {
 	return lexer_t( clone_tree(lhs.backend())->append(clone_tree(rhs.backend())) );
