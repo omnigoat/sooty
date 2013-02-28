@@ -28,8 +28,16 @@ namespace lexing {
 		int row, column;
 	};
 	
-	typedef const position_t& const_position_ref;
-	
+	struct channel_t
+	{
+		channel_t() : bits_(1) {}
+		channel_t(int channels) : bits_(1 | channels) {}
+
+
+	private:
+		int bits_;
+	};
+
 	//=====================================================================
 	// lexeme
 	//=====================================================================
