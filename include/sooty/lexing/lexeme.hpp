@@ -31,8 +31,9 @@ namespace lexing {
 	struct channel_t
 	{
 		channel_t() : bits_(1) {}
-		channel_t(int channels) : bits_(1 | channels) {}
+		explicit channel_t(int ch) : bits_(1 | (1 << ch)) {}
 
+		auto as_int() const -> int { return bits_; }
 
 	private:
 		int bits_;
@@ -46,10 +47,11 @@ namespace lexing {
 		typedef size_t id_t;
 		static std::string empty_text;
 		
-		lexeme_t(id_t, const_characters_iterator_ref begin, const_characters_iterator_ref end, const position_t&);
+		lexeme_t(id_t, const_characters_iterator_ref begin, const_characters_iterator_ref end, position_t const&, channel_t const& = channel_t());
 
 		auto id() const -> id_t const&;
-		auto position() const -> const position_t&;
+		auto position() const -> position_t const&;
+		auto channel() const -> channel_t const&;
 		auto begin() const -> const_characters_iterator_ref;
 		auto end() const -> const_characters_iterator_ref;
 		auto text() const -> std::string;
@@ -58,6 +60,7 @@ namespace lexing {
 		id_t id_;
 		characters_iterator_t begin_, end_;
 		position_t position_;
+		channel_t channel_;
 	};
 	
 	typedef const lexeme_t& const_lexeme_ref;

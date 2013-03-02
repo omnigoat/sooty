@@ -50,8 +50,10 @@ namespace detail {
 			return command_t(action_t::match, f, t, should_insert);
 		}
 		
-		static command_t combine(char id) {
-			return command_t(action_t::combine, 0, id, false);
+		static command_t combine(int id, channel_t const& ch) {
+			command_t result(action_t::combine, 0, id, false);
+			result.channel = ch;
+			return result;
 		}
 		
 		static command_t discard() {
@@ -63,8 +65,9 @@ namespace detail {
 		}
 		
 		action_t::Enum action;
-		char from_id, to_id;
+		int from_id, to_id;
 		bool should_insert;
+		channel_t channel;
 	};
 	
 	typedef const command_t& const_command_ref;

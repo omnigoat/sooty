@@ -32,6 +32,8 @@ int main()
 		using namespace sooty::lexing;
 		typedef sooty::common::performer_t<detail::analyser_t> lexical_analysis_t;
 		
+		channel_t main_channel(1);
+
 		// input stream
 		std::stringstream input(input_string);
 		
@@ -41,23 +43,23 @@ int main()
 		// have a banana
 		lexer_t BANANA =
 		+(
-			insert(1, +match('0', '9'))
+			insert(1, main_channel, +match('0', '9'))
 			|
-			insert(2, match('a', 'z') >> +(match('a', 'z') | match('_')) )
+			insert(2, main_channel, match('a', 'z') >> +(match('a', 'z') | match('_')) )
 			|
-			insert(10, match("+"))
+			insert(10, main_channel, match("+"))
 			|
-			insert(11, match("-"))
+			insert(11, main_channel, match("-"))
 			|
-			insert(12, match("*"))
+			insert(12, main_channel, match("*"))
 			|
-			insert(13, match("/"))
+			insert(13, main_channel, match("/"))
 			|
-			insert(20, match("("))
+			insert(20, main_channel, match("("))
 			|
-			insert(21, match(")"))
+			insert(21, main_channel, match(")"))
 			|
-			match(' ', false)
+			insert(0, channel_t(2), match(' '))
 		);
 		
 		lexical_analysis_t()(acc, input_range, BANANA.backend());

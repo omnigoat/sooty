@@ -31,8 +31,8 @@ namespace detail {
 			position_ = current_position_;
 		}
 		
-		void combine(size_t id) {
-			lexemes_.push_back( lexeme_t(id, beginning_, characters_.end(), position_) );
+		void combine(size_t id, channel_t const& ch) {
+			lexemes_.push_back( lexeme_t(id, beginning_, characters_.end(), position_, ch) );
 		}
 		
 		void push_back(char c) {

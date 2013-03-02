@@ -31,10 +31,13 @@ namespace lexing {
 		friend auto operator >> (const_lexer_ref, const_lexer_ref) -> lexer_t;
 		friend auto operator | (const_lexer_ref, const_lexer_ref) -> lexer_t;
 
-		friend auto match(char, bool should_insert = true) -> lexer_t;
-		friend auto match(char, char, bool should_insert = true) -> lexer_t;
+		friend auto match(char) -> lexer_t;
+		friend auto match(char, char) -> lexer_t;
+		friend auto ignore(char) -> lexer_t;
+		friend auto ignore(char, char) -> lexer_t;
+		
 		friend auto match(std::string const&) -> lexer_t;
-		friend auto insert(size_t, const_lexer_ref) -> lexer_t;
+		friend auto insert(size_t, channel_t const&, const_lexer_ref) -> lexer_t;
 		
 	private:
 		lexer_t(detail::const_lexer_backend_ptr_ref);

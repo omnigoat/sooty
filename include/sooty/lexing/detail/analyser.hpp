@@ -38,7 +38,7 @@ namespace detail {
 					break;
 				
 				case command_t::action_t::combine:
-					accumulator.combine(command.to_id);
+					accumulator.combine(command.to_id, command.channel);
 					// fallthrough
 				
 				case command_t::action_t::clear:

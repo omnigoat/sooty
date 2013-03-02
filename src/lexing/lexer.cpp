@@ -63,19 +63,19 @@ auto sooty::lexing::operator | ( const_lexer_ref lhs, const_lexer_ref rhs ) -> l
 }
 
 
-auto sooty::lexing::match(char from, char to, bool should_insert) -> lexer_t {
-	return lexer_t(
-		detail::lexer_backend_t::make()
-			->push_back_command( detail::command_t::match(from, to, should_insert) )
-	);
+
+
+
+auto sooty::lexing::match(char c) -> lexer_t {
+	return match(c, c);
 }
 
 
-
-
-
-auto sooty::lexing::match(char c, bool should_insert) -> lexer_t {
-	return match(c, c, should_insert);
+auto sooty::lexing::match(char from, char to) -> lexer_t {
+	return lexer_t(
+		detail::lexer_backend_t::make()
+			->push_back_command( detail::command_t::match(from, to, true) )
+	);
 }
 
 
@@ -88,11 +88,11 @@ auto sooty::lexing::match(std::string const& str) -> lexer_t {
 }
 
 
-auto sooty::lexing::insert(size_t insert_id, const_lexer_ref L) -> lexer_t {
+auto sooty::lexing::insert(size_t insert_id, channel_t const& ch, const_lexer_ref L) -> lexer_t {
 	return lexer_t(
 		clone_tree(L.backend())->append(
 			detail::lexer_backend_t::make()
-				->push_back_command(detail::command_t::combine(insert_id))
+				->push_back_command(detail::command_t::combine(insert_id, ch))
 		)
 	);
 }
