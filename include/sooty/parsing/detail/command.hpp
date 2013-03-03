@@ -65,7 +65,8 @@ namespace detail {
 			command_t result(*this);
 			return result;
 		}
-		
+	
+
 		static command_t make_match(size_t from_id, size_t to_id) {
 			return command_t(action_t::match, from_id, to_id);
 		}

@@ -48,28 +48,60 @@ auto lexer_t::operator + () const -> lexer_t {
 	return *this >> **this;
 }
 
+auto lexer_t::operator ! () const -> lexer_t
+{
+	// for each leaf, let it be a terminator
+	detail::lexer_backend_ptr new_backend = clone_tree(backend_);
+
+	common::for_each_depth_first(new_backend, [](detail::lexer_backend_ptr const& L) {
+		if (L->children_.empty())
+			L->set_as_terminator();
+	});
+
+	return lexer_t(new_backend);
+}
+
+auto lexer_t::operator [] (callback_t const& acc) const -> lexer_t
+{
+	// for each leaf, let it perform this action on success
+	detail::lexer_backend_ptr new_backend = clone_tree(backend_);
+
+	common::for_each_depth_first(new_backend, [&acc](detail::lexer_backend_ptr const& L) {
+		if (L->children_.empty())
+			L->push_back_command( detail::command_t(detail::command_t::action_t::passthrough, 0, 0, false, acc) );
+		if (L->terminal())
+			L->push_back_failure( detail::command_t(detail::command_t::action_t::passthrough, 0, 0, false, acc) );
+	});
+
+	return lexer_t(new_backend);
+}
+
 auto lexer_t::backend() const -> detail::lexer_backend_ptr const& {
 	return backend_;
 }
 
 
-auto sooty::lexing::operator >> ( const_lexer_ref lhs, const_lexer_ref rhs ) -> lexer_t {
+auto sooty::lexing::operator >> ( lexer_t const& lhs, lexer_t const& rhs ) -> lexer_t {
 	return lexer_t( clone_tree(lhs.backend())->append(clone_tree(rhs.backend())) );
 }
 
 
-auto sooty::lexing::operator | ( const_lexer_ref lhs, const_lexer_ref rhs ) -> lexer_t {
+auto sooty::lexing::operator | ( lexer_t const& lhs, lexer_t const& rhs ) -> lexer_t {
 	return lexer_t( clone_tree(lhs.backend())->merge(clone_tree(rhs.backend())) );
 }
 
 
 
-
+auto sooty::lexing::peek(char c) -> lexer_t {
+	return lexer_t(
+		detail::lexer_backend_t::make()
+			->push_back_command( detail::command_t::peek(c, c) )
+	);
+}
 
 auto sooty::lexing::match(char c) -> lexer_t {
 	return match(c, c);
 }
-
 
 auto sooty::lexing::match(char from, char to) -> lexer_t {
 	return lexer_t(
@@ -77,7 +109,6 @@ auto sooty::lexing::match(char from, char to) -> lexer_t {
 			->push_back_command( detail::command_t::match(from, to, true) )
 	);
 }
-
 
 auto sooty::lexing::match(std::string const& str) -> lexer_t {
 	detail::lexer_backend_ptr backend = detail::lexer_backend_t::make();
@@ -88,7 +119,20 @@ auto sooty::lexing::match(std::string const& str) -> lexer_t {
 }
 
 
-auto sooty::lexing::insert(size_t insert_id, channel_t const& ch, const_lexer_ref L) -> lexer_t {
+auto sooty::lexing::ignore(char c) -> lexer_t {
+	return ignore(c, c);
+}
+
+auto sooty::lexing::ignore(char from, char to) -> lexer_t {
+	return lexer_t(
+		detail::lexer_backend_t::make()
+			->push_back_command( detail::command_t::match(from, to, false) )
+	);
+}
+
+
+
+auto sooty::lexing::insert(size_t insert_id, channel_t const& ch, lexer_t const& L) -> lexer_t {
 	return lexer_t(
 		clone_tree(L.backend())->append(
 			detail::lexer_backend_t::make()

@@ -21,12 +21,16 @@ namespace detail {
 				terminal,
 				clear,
 				match,
-				combine
+				peek,
+				combine,
+				passthrough
 			};
 		};
 		
-		command_t(action_t::Enum action, char from_id, char to_id, bool should_insert)
-			: action(action), from_id(from_id), to_id(to_id), should_insert(should_insert)
+		typedef std::function< void(accumulator_t&) > callback_t;
+		
+		command_t(action_t::Enum action, char from_id, char to_id, bool should_insert, callback_t const& callback = callback_t())
+			: action(action), from_id(from_id), to_id(to_id), should_insert(should_insert), callback(callback), negate()
 		{
 		}
 		
@@ -38,6 +42,11 @@ namespace detail {
 			return *this;
 		}
 		
+			
+		static auto peek(size_t from_id, size_t to_id) -> command_t {
+			return command_t(action_t::peek, from_id, to_id, false);
+		}
+
 		const command_t& merge(const command_t& rhs) const {
 			return *this;
 		}
@@ -56,10 +65,6 @@ namespace detail {
 			return result;
 		}
 		
-		static command_t discard() {
-			return command_t(action_t::clear, 0, 0, false);
-		}
-		
 		static command_t terminal() {
 			return command_t(action_t::terminal, 0, 0, false);
 		}
@@ -67,7 +72,9 @@ namespace detail {
 		action_t::Enum action;
 		int from_id, to_id;
 		bool should_insert;
+		bool negate;
 		channel_t channel;
+		callback_t callback;
 	};
 	
 	typedef const command_t& const_command_ref;

@@ -20,10 +20,12 @@ namespace detail {
 	struct accumulator_t
 	{
 		accumulator_t(lexemes_ref lexemes, size_t buffer_size)
-			: lexemes_(lexemes), position_(1, 1), current_position_(1, 1)
+			: lexemes_(lexemes), position_(1, 1), current_position_(1, 1), tabs_(), previous_tabs_()
 		{
 			characters_.reserve(buffer_size);
 			beginning_ = characters_.begin();
+			last_newline_ = characters_.end();
+			last_newline_lx_ = 0;
 		}
 		
 		void clear() {
@@ -45,7 +47,48 @@ namespace detail {
 			}
 		}
 		
-		
+		void inc_tabs() {
+			++tabs_;
+		}
+
+		void blockify()
+		{
+			if (characters_.empty()) {
+				if (!lexemes_.empty())
+					last_newline_lx_ = lexemes_.size();
+				return;
+			}
+			else if (last_newline_ == characters_.end() - 1) {
+				last_newline_ = characters_.end() - 1;
+				if (!lexemes_.empty())
+					last_newline_lx_ = lexemes_.size();
+				return;
+			}
+
+			if (tabs_ < previous_tabs_) {
+				if (lexemes_.empty())
+					lexemes_.push_back( lexeme_t(141414, characters_iterator_t(), characters_iterator_t(), current_position_) );
+				else
+					lexemes_.insert( lexemes_.begin() + last_newline_lx_, lexeme_t(141414, characters_iterator_t(), characters_iterator_t(), current_position_) );
+			}
+			else if (tabs_ > previous_tabs_) {
+				if (lexemes_.empty())
+					lexemes_.push_back( lexeme_t(151515, characters_iterator_t(), characters_iterator_t(), current_position_) );
+				else
+					lexemes_.insert( lexemes_.begin() + last_newline_lx_, lexeme_t(151515, characters_iterator_t(), characters_iterator_t(), current_position_) );
+			}
+
+			previous_tabs_ = tabs_;
+			tabs_ = 0;
+			last_newline_ = characters_.end() - 1;
+
+			if (!lexemes_.empty())
+				last_newline_lx_ = lexemes_.size();
+		}
+
+		void reset_tabs() {
+			tabs_ = previous_tabs_;
+		}
 		
 		
 	private:
@@ -53,9 +96,13 @@ namespace detail {
 		typedef std::string characters_t;
 		
 		lexemes_ref lexemes_;
-		
+		int last_newline_lx_;
+		int previous_tabs_;
+		int tabs_;
+
 		characters_t characters_;
 		characters_t::const_iterator beginning_;
+		characters_t::const_iterator last_newline_;
 		position_t position_, current_position_;
 	};
 	

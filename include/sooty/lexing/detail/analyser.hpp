@@ -45,8 +45,15 @@ namespace detail {
 					accumulator.clear();
 					break;
 				
-				
+				case command_t::action_t::peek:
+					return input.cv() == command.from_id;
+
 				case command_t::action_t::terminal:
+					break;
+
+				case command_t::action_t::passthrough:
+					if (command.callback)
+						command.callback(accumulator);
 					break;
 			}
 			
