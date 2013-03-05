@@ -177,9 +177,13 @@ auto node_t<Command>::append_impl(std::map<node_ptr, int>& visited, node_ptr nod
 		return us;
 	}
 	
-	visited.insert( std::make_pair(us, 1) );
+	visited[us] = 1;
 	
 	if (children_.empty()) {
+		children_.insert(node);
+	}
+	else if (terminal()) {
+		terminal_ = false;
 		children_.insert(node);
 	}
 	else {

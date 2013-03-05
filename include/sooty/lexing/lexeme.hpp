@@ -34,10 +34,15 @@ namespace lexing {
 		explicit channel_t(int ch) : bits_(1 | (1 << ch)) {}
 
 		auto as_int() const -> int { return bits_; }
-
+			
+		friend inline auto operator == (channel_t const& lhs, channel_t const& rhs) -> bool {
+			return lhs.bits_ == rhs.bits_;
+		}
 	private:
 		int bits_;
 	};
+
+	
 
 	//=====================================================================
 	// lexeme

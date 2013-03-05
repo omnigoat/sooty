@@ -55,10 +55,10 @@ namespace common {
 
 		// children: sort by descending number of commands
 		struct ordering_t;
+		struct merged_ordering_t;
 		typedef std::set<node_ptr, ordering_t> children_t;
 		
-		struct merged_ordering_t;
-
+		
 
 		// constructors
 		node_t(type_t);
@@ -66,9 +66,8 @@ namespace common {
 		node_t(node_t&& rhs);
 		~node_t();
 
+		// operators
 		auto operator = (node_t const&) -> node_t&;
-		//auto operator = (node_t&& rhs) -> node_t&;
-		auto assume(node_t&&) -> node_ptr;
 		
 		
 		// pure
@@ -78,6 +77,7 @@ namespace common {
 
 		
 		// mutators
+		auto assume(node_t&&) -> node_ptr;
 		auto push_back_command(const command_t&) -> node_ptr;
 		auto push_back_failure(const command_t&) -> node_ptr;
 		auto push_back_action(bool, const command_t&) -> node_ptr;
@@ -213,18 +213,20 @@ namespace common {
 		}
 	}
 
-	template <typename node_ptr_tm, typename FN>
-	void for_each_depth_first(node_ptr_tm const& root, FN fn)
+	template <typename node_ptr_tm, typename FN, typename FNB = std::function<void(node_ptr_tm const&)>>
+	void for_each_depth_first(node_ptr_tm const& root, FN fn, FNB for_backrefs = std::function<void(node_ptr_tm const&)>() )
 	{
 		std::stack<node_ptr_tm> nodes;
 		nodes.push(root);
-		std::set<node_ptr_tm> visited;
+		std::set<node_ptr_tm> visited, backrefs;
 		while (!nodes.empty())
 		{
 			auto x = nodes.top();
 			nodes.pop();
-			if (visited.find(x) != visited.end())
+			if (visited.find(x) != visited.end()) {
+				backrefs.insert(x);
 				continue;
+			}
 			visited.insert(x);
 			typename node_ptr_tm::element_type::children_t children = x->children_;
 			// call fn, which returns the new acc
@@ -232,6 +234,13 @@ namespace common {
 
 			for (auto const& y : children) {
 				nodes.push(y);
+			}
+		}
+
+		std::function<void(node_ptr_tm const&)> fb = for_backrefs;
+		if (fb) {
+			for (auto const& x : backrefs) {
+				for_backrefs(x);
 			}
 		}
 	}

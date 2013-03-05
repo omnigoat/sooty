@@ -94,7 +94,8 @@ namespace detail {
 	}
 	
 	inline command_t merged(const_command_ref lhs, const_command_ref rhs, bool& success) {
-		success = false;
+		success = (!lhs.callback && !rhs.callback) && lhs.action == rhs.action && lhs.from_id == rhs.from_id && 
+		  lhs.to_id == rhs.to_id && lhs.should_insert == rhs.should_insert && lhs.channel == rhs.channel;
 		return lhs;
 	}
 	
