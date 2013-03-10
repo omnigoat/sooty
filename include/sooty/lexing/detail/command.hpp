@@ -30,7 +30,7 @@ namespace detail {
 		typedef std::function< void(accumulator_t&) > callback_t;
 		
 		command_t(action_t::Enum action, char from_id, char to_id, bool should_insert, callback_t const& callback = callback_t())
-			: action(action), from_id(from_id), to_id(to_id), should_insert(should_insert), callback(callback), negate()
+			: action(action), from_id(from_id), to_id(to_id), should_insert(should_insert), callback(callback)
 		{
 		}
 		
@@ -72,7 +72,6 @@ namespace detail {
 		action_t::Enum action;
 		int from_id, to_id;
 		bool should_insert;
-		bool negate;
 		channel_t channel;
 		callback_t callback;
 	};
@@ -94,7 +93,14 @@ namespace detail {
 	}
 	
 	inline command_t merged(const_command_ref lhs, const_command_ref rhs, bool& success) {
-		success = false;
+		success = 
+		  lhs.action == rhs.action &&
+		  lhs.from_id == rhs.from_id &&
+		  lhs.to_id == rhs.to_id &&
+		  lhs.should_insert == rhs.should_insert &&
+		  lhs.channel == rhs.channel
+		  ;
+
 		return lhs;
 	}
 	

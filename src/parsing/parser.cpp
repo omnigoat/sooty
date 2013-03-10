@@ -1,6 +1,9 @@
 #include <sooty/parsing/parser.hpp>
 #include <atma/console.hpp>
 
+using sooty::common::clone_tree;
+using sooty::common::append;
+
 using sooty::parsing::parser;
 using sooty::parsing::detail::parser_backend_ptr;
 using sooty::parsing::detail::parser_backend_t;
@@ -25,7 +28,7 @@ auto parser::resolved_backend() const -> parser_backend_ptr const& {
 
 auto parser::operator >> (parser const& rhs) const -> parser {
 	return parser(
-		common::clone_tree(backend_)->append( common::clone_tree(rhs.backend_) )
+		append( clone_tree(backend_), clone_tree(rhs.backend_) )
 	);
 }
 
@@ -83,7 +86,7 @@ auto parser::operator [] (const parser& rhs) const -> parser
 		// if this is a leaf node, append @this' backend, and the combine
 		if (x->children_.empty()) {
 			x->add_child( common::clone_tree(backend_) );
-			x->append(detail::parser_backend_t::make()
+			append(x, detail::parser_backend_t::make()
 				->push_back_command(detail::command_t(detail::command_t::action_t::combine, 0, 0, ii))
 			);
 		}
@@ -97,8 +100,10 @@ auto parser::operator [] (const parser& rhs) const -> parser
 	for (auto const& x : visited) {
 		if (x.second > 1) {
 			x.first->add_child(
-				common::clone_tree(backend_)->append(detail::parser_backend_t::make()
-					->push_back_command(detail::command_t(detail::command_t::action_t::combine, 0, 0, 2))
+				append(
+					clone_tree(backend_),
+					detail::parser_backend_t::make()
+					 ->push_back_command(detail::command_t(detail::command_t::action_t::combine, 0, 0, 2))
 				)
 			);
 		}
@@ -132,7 +137,8 @@ auto parser::operator = (parser const& rhs) -> parser&
 			// create A'  (a1 A' | a2 A' | a3 A')
 			parser_backend_ptr A_stroke = parser_backend_t::make_backreference();
 			A_stroke->children_ = std::move(xn->children_);
-			A_stroke->append(A_stroke);
+			//A_stroke->append(A_stroke);
+			append(A_stroke, A_stroke);
 
 			// rewrite parent				
 			if (xp)
@@ -144,9 +150,13 @@ auto parser::operator = (parser const& rhs) -> parser&
 				xp->type_ = parser_backend_t::type_t::control;
 
 				// append A' to all B
-				for (auto const& B : xp->children_) {
-					B->append(A_stroke, false);
+				parser_backend_t::children_t tmp;
+				for (auto& B : xp->children_) {
+					//B->append(A_stroke, false);
+					parser_backend_ptr b = B;
+					tmp.insert( append(b, A_stroke) );
 				}
+				std::swap(xp->children_, tmp);
 			}
 
 			did_work = true;

@@ -35,6 +35,10 @@ namespace lexing {
 
 		auto as_int() const -> int { return bits_; }
 
+		auto operator == (channel_t const& rhs) const -> bool {
+			return bits_ == rhs.bits_;
+		}
+
 	private:
 		int bits_;
 	};

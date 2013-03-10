@@ -55,10 +55,10 @@ namespace common {
 
 		// children: sort by descending number of commands
 		struct ordering_t;
+		struct merged_ordering_t;
 		typedef std::set<node_ptr, ordering_t> children_t;
 		
-		struct merged_ordering_t;
-
+		
 
 		// constructors
 		node_t(type_t);
@@ -83,7 +83,6 @@ namespace common {
 		auto push_back_action(bool, const command_t&) -> node_ptr;
 		auto add_child(node_ptr const&) -> node_ptr;
 		auto add_self_as_child() -> node_ptr;
-		auto append(node_ptr const&, bool append_to_backreference = true) -> node_ptr;
 		auto append_self() -> node_ptr;
 		auto merge(node_ptr const&) -> node_ptr;
 		auto set_as_terminator() -> void { terminal_ = true; }
@@ -123,9 +122,6 @@ namespace common {
 
 
 	public:
-		// mutators
-		auto append_impl(std::map<node_ptr, int>& visited, node_ptr node) -> node_ptr;
-		
 		// statics
 		static auto merge_commands(commands_t& combined, commands_t& new_lhs, commands_t& new_rhs, commands_t& lhs, commands_t& rhs) -> void;
 		static auto clone_command(const std::pair<bool, command_t>& C) -> std::pair<bool, command_t>;
@@ -137,7 +133,7 @@ namespace common {
 		std::set<node_t*> clones_;
 		std::vector<node_t*> ancestry_;
 		bool terminal_;
-
+		
 		// friends
 		template <typename ExecutorT> friend struct performer_t;
 		template <typename NodePtr> friend NodePtr detail::clone_tree_impl(std::map<NodePtr, NodePtr>& visited_nodes, const NodePtr& clonee);
@@ -147,6 +143,13 @@ namespace common {
 
 		template <typename node_ptr_tm, typename FN>
 		void for_each_depth_first(node_ptr_tm const& root, FN fn);
+
+
+
+		template <typename node_ptr_tm>
+		friend auto append_impl(std::set<node_ptr_tm>& visited, node_ptr_tm& x, node_ptr_tm const& n) -> void;
+		template <typename C>
+		auto merge_into_children(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> void;
 	};
 
 	template <typename Command>
@@ -184,6 +187,17 @@ namespace common {
 			return lhs.get() < rhs.get();
 		};
 	};
+
+	
+	template <typename node_ptr_tm>
+	auto append(node_ptr_tm& x, node_ptr_tm const& n) -> node_ptr_tm&;
+
+	template <typename C>
+	auto append_impl(std::set<std::shared_ptr<node_t<C>>>& visited, std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> void;
+
+	template <typename C>
+	auto merge_into_children(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> void;
+
 
 	template <typename node_ptr_tm, typename acc_tm, typename FN>
 	void accumulate_depth_first(node_ptr_tm const& root, acc_tm acc, FN fn)

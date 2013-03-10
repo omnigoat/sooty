@@ -118,26 +118,6 @@ auto node_t<Command>::add_self_as_child() -> node_ptr {
 }
 
 template <typename Command>
-auto node_t<Command>::append(node_ptr const& node, bool append_to_backreference) -> node_ptr
-{
-	std::map<node_ptr, int> visited;
-
-	// regular append (when children_ is empty)
-	append_impl(visited, node);
-
-	// also find nodes that are backreferenced and add to them
-	if (append_to_backreference) {
-		for (auto const& x : visited) {
-			if (x.second > 1) {
-				x.first->add_child(node);
-			}
-		}
-	}
-
-	return shared_from_this();
-}
-
-template <typename Command>
 auto node_t<Command>::append_self() -> node_ptr {
 	return append(shared_from_this());
 }
@@ -165,28 +145,6 @@ auto node_t<Command>::push_back_action(bool good, const command_t& command) -> n
 	type_ = type_t::actor;
 	commands_.push_back( std::make_pair(good, command) );
 	return shared_from_this();
-}
-
-template <typename Command>
-auto node_t<Command>::append_impl(std::map<node_ptr, int>& visited, node_ptr node) -> node_ptr
-{
-	node_ptr us = shared_from_this();
-
-	if (visited.find(us) != visited.end()) {
-		++visited[us];
-		return us;
-	}
-	
-	visited.insert( std::make_pair(us, 1) );
-	
-	if (children_.empty()) {
-		children_.insert(node);
-	}
-	else {
-		std::for_each(children_.begin(), children_.end(), std::bind(&node_t::append_impl, std::placeholders::_1, std::ref(visited), std::ref(node)));
-	}
-	
-	return us;
 }
 
 template <typename Command>
@@ -231,6 +189,11 @@ auto node_t<Command>::merge(node_ptr const& rhs) -> node_ptr
 		);
 
 		children_.swap(new_children);
+
+		// we have children, and one of our two branches was wholly consumed. we
+		// are therefore a terminal.
+		if (!children_.empty())
+			terminal_ = true;
 	}
 	// @rhs was completely merged into @lhs, but has commands left over. merge it into any of our children
 	else if (!combined_commands.empty() && new_lhs_commands.empty() && !new_rhs_commands.empty())
@@ -325,3 +288,85 @@ template <typename Command>
 auto node_t<Command>::clone_command(const std::pair<bool, command_t>& C) -> std::pair<bool, command_t> {
 	return std::make_pair(C.first, C.second.clone());
 }
+
+
+//=====================================================================
+// append
+//=====================================================================
+template <typename node_ptr_tm>
+auto sooty::common::append(node_ptr_tm& x, node_ptr_tm const& node) -> node_ptr_tm&
+{
+	std::set<node_ptr_tm> visited;
+	append_impl(visited, x, node);
+	return x;
+}
+
+template <typename C>
+auto sooty::common::append_impl(std::set<std::shared_ptr<node_t<C>>>& visited, std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> void
+{
+	typedef std::shared_ptr<node_t<C>> node_ptr;
+
+	if (visited.find(x) != visited.end())
+		return;
+
+	visited.insert(x);
+
+	if (x->children_.empty()) {
+		x->children_.insert(node);
+	}
+	else {
+		if (x->terminal()) {
+			merge_into_children(x, node);
+			x->terminal_ = false;
+		}
+	
+		node_t<C>::children_t tmp;
+		for (auto& y : x->children_) {
+			node_ptr n = y;
+			append_impl(visited, n, node);
+			tmp.insert(n);
+		}
+		std::swap(x->children_, tmp);
+	}
+}
+
+
+
+//=====================================================================
+// merge_into_children
+//=====================================================================
+template <typename C>
+auto merge_into_children(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> void
+{
+	typedef std::shared_ptr<node_t<C>> node_ptr;
+
+	node_t<C>::merged_ordering_t pred;
+
+	auto i = x->children_.begin();
+	while (i != x->children_.end() && pred(node, *i))
+		++i;
+
+	// we hit the end, or we never found an equal child
+	if (i == x->children_.end() || pred(*i, node)) {
+		x->children_.insert(node);
+	}
+	// we have a match! we perform a regular merge fomr here on out.
+	else {
+		node_ptr t = *i;
+		t = t->merge(node);
+		x->children_.erase(i);
+		x->children_.insert(t);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
