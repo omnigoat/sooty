@@ -67,15 +67,15 @@ namespace detail {
 
 			if (tabs_ < previous_tabs_) {
 				if (lexemes_.empty())
-					lexemes_.push_back( lexeme_t(141414, characters_iterator_t(), characters_iterator_t(), current_position_) );
+					lexemes_.push_back( lexeme_t(141414, characters_.end(), characters_.end(), current_position_) );
 				else
-					lexemes_.insert( lexemes_.begin() + last_newline_lx_, lexeme_t(141414, characters_iterator_t(), characters_iterator_t(), current_position_) );
+					lexemes_.insert( lexemes_.begin() + last_newline_lx_, lexeme_t(141414, characters_.end(), characters_.end(), current_position_) );
 			}
 			else if (tabs_ > previous_tabs_) {
 				if (lexemes_.empty())
-					lexemes_.push_back( lexeme_t(151515, characters_iterator_t(), characters_iterator_t(), current_position_) );
+					lexemes_.push_back( lexeme_t(151515, characters_.end(), characters_.end(), current_position_) );
 				else
-					lexemes_.insert( lexemes_.begin() + last_newline_lx_, lexeme_t(151515, characters_iterator_t(), characters_iterator_t(), current_position_) );
+					lexemes_.insert( lexemes_.begin() + last_newline_lx_, lexeme_t(151515, characters_.end(), characters_.end(), current_position_) );
 			}
 
 			previous_tabs_ = tabs_;

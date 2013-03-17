@@ -6,13 +6,13 @@
 //
 template <typename Command>
 node_t<Command>::node_t(type_t type)
-	: type_(type), terminal_()
+	: type_(type), terminal_(), fallible_()
 {
 }
 
 template <typename Command>
 node_t<Command>::node_t(const node_t<Command>& rhs)
-	: type_(rhs.type_), commands_(rhs.commands_), terminal_(rhs.terminal_)
+	: type_(rhs.type_), commands_(rhs.commands_), terminal_(rhs.terminal_), fallible_(rhs.fallible_)
 {
 }
 
@@ -36,13 +36,13 @@ node_t<Command>::~node_t()
 }
 
 template <typename Command>
-auto node_t<Command>::operator = (node_t<Command> const& rhs) -> node_t<Command>& {
-	//ATMA_ASSERT(false && "not yet implemented");
+auto node_t<Command>::operator = (node_t<Command> const& rhs) -> node_t<Command>&
+{
 	type_ = rhs.type_;
 	commands_ = rhs.commands_;
 	children_ = rhs.children_;
-	termianl_ = rhs.terminal_;
-
+	terminal_ = rhs.terminal_;
+	fallible_ = rhs.fallible_;
 	return *this;
 }
 
@@ -297,6 +297,15 @@ template <typename node_ptr_tm>
 auto sooty::common::append(node_ptr_tm& x, node_ptr_tm const& node) -> node_ptr_tm&
 {
 	std::set<node_ptr_tm> visited;
+	visited.insert(node);
+	append_impl(visited, x, node);
+	return x;
+}
+
+template <typename node_ptr_tm>
+auto sooty::common::append_backref(node_ptr_tm& x, node_ptr_tm const& node) -> node_ptr_tm&
+{
+	std::set<node_ptr_tm> visited;
 	append_impl(visited, x, node);
 	return x;
 }
@@ -314,12 +323,33 @@ auto sooty::common::append_impl(std::set<std::shared_ptr<node_t<C>>>& visited, s
 	if (x->children_.empty()) {
 		x->children_.insert(node);
 	}
-	else {
+	else
+	{
+		// if we're a terminal node, then we need to merge @node into our children
 		if (x->terminal()) {
 			merge_into_children(x, node);
 			x->terminal_ = false;
 		}
-	
+
+		// for each fallible child node, make a control node and add it and @node as children
+		{
+			auto i = x->children_.begin();
+			while (i != x->children_.end())
+			{
+				if ( (*i)->fallible_ ) {
+					node_ptr t = node_t<C>::make();
+					t->add_child(*i);
+					t->add_child(node);
+					(*i)->fallible_ = false;
+					i = x->children_.erase(i);
+					x->children_.insert(t);
+				}
+				else {
+					++i;
+				}
+			}
+		}
+		
 		node_t<C>::children_t tmp;
 		for (auto& y : x->children_) {
 			node_ptr n = y;

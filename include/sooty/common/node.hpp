@@ -86,7 +86,8 @@ namespace common {
 		auto append_self() -> node_ptr;
 		auto merge(node_ptr const&) -> node_ptr;
 		auto set_as_terminator() -> void { terminal_ = true; }
-		
+		auto set_as_fallible() -> void { fallible_ = true; }
+
 		static auto make_backreference() -> node_ptr {  return node_ptr(new node_t(type_t::backreference));  }
 		static auto make_placeholder() -> node_ptr {  return node_ptr(new node_t(type_t::placeholder));  }
 		static auto make() -> node_ptr {  return node_ptr(new node_t(type_t::control));  }
@@ -133,7 +134,8 @@ namespace common {
 		std::set<node_t*> clones_;
 		std::vector<node_t*> ancestry_;
 		bool terminal_;
-		
+		bool fallible_;
+
 		// friends
 		template <typename ExecutorT> friend struct performer_t;
 		template <typename NodePtr> friend NodePtr detail::clone_tree_impl(std::map<NodePtr, NodePtr>& visited_nodes, const NodePtr& clonee);
@@ -191,6 +193,9 @@ namespace common {
 	
 	template <typename node_ptr_tm>
 	auto append(node_ptr_tm& x, node_ptr_tm const& n) -> node_ptr_tm&;
+
+	template <typename node_ptr_tm>
+	auto append_backref(node_ptr_tm& x, node_ptr_tm const& n) -> node_ptr_tm&;
 
 	template <typename C>
 	auto append_impl(std::set<std::shared_ptr<node_t<C>>>& visited, std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> void;

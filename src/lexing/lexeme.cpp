@@ -38,7 +38,6 @@ auto lexeme_t::end() const -> const_characters_iterator_ref
 
 auto lexeme_t::text() const -> std::string
 {
-	std::string result(begin_, end_);
-	return result;
+	return std::string(begin_, end_);
 }
 

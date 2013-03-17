@@ -23,11 +23,10 @@ auto lexer_t::operator = (lexer_t const& rhs) -> lexer_t& {
 
 auto lexer_t::operator * () const -> lexer_t
 {
-	//detail::lexer_backend_ptr C = detail::lexer_backend_t::make();
 	detail::lexer_backend_ptr B = clone_tree(backend_);
 
-	common::append(B, B);
-	B->set_as_terminator();
+	common::append_backref(B, B);
+	B->set_as_fallible();
 
 	return lexer_t(B);
 }
