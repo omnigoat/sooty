@@ -25,8 +25,19 @@ auto lexer_t::operator * () const -> lexer_t
 {
 	detail::lexer_backend_ptr B = clone_tree(backend_);
 
+	// append a back-reference to ourselves
 	common::append_backref(B, B);
-	B->set_as_fallible();
+
+	// knowing that @append_backref might have changed @B,
+	// if we're a control node, then we have become a terminal.
+	// control nodes can't become fallible. that is reserved for
+	// non-control nodes.
+	if (B->type() == detail::lexer_backend_t::type_t::control) {
+		B->set_as_terminator();
+	}
+	else {
+		B->set_as_fallible();
+	}
 
 	return lexer_t(B);
 }

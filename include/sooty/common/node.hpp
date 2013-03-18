@@ -86,7 +86,7 @@ namespace common {
 		auto append_self() -> node_ptr;
 		auto merge(node_ptr const&) -> node_ptr;
 		auto set_as_terminator() -> void { terminal_ = true; }
-		auto set_as_fallible() -> void { fallible_ = true; }
+		auto set_as_fallible() -> void { ATMA_ASSERT(type_ != type_t::control); fallible_ = true; }
 
 		static auto make_backreference() -> node_ptr {  return node_ptr(new node_t(type_t::backreference));  }
 		static auto make_placeholder() -> node_ptr {  return node_ptr(new node_t(type_t::placeholder));  }
