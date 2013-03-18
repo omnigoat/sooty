@@ -200,7 +200,6 @@ namespace common {
 	template <typename C>
 	auto append_impl(
 		std::set<std::shared_ptr<node_t<C>>>& visited,
-		std::shared_ptr<node_t<C>> const& parent,
 		std::shared_ptr<node_t<C>>& x,
 		std::shared_ptr<node_t<C>> const& node
 	) -> void;
