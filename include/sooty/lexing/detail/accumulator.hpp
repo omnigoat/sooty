@@ -54,36 +54,31 @@ namespace detail {
 		void blockify()
 		{
 			if (characters_.empty()) {
-				if (!lexemes_.empty())
-					last_newline_lx_ = lexemes_.size();
-				return;
-			}
-			else if (last_newline_ == characters_.end() - 1) {
-				last_newline_ = characters_.end() - 1;
-				if (!lexemes_.empty())
-					last_newline_lx_ = lexemes_.size();
 				return;
 			}
 
-			if (tabs_ < previous_tabs_) {
-				if (lexemes_.empty())
-					lexemes_.push_back( lexeme_t(141414, characters_.end(), characters_.end(), current_position_) );
-				else
-					lexemes_.insert( lexemes_.begin() + last_newline_lx_, lexeme_t(141414, characters_.end(), characters_.end(), current_position_) );
+			auto i = characters_.rbegin();
+
+			// skip past other whitespace
+			while (*i != '\t' && *i != '\n')
+				++i;
+
+			// count tabs
+			int tabs = 0;
+			while (*i++ == '\t')
+				++tabs;
+
+			
+			if (tabs < previous_tabs_) {
+				lexemes_.push_back( lexeme_t(141414, beginning_, characters_.end(), current_position_) );
 			}
-			else if (tabs_ > previous_tabs_) {
-				if (lexemes_.empty())
-					lexemes_.push_back( lexeme_t(151515, characters_.end(), characters_.end(), current_position_) );
-				else
-					lexemes_.insert( lexemes_.begin() + last_newline_lx_, lexeme_t(151515, characters_.end(), characters_.end(), current_position_) );
+			else if (tabs > previous_tabs_) {
+				lexemes_.push_back( lexeme_t(151515, beginning_, characters_.end(), current_position_) );
 			}
 
-			previous_tabs_ = tabs_;
-			tabs_ = 0;
-			last_newline_ = characters_.end() - 1;
+			beginning_ = characters_.end();
 
-			if (!lexemes_.empty())
-				last_newline_lx_ = lexemes_.size();
+			previous_tabs_ = tabs;
 		}
 
 		void reset_tabs() {

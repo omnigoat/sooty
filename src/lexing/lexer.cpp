@@ -52,8 +52,13 @@ auto lexer_t::operator ! () const -> lexer_t
 	// for each leaf, let it be a terminator
 	detail::lexer_backend_ptr new_backend = clone_tree(backend_);
 
-	common::for_each_depth_first(new_backend, [](detail::lexer_backend_ptr const& L) {
-		L->set_as_fallible();
+	common::for_each_depth_first(new_backend, [](detail::lexer_backend_ptr const& N) {
+		if (N->type() == detail::lexer_backend_t::type_t::control) {
+			N->set_as_terminator();
+		}
+		else {
+			N->set_as_fallible();
+		}
 	});
 
 	return lexer_t(new_backend);
@@ -64,12 +69,18 @@ auto lexer_t::operator [] (callback_t const& acc) const -> lexer_t
 	// for each leaf, let it perform this action on success
 	detail::lexer_backend_ptr new_backend = clone_tree(backend_);
 
+	common::append(
+		new_backend,
+		detail::lexer_backend_t::make()
+			->push_back_command( detail::command_t(detail::command_t::action_t::passthrough, 0, 0, false, acc) )
+	);
+/*
 	common::for_each_depth_first(new_backend, [&acc](detail::lexer_backend_ptr const& L) {
 		if (L->children_.empty())
 			L->push_back_command( detail::command_t(detail::command_t::action_t::passthrough, 0, 0, false, acc) );
 		if (L->terminal())
 			L->push_back_failure( detail::command_t(detail::command_t::action_t::passthrough, 0, 0, false, acc) );
-	});
+	});*/
 
 	return lexer_t(new_backend);
 }

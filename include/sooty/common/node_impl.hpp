@@ -328,7 +328,6 @@ auto sooty::common::append_impl(std::set<std::shared_ptr<node_t<C>>>& visited, s
 		// if we're a terminal node, then we need to merge @node into our children
 		if (x->terminal()) {
 			merge_into_children(x, node);
-			x->terminal_ = false;
 		}
 
 		// if we're fallible
@@ -341,23 +340,27 @@ auto sooty::common::append_impl(std::set<std::shared_ptr<node_t<C>>>& visited, s
 			x->fallible_ = false;
 
 			// remove backreferences to ourself
-			for_each_depth_first(x, [&t, &x](node_ptr const& c) {
+			auto tmp_visited = visited;
+			tmp_visited.erase(x);
+			for_each_depth_first(tmp_visited, x, [&t, &x](node_ptr const& c) {
 				if (c->children_.find(x) != c->children_.end()) {
 					c->children_.erase(x);
 					c->children_.insert(t);
 				}
 			});
 			
+			visited.erase(x);
 			x = t;
 		}
 		
-		node_t<C>::children_t tmp;
-		for (auto& y : x->children_) {
+		node_t<C>::children_t tmp = x->children_;
+		node_t<C>::children_t new_children;
+		for (auto& y : tmp) {
 			node_ptr n = y;
 			append_impl(visited, n, node);
-			tmp.insert(n);
+			new_children.insert(n);
 		}
-		std::swap(x->children_, tmp);
+		std::swap(x->children_, new_children);
 	}
 }
 
@@ -381,7 +384,7 @@ auto merge_into_children(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C
 	if (i == x->children_.end() || pred(*i, node)) {
 		x->children_.insert(node);
 	}
-	// we have a match! we perform a regular merge fomr here on out.
+	// we have a match! we perform a regular merge from here on out.
 	else {
 		node_ptr t = *i;
 		t = t->merge(node);

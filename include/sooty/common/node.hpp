@@ -259,7 +259,27 @@ namespace common {
 		}
 	}
 
+	template <typename node_ptr_tm, typename FN>
+	void for_each_depth_first(std::set<node_ptr_tm>& visited, node_ptr_tm const& root, FN fn)
+	{
+		std::stack<node_ptr_tm> nodes;
+		nodes.push(root);
+		while (!nodes.empty())
+		{
+			auto x = nodes.top();
+			nodes.pop();
+			if (visited.find(x) != visited.end())
+				continue;
+			visited.insert(x);
+			typename node_ptr_tm::element_type::children_t children = x->children_;
+			// call fn, which returns the new acc
+			fn(x);
 
+			for (auto const& y : children) {
+				nodes.push(y);
+			}
+		}
+	}
 
 	// implementation
 	#include "node_impl.hpp"
