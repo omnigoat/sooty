@@ -42,7 +42,7 @@ auto lexer_t::operator ! () const -> lexer_t
 	detail::lexer_backend_ptr new_backend = clone_tree(backend_);
 
 	common::for_each_depth_first(new_backend, [](detail::lexer_backend_ptr const& L) {
-		L->set_as_terminator();
+		L->set_as_fallible();
 	});
 
 	return lexer_t(new_backend);

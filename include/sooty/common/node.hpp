@@ -198,7 +198,12 @@ namespace common {
 	auto append_backref(node_ptr_tm& x, node_ptr_tm const& n) -> node_ptr_tm&;
 
 	template <typename C>
-	auto append_impl(std::set<std::shared_ptr<node_t<C>>>& visited, std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> void;
+	auto append_impl(
+		std::set<std::shared_ptr<node_t<C>>>& visited,
+		std::shared_ptr<node_t<C>> const& parent,
+		std::shared_ptr<node_t<C>>& x,
+		std::shared_ptr<node_t<C>> const& node
+	) -> void;
 
 	template <typename C>
 	auto merge_into_children(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> void;

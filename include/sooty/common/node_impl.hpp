@@ -298,7 +298,7 @@ auto sooty::common::append(node_ptr_tm& x, node_ptr_tm const& node) -> node_ptr_
 {
 	std::set<node_ptr_tm> visited;
 	visited.insert(node);
-	append_impl(visited, x, node);
+	append_impl(visited, node_ptr_tm(), x, node);
 	return x;
 }
 
@@ -306,12 +306,12 @@ template <typename node_ptr_tm>
 auto sooty::common::append_backref(node_ptr_tm& x, node_ptr_tm const& node) -> node_ptr_tm&
 {
 	std::set<node_ptr_tm> visited;
-	append_impl(visited, x, node);
+	append_impl(visited, node_ptr_tm(), x, node);
 	return x;
 }
 
 template <typename C>
-auto sooty::common::append_impl(std::set<std::shared_ptr<node_t<C>>>& visited, std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> void
+auto sooty::common::append_impl(std::set<std::shared_ptr<node_t<C>>>& visited, std::shared_ptr<node_t<C>> const& parent, std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> void
 {
 	typedef std::shared_ptr<node_t<C>> node_ptr;
 
@@ -331,29 +331,45 @@ auto sooty::common::append_impl(std::set<std::shared_ptr<node_t<C>>>& visited, s
 			x->terminal_ = false;
 		}
 
-		// for each fallible child node, make a control node and add it and @node as children
+		// if we're fallible
+		if (x->fallible_)
 		{
-			auto i = x->children_.begin();
-			while (i != x->children_.end())
+			// create control @t to replace *i with
+			node_ptr t = node_t<C>::make();
+			t->add_child(x);
+			t->add_child(node);
+			x->fallible_ = false;
+
+			// remove backreferences to ourself
+			std::stack<node_ptr> nodes;
+			nodes.push(x);
+			std::set<node_ptr> visited;
+			visited.insert(t);
+			while (!nodes.empty())
 			{
-				if ( (*i)->fallible_ ) {
-					node_ptr t = node_t<C>::make();
-					t->add_child(*i);
-					t->add_child(node);
-					(*i)->fallible_ = false;
-					i = x->children_.erase(i);
-					x->children_.insert(t);
+				auto c = nodes.top();
+				nodes.pop();
+				if (visited.find(c) != visited.end())
+					continue;
+				visited.insert(c);
+						
+				if (c->children_.find(x) != c->children_.end()) {
+					c->children_.erase(x);
+					c->children_.insert(t);
 				}
-				else {
-					++i;
+
+				for (auto const& y : c->children_) {
+					nodes.push(y);
 				}
 			}
+
+			x = t;
 		}
 		
 		node_t<C>::children_t tmp;
 		for (auto& y : x->children_) {
 			node_ptr n = y;
-			append_impl(visited, n, node);
+			append_impl(visited, x, n, node);
 			tmp.insert(n);
 		}
 		std::swap(x->children_, tmp);
