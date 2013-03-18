@@ -138,7 +138,7 @@ auto parser::operator = (parser const& rhs) -> parser&
 			parser_backend_ptr A_stroke = parser_backend_t::make_backreference();
 			A_stroke->children_ = std::move(xn->children_);
 			//A_stroke->append(A_stroke);
-			append(A_stroke, A_stroke);
+			append_backref(A_stroke, A_stroke);
 
 			// rewrite parent				
 			if (xp)
