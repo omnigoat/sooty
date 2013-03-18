@@ -322,6 +322,7 @@ auto sooty::common::append_impl(std::set<std::shared_ptr<node_t<C>>>& visited, s
 
 	if (x->children_.empty()) {
 		x->children_.insert(node);
+		x->fallible_ = false;
 	}
 	else
 	{
@@ -330,37 +331,43 @@ auto sooty::common::append_impl(std::set<std::shared_ptr<node_t<C>>>& visited, s
 			merge_into_children(x, node);
 		}
 
-		// if we're fallible
 		if (x->fallible_)
 		{
-			// create control @t to replace @x with
-			node_ptr t = node_t<C>::make();
-			t->add_child(x);
-			t->add_child(node);
-			x->fallible_ = false;
+			// create control @t with which to replace @x.
+			node_ptr t = node_t<C>::make()
+				->add_child(x)
+				->add_child(node)
+				;
 
-			// remove backreferences to ourself
-			auto tmp_visited = visited;
-			tmp_visited.erase(x);
-			for_each_depth_first(tmp_visited, x, [&t, &x](node_ptr const& c) {
+			// because @x will eventually be assigned @t, we remove @x from 
+			// the visited set, as we still wish to visited its children.
+			x->fallible_ = false;
+			visited.erase(x);
+
+			// modify backreferences to @x to point to the newly-created @t
+			for_each_depth_first(x, [&t, &x](node_ptr const& c) {
 				if (c->children_.find(x) != c->children_.end()) {
 					c->children_.erase(x);
 					c->children_.insert(t);
 				}
 			});
 			
-			visited.erase(x);
+			
 			x = t;
 		}
 		
-		node_t<C>::children_t tmp = x->children_;
+		// we want to be able to modify @x's children, but we have to be careful,
+		// because @append_impl might modify things with little regards for any
+		// iterators we might hold.
 		node_t<C>::children_t new_children;
-		for (auto& y : tmp) {
-			node_ptr n = y;
+		while (!x->children_.empty())
+		{
+			node_ptr n = *x->children_.begin();
+			x->children_.erase(x->children_.begin());
 			append_impl(visited, n, node);
 			new_children.insert(n);
 		}
-		std::swap(x->children_, new_children);
+		x->children_ = std::move(new_children);
 	}
 }
 
