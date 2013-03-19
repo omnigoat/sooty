@@ -8,7 +8,6 @@
 //=====================================================================
 #include <sooty/lexing/detail/lexer_backend.hpp>
 #include <sooty/lexing/detail/command.hpp>
-#include <sooty/lexing/detail/accumulator.hpp>
 //=====================================================================
 namespace sooty {
 namespace lexing {
@@ -16,7 +15,7 @@ namespace lexing {
 	
 	struct lexer_t
 	{
-		typedef detail::lexer_backend_t::command_t::callback_t callback_t;
+		//typedef detail::lexer_backend_t::command_t::callback_t callback_t;
 
 		lexer_t(lexer_t const&);
 
@@ -25,9 +24,9 @@ namespace lexing {
 		auto operator !  () const -> lexer_t;
 		auto operator *  () const -> lexer_t;
 		auto operator +  () const -> lexer_t;
-		auto operator [] (callback_t const&) const -> lexer_t;
+		//auto operator [] (callback_t const&) const -> lexer_t;
 		
-		auto backend() const -> detail::const_lexer_backend_ptr_ref;
+		//auto backend() const -> detail::const_lexer_backend_ptr_ref;
 		
 		
 		friend auto operator >> (lexer_t const&, lexer_t const&) -> lexer_t;
@@ -43,9 +42,9 @@ namespace lexing {
 		friend auto insert(size_t, channel_t const&, lexer_t const&) -> lexer_t;
 		
 	private:
-		lexer_t(detail::const_lexer_backend_ptr_ref);
-		
-		detail::lexer_backend_ptr backend_;
+		lexer_t(detail::lexer_backends_t const&);
+
+		detail::lexer_backends_t backends_;
 	};
 
 //=====================================================================

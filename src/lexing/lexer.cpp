@@ -6,30 +6,34 @@
 using namespace sooty::lexing;
 using sooty::common::clone_tree;
 
-lexer_t::lexer_t(lexer_t const& rhs)
-	: backend_(rhs.backend_)
+lexer_t::lexer_t(detail::lexer_backends_t const& backends)
+	: backends_(backends)
 {
 }
 
-lexer_t::lexer_t(detail::const_lexer_backend_ptr_ref backend)
-: backend_(backend)
+lexer_t::lexer_t(lexer_t const& rhs)
+	: backends_(rhs.backends_)
 {
 }
+
+
 
 auto lexer_t::operator = (lexer_t const& rhs) -> lexer_t& {
-	backend_ = rhs.backend_;
+	backends_ = rhs.backends_;
 	return *this;
 }
 
 auto lexer_t::operator * () const -> lexer_t
 {
-	detail::lexer_backend_ptr B = clone_tree(backend_);
+	//detail::lexer_backend_ptr B = clone_tree(backend_);
+	detail::lexer_backends_t B = common::clone_nodes(backends_);
 
 	// append a back-reference to ourselves
-	common::append_backref(B, B);
+	//common::append_backref(B, B);
+	//common::interweave_nodes(B);
+	//B.insert( lexer_node_t::make_terminal() );
 
-	B->set_as_bypassable();
-
+	//B->set_as_bypassable();
 
 	return lexer_t(B);
 }
@@ -42,24 +46,24 @@ auto lexer_t::operator + () const -> lexer_t {
 auto lexer_t::operator ! () const -> lexer_t
 {
 	// for each leaf, let it be a terminator
-	detail::lexer_backend_ptr new_backend = clone_tree(backend_);
+	detail::lexer_backend_ptr B = common::clone_nodes(backends_); //clone_tree(backend_);
 
-	common::for_each_depth_first(new_backend, [](detail::lexer_backend_ptr const& N) {
+	/*common::for_each_depth_first(new_backend, [](detail::lexer_backend_ptr const& N) {
 		if (N->type() == detail::lexer_backend_t::type_t::control) {
 			N->set_as_terminator();
 		}
 		else {
 			N->set_as_bypassable();
 		}
-	});
+	});*/
 
-	return lexer_t(new_backend);
+	return lexer_t(B);
 }
 
 auto lexer_t::operator [] (callback_t const& acc) const -> lexer_t
 {
 	// for each leaf, let it perform this action on success
-	detail::lexer_backend_ptr new_backend = clone_tree(backend_);
+	detail::lexer_backend_ptr B = common::clone_nodes(backends_);
 
 	common::append(
 		new_backend,
@@ -142,19 +146,6 @@ auto sooty::lexing::insert(size_t insert_id, channel_t const& ch, lexer_t const&
 		)
 	);
 }
-
-
-//ATMA_SUITE(lexing)
-//{
-//	ATMA_TEST(nodes)
-//	{
-//		lexer L = match('a') >> match('b');
-//	}
-//}
-//
-
-
-
 
 
 

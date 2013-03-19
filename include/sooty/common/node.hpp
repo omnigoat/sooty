@@ -25,23 +25,12 @@ namespace common {
 	//=====================================================================
 	// node
 	//=====================================================================
-	template <typename Command>
-	struct node_t : std::enable_shared_from_this<node_t<Command>>
+	template <typename N>
+	struct node_t : std::enable_shared_from_this<node_t<N>>
 	{
-		enum class type_t {
-			actor,
-			control,
-			placeholder,
-			backreference
-		};
-
 		// node-ptr / command_t
 		typedef std::shared_ptr<node_t> node_ptr;
-		typedef Command command_t;
 		
-		// commands
-		typedef std::deque<std::pair<bool, command_t>> commands_t;
-
 		// children: sort by descending number of commands
 		struct ordering_t;
 		struct merged_ordering_t;
@@ -49,7 +38,7 @@ namespace common {
 
 
 		// constructors
-		node_t(type_t);
+		node_t();
 		node_t(node_t const& rhs);
 		node_t(node_t&& rhs);
 		~node_t();
@@ -60,40 +49,24 @@ namespace common {
 		
 		
 		// pure
-		auto type() const -> type_t { return type_; }
 		auto terminal() const -> bool { return terminal_; }
+		auto bypassable() const -> bool { return bypassable_; }
 		auto clone() -> node_ptr;
 		auto children() -> children_t const& { return children_; }
 		
 		// mutators
-		auto push_back_command(const command_t&) -> node_ptr;
-		auto push_back_failure(const command_t&) -> node_ptr;
-		auto push_back_action(bool, const command_t&) -> node_ptr;
 		auto add_child(node_ptr const&) -> node_ptr;
-		auto add_self_as_child() -> node_ptr;
-		auto append_self() -> node_ptr;
 		auto merge(node_ptr const&) -> node_ptr;
 		auto set_as_terminator() -> void { terminal_ = true; }
 		auto set_as_bypassable() -> void { bypassable_ = true; }
 
 		// statics
-		static auto make_backreference() -> node_ptr {  return node_ptr(new node_t(type_t::backreference));  }
-		static auto make_placeholder() -> node_ptr {  return node_ptr(new node_t(type_t::placeholder));  }
-		static auto make() -> node_ptr {  return node_ptr(new node_t(type_t::control));  }
 		static auto equal_or_clone(node_ptr const& lhs, node_ptr const& rhs) -> bool;
 		static auto share_ancestry(node_ptr const& lhs, node_ptr const& rhs) -> bool;
-		static auto is_failure(const std::pair<bool, command_t>& C) -> bool { return !C.first; }
-		static auto is_command(const std::pair<bool, command_t>& C) -> bool { return C.first; }
 		
 
 	public:
-		// statics
-		static auto merge_commands(commands_t& combined, commands_t& new_lhs, commands_t& new_rhs, commands_t& lhs, commands_t& rhs) -> void;
-		static auto clone_command(const std::pair<bool, command_t>& C) -> std::pair<bool, command_t>;
-
 		// members
-		type_t type_;
-		commands_t commands_;
 		children_t children_;
 		std::set<node_t*> clones_;
 		std::vector<node_t*> ancestry_;
