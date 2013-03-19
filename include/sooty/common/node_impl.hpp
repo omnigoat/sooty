@@ -6,13 +6,13 @@
 //
 template <typename Command>
 node_t<Command>::node_t(type_t type)
-	: type_(type), terminal_(), fallible_()
+	: type_(type), terminal_(), bypassable_()
 {
 }
 
 template <typename Command>
 node_t<Command>::node_t(const node_t<Command>& rhs)
-	: type_(rhs.type_), commands_(rhs.commands_), terminal_(rhs.terminal_), fallible_(rhs.fallible_)
+	: type_(rhs.type_), commands_(rhs.commands_), terminal_(rhs.terminal_), bypassable_(rhs.bypassable_)
 {
 }
 
@@ -42,7 +42,7 @@ auto node_t<Command>::operator = (node_t<Command> const& rhs) -> node_t<Command>
 	commands_ = rhs.commands_;
 	children_ = rhs.children_;
 	terminal_ = rhs.terminal_;
-	fallible_ = rhs.fallible_;
+	bypassable_ = rhs.bypassable_;
 	return *this;
 }
 
@@ -356,50 +356,45 @@ auto sooty::common::append_impl(std::set<std::shared_ptr<node_t<C>>>& visited, s
 
 	visited.insert(x);
 
-	if (x->children_.empty()) {
-		x->children_.insert(node);
-		x->fallible_ = false;
+	if (x->children_.empty())
+	{
+		// append control node's children, not them themselves
+		if (node->type_ == node_t<C>::type_t::control) {
+			for (auto const& y : node->children_) {
+				y->terminal_ = node->bypassable_;
+				x->children_.insert(y);
+			}
+
+			x->terminal_ = x->terminal_ || node->bypassable_;
+		}
+		// otherwise, append the node itself
+		else {
+			x->children_.insert(node);
+			// also, append a bypassable node's children in addition to itself
+			if (node->bypassable_) {
+				for (auto const& y : node->children_) {
+					x->children_.insert(y);
+				}
+			}
+		}
 	}
 	else
 	{
-		// if we're a terminal node, then we need to merge @node into our children
-		if (x->terminal()) {
+		// if we're a terminal node, or any of our children are
+		// a bypassable node, then we need to merge @node into our children
+		if (x->terminal() || std::any_of(x->children_.begin(), x->children_.end(), [](node_ptr const& y) { return y->bypassable_; })) {
 			merge_into_children(x, node);
-		}
-
-		if (x->fallible_)
-		{
-			// create control @t with which to replace @x.
-			node_ptr t = node_t<C>::make()
-				->add_child(x)
-				->add_child(node)
-				;
-
-			// because @x will eventually be assigned @t, we remove @x from 
-			// the visited set, as we still wish to visited its children.
-			x->fallible_ = false;
-			visited.erase(x);
-
-			// modify backreferences to @x to point to the newly-created @t
-			for_each_depth_first(x, [&t, &x](node_ptr const& c) {
-				if (c->children_.find(x) != c->children_.end()) {
-					c->children_.erase(x);
-					c->children_.insert(t);
-				}
-			});
-			
-			
-			x = t;
+			x->terminal_ = false;
 		}
 		
-		// we want to be able to modify @x's children, but we have to be careful,
-		// because @append_impl might modify things with little regards for any
-		// iterators we might hold.
+		// 
+		// 
+		// 
+		node_t<C>::children_t old_children = x->children_;
 		node_t<C>::children_t new_children;
-		while (!x->children_.empty())
+		for (auto const& y : old_children)
 		{
-			node_ptr n = *x->children_.begin();
-			x->children_.erase(x->children_.begin());
+			node_ptr n = y;
 			append_impl(visited, n, node);
 			new_children.insert(n);
 		}
