@@ -46,8 +46,7 @@ namespace common {
 		struct ordering_t;
 		struct merged_ordering_t;
 		typedef std::set<node_ptr, ordering_t> children_t;
-		
-		
+
 
 		// constructors
 		node_t(type_t);
@@ -77,39 +76,15 @@ namespace common {
 		auto set_as_terminator() -> void { terminal_ = true; }
 		auto set_as_bypassable() -> void { bypassable_ = true; }
 
+		// statics
 		static auto make_backreference() -> node_ptr {  return node_ptr(new node_t(type_t::backreference));  }
 		static auto make_placeholder() -> node_ptr {  return node_ptr(new node_t(type_t::placeholder));  }
 		static auto make() -> node_ptr {  return node_ptr(new node_t(type_t::control));  }
-
-		static bool is_failure(const std::pair<bool, command_t>& C) {
-			return !C.first;
-		}
+		static auto equal_or_clone(node_ptr const& lhs, node_ptr const& rhs) -> bool;
+		static auto share_ancestry(node_ptr const& lhs, node_ptr const& rhs) -> bool;
+		static auto is_failure(const std::pair<bool, command_t>& C) -> bool { return !C.first; }
+		static auto is_command(const std::pair<bool, command_t>& C) -> bool { return C.first; }
 		
-		static bool is_command(const std::pair<bool, command_t>& C) {
-			return C.first;
-		}
-		
-		static bool equal_or_clone(node_ptr const& lhs, node_ptr const& rhs)
-		{
-			std::stack<node_t*> nodes;
-			nodes.push(lhs.get());
-			while (!nodes.empty()) {
-				auto x = nodes.top();
-				nodes.pop();
-				if (x == rhs.get())
-					return true;
-				for (auto& y : x->clones_)
-					nodes.push(y);
-			}
-
-			return false;
-		}
-
-		static bool share_ancestry(node_ptr const& lhs, node_ptr const& rhs)
-		{
-			return !lhs->ancestry_.empty() && !rhs->ancestry_.empty() && lhs->ancestry_.back() == rhs->ancestry_.back();
-		}
-
 
 	public:
 		// statics
@@ -128,17 +103,12 @@ namespace common {
 		// friends
 		template <typename ExecutorT> friend struct performer_t;
 		template <typename NodePtr> friend NodePtr detail::clone_tree_impl(std::map<NodePtr, NodePtr>& visited_nodes, const NodePtr& clonee);
-
-		template <typename node_ptr_tm, typename accumulator_tm, typename FN>
-		friend void accumulate_depth_first(node_ptr_tm const& root, accumulator_tm acc, FN fn);
-
-
-		template <typename node_ptr_tm>
-		friend auto append_impl(std::set<node_ptr_tm>& visited, node_ptr_tm& x, node_ptr_tm const& n) -> void;
-
-		template <typename C>
-		auto merge_into_children(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> void;
+		template <typename node_ptr_tm, typename accumulator_tm, typename FN> friend void accumulate_depth_first(node_ptr_tm const& root, accumulator_tm acc, FN fn);
+		template <typename node_ptr_tm> friend auto append_impl(std::set<node_ptr_tm>& visited, node_ptr_tm& x, node_ptr_tm const& n) -> void;
+		template <typename C> auto merge_into_children(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> void;
 	};
+
+
 
 	template <typename Command>
 	struct node_t<Command>::ordering_t {
@@ -155,43 +125,17 @@ namespace common {
 	//=====================================================================
 	//
 	//
+	//  ALGORITHMS
 	//
 	//
 	//=====================================================================
 	//
 	// for_each_depth_first
 	//
-	template <typename node_ptr_tm, typename FN>
-	void for_each_depth_first(std::set<node_ptr_tm>& visited, node_ptr_tm const& root, FN fn)
-	{
-		std::stack<node_ptr_tm> nodes;
-		nodes.push(root);
-		while (!nodes.empty())
-		{
-			auto x = nodes.top();
-			nodes.pop();
-			if (visited.find(x) != visited.end())
-				continue;
-			visited.insert(x);
-			typename node_ptr_tm::element_type::children_t children = x->children_;
-			// call fn, which returns the new acc
-			fn(x);
-
-			for (auto const& y : children) {
-				nodes.push(y);
-			}
-		}
-	}
-
-	template <typename node_ptr_tm, typename FN>
-	void for_each_depth_first(node_ptr_tm const& root, FN fn)
-	{
-		std::set<node_ptr_tm> visited;
-		for_each_depth_first(visited, root, fn);
-	}
-
+	template <typename node_ptr_tm, typename FN> void for_each_depth_first(std::set<node_ptr_tm>& visited, node_ptr_tm const& root, FN fn);
+	template <typename node_ptr_tm, typename FN> void for_each_depth_first(node_ptr_tm const& root, FN fn);
 	
-
+	
 	//
 	// append
 	// append_backref
@@ -208,33 +152,15 @@ namespace common {
 	template <typename C> auto merge_into_children(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> void;
 
 
-	template <typename node_ptr_tm, typename acc_tm, typename FN>
-	void accumulate_depth_first(node_ptr_tm const& root, acc_tm acc, FN fn)
-	{
-		typedef std::tuple<node_ptr_tm, acc_tm> value_t;
-		std::stack<value_t> nodes;
-		nodes.push(std::make_tuple(root, acc));
-		std::set<node_ptr_tm> visited;
-		while (!nodes.empty())
-		{
-			auto x = nodes.top();
-			auto const& xn = std::get<0>(x);
-			auto const& xa = std::get<1>(x);
-			nodes.pop();
-			if (visited.find(xn) != visited.end())
-				continue;
-			visited.insert(xn);
+	//
+	// accumulate_depth_first
+	//
+	template <typename C, typename acc_tm, typename FN>
+	void accumulate_depth_first(std::shared_ptr<node_t<C>> const& root, acc_tm acc, FN fn);
 
-			typename node_ptr_tm::element_type::children_t children = xn->children_;
-			
-			// call fn, which returns the new acc
-			acc_tm combined_acc = fn(xa, xn);
 
-			for (auto const& y : children) {
-				nodes.push( std::make_tuple(y, combined_acc) );
-			}
-		}
-	}
+
+
 
 	
 

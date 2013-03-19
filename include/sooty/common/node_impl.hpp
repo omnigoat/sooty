@@ -289,6 +289,29 @@ auto node_t<Command>::clone_command(const std::pair<bool, command_t>& C) -> std:
 	return std::make_pair(C.first, C.second.clone());
 }
 
+template <typename C>
+auto node_t<C>::equal_or_clone(node_ptr const& lhs, node_ptr const& rhs) -> bool
+{
+	std::stack<node_t*> nodes;
+	nodes.push(lhs.get());
+	while (!nodes.empty()) {
+		auto x = nodes.top();
+		nodes.pop();
+		if (x == rhs.get())
+			return true;
+		for (auto& y : x->clones_)
+			nodes.push(y);
+	}
+
+	return false;
+}
+
+template <typename C>
+auto node_t<C>::share_ancestry(node_ptr const& lhs, node_ptr const& rhs) -> bool
+{
+	return !lhs->ancestry_.empty() && !rhs->ancestry_.empty() && lhs->ancestry_.back() == rhs->ancestry_.back();
+}
+
 
 
 template <typename C>
@@ -432,9 +455,62 @@ auto merge_into_children(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C
 }
 
 
+template <typename node_ptr_tm, typename FN>
+void for_each_depth_first(std::set<node_ptr_tm>& visited, node_ptr_tm const& root, FN fn)
+{
+	std::stack<node_ptr_tm> nodes;
+	nodes.push(root);
+	while (!nodes.empty())
+	{
+		auto x = nodes.top();
+		nodes.pop();
+		if (visited.find(x) != visited.end())
+			continue;
+		visited.insert(x);
+		typename node_ptr_tm::element_type::children_t children = x->children_;
+		// call fn, which returns the new acc
+		fn(x);
 
+		for (auto const& y : children) {
+			nodes.push(y);
+		}
+	}
+}
 
+template <typename node_ptr_tm, typename FN>
+void for_each_depth_first(node_ptr_tm const& root, FN fn)
+{
+	std::set<node_ptr_tm> visited;
+	for_each_depth_first(visited, root, fn);
+}
 
+template <typename C, typename acc_tm, typename FN>
+void accumulate_depth_first(std::shared_ptr<node_t<C>> const& root, acc_tm acc, FN fn)
+{
+	typedef std::tuple<std::shared_ptr<node_t<C>>, acc_tm> value_t;
+	std::stack<value_t> nodes;
+	nodes.push(std::make_tuple(root, acc));
+	std::set<std::shared_ptr<node_t<C>>> visited;
+	while (!nodes.empty())
+	{
+		auto x = nodes.top();
+		auto const& xn = std::get<0>(x);
+		auto const& xa = std::get<1>(x);
+		nodes.pop();
+		if (visited.find(xn) != visited.end())
+			continue;
+		visited.insert(xn);
+
+		typename std::shared_ptr<node_t<C>>::element_type::children_t children = xn->children_;
+			
+		// call fn, which returns the new acc
+		acc_tm combined_acc = fn(xa, xn);
+
+		for (auto const& y : children) {
+			nodes.push( std::make_tuple(y, combined_acc) );
+		}
+	}
+}
 
 
 

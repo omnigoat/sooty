@@ -137,7 +137,6 @@ auto parser::operator = (parser const& rhs) -> parser&
 			// create A'  (a1 A' | a2 A' | a3 A')
 			parser_backend_ptr A_stroke = parser_backend_t::make_backreference();
 			A_stroke->children_ = std::move(xn->children_);
-			//A_stroke->append(A_stroke);
 			append_backref(A_stroke, A_stroke);
 
 			// rewrite parent				
@@ -181,7 +180,7 @@ auto parser::operator = (parser const& rhs) -> parser&
 	//  - we need to correctly disentangle @resovled_backend_ from ITS clones/ancestors
 	//  - we actually have a method to do this, called "assume", which assumes the
 	//    clone/ancestor identity of a node
-	parser_backend_ptr tmp = common::clone_tree(backend_);
+	parser_backend_ptr tmp = backend_->clone();
 	resolved_backend_->assume( std::move(*tmp) );
 
 	return *this;
