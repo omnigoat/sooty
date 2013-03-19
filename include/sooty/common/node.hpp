@@ -22,17 +22,6 @@ namespace sooty {
 namespace common {
 //=====================================================================
 	
-	//=====================================================================	
-	// forward declares
-	//=====================================================================
-	template <typename Command> struct node_t;
-
-	
-	//=====================================================================
-	// no_orders
-	//=====================================================================
-	struct no_orders {};
-	
 	//=====================================================================
 	// node
 	//=====================================================================
@@ -75,7 +64,7 @@ namespace common {
 		auto type() const -> type_t { return type_; }
 		auto terminal() const -> bool { return terminal_; }
 		auto clone() -> node_ptr;
-
+		auto children() -> children_t const& { return children_; }
 		
 		// mutators
 		auto push_back_command(const command_t&) -> node_ptr;
@@ -143,69 +132,80 @@ namespace common {
 		template <typename node_ptr_tm, typename accumulator_tm, typename FN>
 		friend void accumulate_depth_first(node_ptr_tm const& root, accumulator_tm acc, FN fn);
 
-		template <typename node_ptr_tm, typename FN>
-		void for_each_depth_first(node_ptr_tm const& root, FN fn);
-
-
 
 		template <typename node_ptr_tm>
 		friend auto append_impl(std::set<node_ptr_tm>& visited, node_ptr_tm& x, node_ptr_tm const& n) -> void;
+
 		template <typename C>
 		auto merge_into_children(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> void;
 	};
 
 	template <typename Command>
 	struct node_t<Command>::ordering_t {
-		bool operator () (node_ptr const& lhs, node_ptr const& rhs) const
-		{
-			if (lhs->type_ != rhs->type_)
-				return lhs->type_ < rhs->type_;
-			
-			if (lhs->commands_ < rhs->commands_)
-				return true;
-			else if (rhs->commands_ < lhs->commands_)
-				return false;
-
-			return lhs.get() < rhs.get();
-		};
+		bool operator () (node_ptr const& lhs, node_ptr const& rhs) const;
 	};
 
 	template <typename Command>
 	struct node_t<Command>::merged_ordering_t {
-		bool operator () (node_ptr const& lhs, node_ptr const& rhs) const
-		{
-			// descending order of commands
-			if (lhs->commands_ > rhs->commands_)
-				return true;
-			else if (rhs->commands_ > lhs->commands_)
-				return false;
-
-			// if the two nodes share part of their ancestry
-			for (auto& x : lhs->ancestry_) {
-				if (std::find(rhs->ancestry_.begin(), rhs->ancestry_.end(), x) != rhs->ancestry_.end())
-					return false;
-			}
-
-			return lhs.get() < rhs.get();
-		};
+		bool operator () (node_ptr const& lhs, node_ptr const& rhs) const;
 	};
 
+
+
+	//=====================================================================
+	//
+	//
+	//
+	//
+	//=====================================================================
+	//
+	// for_each_depth_first
+	//
+	template <typename node_ptr_tm, typename FN>
+	void for_each_depth_first(std::set<node_ptr_tm>& visited, node_ptr_tm const& root, FN fn)
+	{
+		std::stack<node_ptr_tm> nodes;
+		nodes.push(root);
+		while (!nodes.empty())
+		{
+			auto x = nodes.top();
+			nodes.pop();
+			if (visited.find(x) != visited.end())
+				continue;
+			visited.insert(x);
+			typename node_ptr_tm::element_type::children_t children = x->children_;
+			// call fn, which returns the new acc
+			fn(x);
+
+			for (auto const& y : children) {
+				nodes.push(y);
+			}
+		}
+	}
+
+	template <typename node_ptr_tm, typename FN>
+	void for_each_depth_first(node_ptr_tm const& root, FN fn)
+	{
+		std::set<node_ptr_tm> visited;
+		for_each_depth_first(visited, root, fn);
+	}
+
 	
-	template <typename node_ptr_tm>
-	auto append(node_ptr_tm& x, node_ptr_tm const& n) -> node_ptr_tm&;
 
-	template <typename node_ptr_tm>
-	auto append_backref(node_ptr_tm& x, node_ptr_tm const& n) -> node_ptr_tm&;
+	//
+	// append
+	// append_backref
+	// append_impl
+	//
+	template <typename C> auto append(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& n) -> std::shared_ptr<node_t<C>>&;
+	template <typename C> auto append_backref(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& n) -> std::shared_ptr<node_t<C>>&;
+	template <typename C> auto append_impl(std::set<std::shared_ptr<node_t<C>>>& visited, std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> void;
 
-	template <typename C>
-	auto append_impl(
-		std::set<std::shared_ptr<node_t<C>>>& visited,
-		std::shared_ptr<node_t<C>>& x,
-		std::shared_ptr<node_t<C>> const& node
-	) -> void;
 
-	template <typename C>
-	auto merge_into_children(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> void;
+	//
+	// merge_into_children
+	//
+	template <typename C> auto merge_into_children(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> void;
 
 
 	template <typename node_ptr_tm, typename acc_tm, typename FN>
@@ -236,50 +236,7 @@ namespace common {
 		}
 	}
 
-	template <typename node_ptr_tm, typename FN>
-	void for_each_depth_first(node_ptr_tm const& root, FN fn)
-	{
-		std::stack<node_ptr_tm> nodes;
-		nodes.push(root);
-		std::set<node_ptr_tm> visited;
-		while (!nodes.empty())
-		{
-			auto x = nodes.top();
-			nodes.pop();
-			if (visited.find(x) != visited.end())
-				continue;
-			visited.insert(x);
-			typename node_ptr_tm::element_type::children_t children = x->children_;
-			// call fn, which returns the new acc
-			fn(x);
-
-			for (auto const& y : children) {
-				nodes.push(y);
-			}
-		}
-	}
-
-	template <typename node_ptr_tm, typename FN>
-	void for_each_depth_first(std::set<node_ptr_tm>& visited, node_ptr_tm const& root, FN fn)
-	{
-		std::stack<node_ptr_tm> nodes;
-		nodes.push(root);
-		while (!nodes.empty())
-		{
-			auto x = nodes.top();
-			nodes.pop();
-			if (visited.find(x) != visited.end())
-				continue;
-			visited.insert(x);
-			typename node_ptr_tm::element_type::children_t children = x->children_;
-			// call fn, which returns the new acc
-			fn(x);
-
-			for (auto const& y : children) {
-				nodes.push(y);
-			}
-		}
-	}
+	
 
 	// implementation
 	#include "node_impl.hpp"

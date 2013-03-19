@@ -290,22 +290,58 @@ auto node_t<Command>::clone_command(const std::pair<bool, command_t>& C) -> std:
 }
 
 
+
+template <typename C>
+auto node_t<C>::ordering_t::operator () (node_ptr const& lhs, node_ptr const& rhs) const -> bool
+{
+	if (lhs->type_ != rhs->type_)
+		return lhs->type_ < rhs->type_;
+			
+	if (lhs->commands_ < rhs->commands_)
+		return true;
+	else if (rhs->commands_ < lhs->commands_)
+		return false;
+
+	return lhs.get() < rhs.get();
+};
+
+
+template <typename C>
+auto node_t<C>::merged_ordering_t::operator () (node_ptr const& lhs, node_ptr const& rhs) const -> bool
+{
+	// descending order of commands
+	if (lhs->commands_ > rhs->commands_)
+		return true;
+	else if (rhs->commands_ > lhs->commands_)
+		return false;
+
+	// if the two nodes share part of their ancestry
+	for (auto& x : lhs->ancestry_) {
+		if (std::find(rhs->ancestry_.begin(), rhs->ancestry_.end(), x) != rhs->ancestry_.end())
+			return false;
+	}
+
+	return lhs.get() < rhs.get();
+}
+
+
+
 //=====================================================================
 // append
 //=====================================================================
-template <typename node_ptr_tm>
-auto sooty::common::append(node_ptr_tm& x, node_ptr_tm const& node) -> node_ptr_tm&
+template <typename C>
+auto sooty::common::append(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> std::shared_ptr<node_t<C>>&
 {
-	std::set<node_ptr_tm> visited;
+	std::set<std::shared_ptr<node_t<C>>> visited;
 	visited.insert(node);
 	append_impl(visited, x, node);
 	return x;
 }
 
-template <typename node_ptr_tm>
-auto sooty::common::append_backref(node_ptr_tm& x, node_ptr_tm const& node) -> node_ptr_tm&
+template <typename C>
+auto sooty::common::append_backref(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> std::shared_ptr<node_t<C>>&
 {
-	std::set<node_ptr_tm> visited;
+	std::set<std::shared_ptr<node_t<C>>> visited;
 	append_impl(visited, x, node);
 	return x;
 }
