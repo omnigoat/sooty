@@ -238,75 +238,62 @@ auto node_t<C>::merged_ordering_t::operator () (node_ptr const& lhs, node_ptr co
 // append
 //=====================================================================
 template <typename C>
-auto sooty::common::append(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> std::shared_ptr<node_t<C>>&
-{
-	std::set<std::shared_ptr<node_t<C>>> visited;
-	visited.insert(node);
-	append_impl(visited, x, node);
-	return x;
+auto append(C& dest, C const& n) -> C& {
+	std::set<typename C::element_type> visited{n.begin(), n.end()};
+	append_impl(visited, dest, n);
+	return dest;
 }
 
 template <typename C>
-auto sooty::common::append_backref(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> std::shared_ptr<node_t<C>>&
-{
-	std::set<std::shared_ptr<node_t<C>>> visited;
-	append_impl(visited, x, node);
-	return x;
+auto append_backref(C& dest, C const& n) -> C& {
+	std::set<typename C::element_type> visited;
+	append_impl(visited, dest, n);
+	return dest;
+}
+
+template <typename C, typename N>
+auto append(C& dest, std::shared_ptr<node_t<N>> const& n) -> C& {
+	return append(dest, C{n});
+}
+
+template <typename C, typename N>
+auto append_backref(C& dest, std::shared_ptr<node_t<N>> const& n) -> C& {
+	return append_backref(dest, C{n});
 }
 
 template <typename C>
-auto sooty::common::append_impl(std::set<std::shared_ptr<node_t<C>>>& visited, std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> void
+auto sooty::common::append_impl(std::set<typename C::element_type>& visited, C& dest, C const& node) -> void
 {
-	typedef std::shared_ptr<node_t<C>> node_ptr;
+	typedef typename C::element_type node_ptr;
 
-	if (visited.find(x) != visited.end())
-		return;
+	// for each node @y we want to insert
+	// for each node @x we're inserting into
+	for (auto const& y : node) {
+		for (auto const& x : dest) {
+			if (visited.find(x) != visited.end())
+				continue;
+			visited.insert(x);
 
-	visited.insert(x);
-
-	if (x->children_.empty())
-	{
-		// append control node's children, not them themselves
-		if (node->type_ == node_t<C>::type_t::control) {
-			for (auto const& y : node->children_) {
-				y->terminal_ = node->bypassable_;
+			// if @x is a leaf node
+			if (x->children_.empty()) {
+				// insert @y into our leaf node
 				x->children_.insert(y);
-			}
-
-			x->terminal_ = x->terminal_ || node->bypassable_;
-		}
-		// otherwise, append the node itself
-		else {
-			x->children_.insert(node);
-			// also, append a bypassable node's children in addition to itself
-			if (node->bypassable_) {
-				for (auto const& y : node->children_) {
-					x->children_.insert(y);
+				// 
+				if (y->bypassable()) {
+					for (auto const& yc : y->children_) {
+						x->children_.insert(yc);
+					}
 				}
 			}
+			else
+			{
+				if (std::any_of(x->children_.begin(), x->children_.end(), [](node_ptr const& y) { return y->bypassable_; })) {
+					merge_into_children(x, y);
+				}
+
+				append_impl(visited, x->children_, node);
+			}
 		}
-	}
-	else
-	{
-		// if we're a terminal node, or any of our children are
-		// a bypassable node, then we need to merge @node into our children
-		if (x->terminal() || std::any_of(x->children_.begin(), x->children_.end(), [](node_ptr const& y) { return y->bypassable_; })) {
-			merge_into_children(x, node);
-			x->terminal_ = false;
-		}
-		
-		// 
-		// 
-		// 
-		node_t<C>::children_t old_children = x->children_;
-		node_t<C>::children_t new_children;
-		for (auto const& y : old_children)
-		{
-			node_ptr n = y;
-			append_impl(visited, n, node);
-			new_children.insert(n);
-		}
-		x->children_ = std::move(new_children);
 	}
 }
 
@@ -340,10 +327,14 @@ auto merge_into_children(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C
 }
 
 
-template <typename node_ptr_tm, typename FN>
-void for_each_depth_first(std::set<node_ptr_tm>& visited, node_ptr_tm const& root, FN fn)
+template <typename C, typename N, typename FN>
+void for_each_depth_first(std::set<std::shared_ptr<node_t<N>>>& visited, C const& root, FN fn)
 {
-	std::stack<node_ptr_tm> nodes;
+	static_assert(typename C::element_type == decltype(visited)::element_type);
+
+	typedef typename node_t<N>::node_ptr node_ptr;
+
+	std::stack<node_ptr> nodes;
 	nodes.push(root);
 	while (!nodes.empty())
 	{
@@ -352,7 +343,7 @@ void for_each_depth_first(std::set<node_ptr_tm>& visited, node_ptr_tm const& roo
 		if (visited.find(x) != visited.end())
 			continue;
 		visited.insert(x);
-		typename node_ptr_tm::element_type::children_t children = x->children_;
+		node_t<N>::children_t children = x->children_;
 		// call fn, which returns the new acc
 		fn(x);
 
@@ -362,40 +353,41 @@ void for_each_depth_first(std::set<node_ptr_tm>& visited, node_ptr_tm const& roo
 	}
 }
 
-template <typename node_ptr_tm, typename FN>
-void for_each_depth_first(node_ptr_tm const& root, FN fn)
+template <typename C, typename FN>
+void for_each_depth_first(C const& root, FN fn)
 {
-	std::set<node_ptr_tm> visited;
+	std::set<typename C::element_type> visited;
 	for_each_depth_first(visited, root, fn);
 }
 
-template <typename C, typename acc_tm, typename FN>
-void accumulate_depth_first(std::shared_ptr<node_t<C>> const& root, acc_tm acc, FN fn)
-{
-	typedef std::tuple<std::shared_ptr<node_t<C>>, acc_tm> value_t;
-	std::stack<value_t> nodes;
-	nodes.push(std::make_tuple(root, acc));
-	std::set<std::shared_ptr<node_t<C>>> visited;
-	while (!nodes.empty())
-	{
-		auto x = nodes.top();
-		auto const& xn = std::get<0>(x);
-		auto const& xa = std::get<1>(x);
-		nodes.pop();
-		if (visited.find(xn) != visited.end())
-			continue;
-		visited.insert(xn);
-
-		typename std::shared_ptr<node_t<C>>::element_type::children_t children = xn->children_;
-			
-		// call fn, which returns the new acc
-		acc_tm combined_acc = fn(xa, xn);
-
-		for (auto const& y : children) {
-			nodes.push( std::make_tuple(y, combined_acc) );
-		}
-	}
-}
+//template <typename N, typename acc_tm, typename FN>
+//void accumulate_depth_first(node_t<N>::node_ptr const& root, acc_tm acc, FN fn)
+//{
+//	typedef node_t<N>::node_ptr node_ptr;
+//	typedef std::tuple<node_ptr, acc_tm> value_t;
+//	std::stack<value_t> nodes;
+//	nodes.push(std::make_tuple(root, acc));
+//	std::set<node_ptr> visited;
+//	while (!nodes.empty())
+//	{
+//		auto x = nodes.top();
+//		auto const& xn = std::get<0>(x);
+//		auto const& xa = std::get<1>(x);
+//		nodes.pop();
+//		if (visited.find(xn) != visited.end())
+//			continue;
+//		visited.insert(xn);
+//
+//		typename std::shared_ptr<node_t<C>>::element_type::children_t children = xn->children_;
+//			
+//		// call fn, which returns the new acc
+//		acc_tm combined_acc = fn(xa, xn);
+//
+//		for (auto const& y : children) {
+//			nodes.push( std::make_tuple(y, combined_acc) );
+//		}
+//	}
+//}
 
 
 

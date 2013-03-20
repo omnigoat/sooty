@@ -105,8 +105,8 @@ namespace common {
 	//
 	// for_each_depth_first
 	//
-	template <typename node_ptr_tm, typename FN> void for_each_depth_first(std::set<node_ptr_tm>& visited, node_ptr_tm const& root, FN fn);
-	template <typename node_ptr_tm, typename FN> void for_each_depth_first(node_ptr_tm const& root, FN fn);
+	template <typename N, typename FN> void for_each_depth_first(std::set<std::shared_ptr<node_t<N>>>& visited, typename node_t<N>::children_t const&, FN fn);
+	template <typename C, typename FN> void for_each_depth_first(C const&, FN fn);
 	
 	
 	//
@@ -114,10 +114,12 @@ namespace common {
 	// append_backref
 	// append_impl
 	//
-	template <typename C> auto append(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& n) -> std::shared_ptr<node_t<C>>&;
-	template <typename C> auto append_backref(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& n) -> std::shared_ptr<node_t<C>>&;
-	template <typename C> auto append_impl(std::set<std::shared_ptr<node_t<C>>>& visited, std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> void;
-
+	template <typename C> auto append(C& dest, C const& n) -> C&;
+	template <typename C> auto append_backref(C& dest, C const& n) -> C&;
+	template <typename C> auto append_impl(std::set<typename C::element_type>& visited, C& dest, C const& n) -> void;
+	template <typename C, typename N> auto append(C& dest, std::shared_ptr<node_t<N>> const& n) -> C&;
+	template <typename C, typename N> auto append_backref(C& dest, std::shared_ptr<node_t<N>> const& n) -> C&;
+	
 
 	//
 	// merge_into_children
