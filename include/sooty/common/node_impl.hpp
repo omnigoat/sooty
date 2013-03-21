@@ -262,23 +262,42 @@ auto append_backref(C& dest, std::shared_ptr<node_t<N>> const& n) -> C& {
 }
 
 template <typename C>
-auto sooty::common::append_impl(std::set<typename C::element_type>& visited, C& dest, C const& node) -> void
+auto append_impl(std::set<typename C::element_type>& visited, C& dest, C const& nodes) -> void
 {
 	typedef typename C::element_type node_ptr;
 
-	// for each node @y we want to insert
-	// for each node @x we're inserting into
-	for (auto const& y : node) {
-		for (auto const& x : dest) {
-			if (visited.find(x) != visited.end())
-				continue;
-			visited.insert(x);
+	// if we are empty (leaf container), then just insert the nodes
+	if ( dest.empty() ) {
+		dest.assign(nodes.begin(), nodes.end());
+	}
+	// if _all_ our children are nodes we have already visited, then we are fully
+	// recursive, and we should merge @nodes anyway.
+	else if ( std::includes(dest.begin(), dest.end(), visited.begin(), visited.end())  ) {
+		merge(dest, nodes);
+	}
+	else if ( std::any_of(dest.begin(), dest.end(), is_bypassable) ) {
+	}
 
+
+	// for each node @x we're inserting into
+	for (auto const& x : dest)
+	{
+		if (visited.find(x) != visited.end())
+				continue;
+		visited.insert(x);
+
+		// if x is a terminal, then simply merge in all @nodes
+		if (x->terminal()) {
+			for (auto const& y : nodes)
+				merge_into_children(x, y);
+		}
+
+		// for each node @y we want to insert
+		for (auto const& y : node) {
 			// if @x is a leaf node
 			if (x->children_.empty()) {
-				// insert @y into our leaf node
+				// insert @y into our leaf node, and if it is a bypassable node, insert @y's children 
 				x->children_.insert(y);
-				// 
 				if (y->bypassable()) {
 					for (auto const& yc : y->children_) {
 						x->children_.insert(yc);
@@ -290,10 +309,10 @@ auto sooty::common::append_impl(std::set<typename C::element_type>& visited, C& 
 				if (std::any_of(x->children_.begin(), x->children_.end(), [](node_ptr const& y) { return y->bypassable_; })) {
 					merge_into_children(x, y);
 				}
-
-				append_impl(visited, x->children_, node);
 			}
 		}
+
+		append_impl(visited, x->children_, node);
 	}
 }
 
