@@ -255,7 +255,9 @@ auto append_backref(C& dest, C const& n) -> C& {
 
 template <typename C, typename N>
 auto append(C& dest, std::shared_ptr<node_t<N>> const& n) -> C& {
-	return append(dest, C{n});
+	C c;
+	c.insert(n);
+	return append(dest, c);
 }
 
 template <typename C, typename N>

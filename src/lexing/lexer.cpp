@@ -32,8 +32,7 @@ auto lexer_t::operator = (lexer_t const& rhs) -> lexer_t& {
 	return *this;
 }
 
-auto lexer_t::operator * () const -> lexer_t
-{
+auto lexer_t::operator * () const -> lexer_t {
 	detail::lexer_backends_t B = common::clone_nodes(backends_);
 
 	common::interweave_nodes(B);
@@ -43,8 +42,10 @@ auto lexer_t::operator * () const -> lexer_t
 }
 
 auto lexer_t::operator + () const -> lexer_t {
-	// this might be the best line of code I've ever written.
-	return *this >> **this;
+	detail::lexer_backends_t B = common::clone_nodes(backends_);
+	common::interweave_nodes(B);
+	for (auto& b : B) { b->set_as_terminator(); }
+	return lexer_t(B);
 }
 
 auto lexer_t::operator ! () const -> lexer_t
@@ -60,27 +61,21 @@ auto lexer_t::operator ! () const -> lexer_t
 }
 
 
-//
-//auto lexer_t::operator [] (callback_t const& acc) const -> lexer_t
-//{
-//	// for each leaf, let it perform this action on success
-//	detail::lexer_backend_ptr B = common::clone_nodes(backends_);
-//
-//	common::append(
-//		new_backend,
-//		detail::lexer_backend_t::make()
-//			->push_back_command( detail::command_t(detail::command_t::action_t::passthrough, 0, 0, false, acc) )
-//	);
-///*
-//	common::for_each_depth_first(new_backend, [&acc](detail::lexer_backend_ptr const& L) {
-//		if (L->children_.empty())
-//			L->push_back_command( detail::command_t(detail::command_t::action_t::passthrough, 0, 0, false, acc) );
-//		if (L->terminal())
-//			L->push_back_failure( detail::command_t(detail::command_t::action_t::passthrough, 0, 0, false, acc) );
-//	});*/
-//
-//	return lexer_t(new_backend);
-//}
+
+auto lexer_t::operator [] (callback_t const& c) const -> lexer_t
+{
+	using namespace detail;
+
+	// for each leaf, let it perform this action on success
+	detail::lexer_backends_t B = common::clone_nodes(backends_);
+
+	return lexer_t(
+		common::append(
+			B,
+			lexer_backend_t::make(lexer_node_t::action_t::callback, c)
+		)
+	);
+}
 
 //auto lexer_t::backends() const -> detail::lexer_backends_t const& {
 //	return backends_;

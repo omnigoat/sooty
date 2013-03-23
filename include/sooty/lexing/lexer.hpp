@@ -17,7 +17,7 @@ namespace lexing {
 	
 	struct lexer_t
 	{
-		//typedef detail::lexer_backend_t::command_t::callback_t callback_t;
+		typedef detail::lexer_node_t::callback_t callback_t;
 
 		lexer_t(lexer_t const&);
 
@@ -26,7 +26,7 @@ namespace lexing {
 		auto operator !  () const -> lexer_t;
 		auto operator *  () const -> lexer_t;
 		auto operator +  () const -> lexer_t;
-		//auto operator [] (callback_t const&) const -> lexer_t;
+		auto operator [] (callback_t const&) const -> lexer_t;
 		
 		//auto backend() const -> detail::const_lexer_backend_ptr_ref;
 		
