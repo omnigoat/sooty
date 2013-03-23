@@ -28,8 +28,8 @@ namespace detail {
 			new_node->children_.insert( clone_tree_impl(visited_nodes, x) );
 		};
 
-		std::transform(new_node->commands_.begin(), new_node->commands_.end(), new_node->commands_.begin(),
-			&NodePtr::element_type::clone_command);
+		//std::transform(new_node->commands_.begin(), new_node->commands_.end(), new_node->commands_.begin(),
+			//&NodePtr::element_type::clone_command);
 		
 		return new_node;
 	}

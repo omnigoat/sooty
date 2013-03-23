@@ -22,13 +22,13 @@ namespace common {
 	template <typename C>
 	auto clone_nodes(C const& nodes) -> C
 	{
-		typedef typename C::element_type node_ptr;
+		typedef typename C::value_type node_ptr;
 
 		C result;
 		std::map<node_ptr, node_ptr> visited_nodes;
 		
 		for (auto const& x : nodes)
-			result.insert(detail::clone_tree_impl(visited_nodes, x););
+			result.insert(detail::clone_tree_impl(visited_nodes, x));
 
 		return result;
 	}

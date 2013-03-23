@@ -17,7 +17,7 @@ namespace lexing {
 namespace detail {
 //=====================================================================
 	
-	struct lexer_node_t : common::node_t<lexer_node_t>
+	struct lexer_node_t
 	{
 		enum class action_t {
 			peek,
@@ -27,13 +27,13 @@ namespace detail {
 			terminal
 		};
 
-		lexer_node_t(action_t const& a)
-			: action(a)
+		lexer_node_t(action_t const& a, int from_id = 0, int to_id = 0, bool should_insert = true)
+			: action(a), from_id(from_id), to_id(to_id), should_insert(should_insert)
 		{}
 
-		static node_ptr make_terminal() {
-			return node_ptr(new lexer_node_t(action_t::terminal));
-		}
+		//static node_ptr make_terminal() {
+			//return node_ptr(new lexer_node_t(action_t::terminal));
+		//}
 
 		action_t action;
 		int from_id, to_id;

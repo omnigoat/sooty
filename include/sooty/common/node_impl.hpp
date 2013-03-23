@@ -5,14 +5,15 @@
 // constructors
 //
 template <typename N>
-node_t<N>::node_t()
-	: type_(type), terminal_(), bypassable_()
+template <typename... Args>
+node_t<N>::node_t(Args... args)
+	: value_(args...), terminal_(), bypassable_()
 {
 }
 
 template <typename N>
 node_t<N>::node_t(const node_t<N>& rhs)
-	: terminal_(rhs.terminal_), bypassable_(rhs.bypassable_)
+	: value_(rhs.value_), terminal_(rhs.terminal_), bypassable_(rhs.bypassable_)
 {
 }
 
@@ -91,7 +92,7 @@ template <typename N>
 auto node_t<N>::clone() -> node_ptr
 {
 	// clone node
-	node_ptr C(new N(static_cast<N&>(*this)));
+	node_ptr C(new node_t(*this));
 
 	// our clone's ancestry is our ancestry with us at the front
 	C->ancestry_.reserve(1 + ancestry_.size());
@@ -216,7 +217,7 @@ auto node_t<C>::share_ancestry(node_ptr const& lhs, node_ptr const& rhs) -> bool
 template <typename C>
 auto node_t<C>::ordering_t::operator () (node_ptr const& lhs, node_ptr const& rhs) const -> bool
 {
-	return lhs.get() < rhs.get();
+	return lhs->value_ < rhs->value_;
 };
 
 
@@ -229,7 +230,7 @@ auto node_t<C>::merged_ordering_t::operator () (node_ptr const& lhs, node_ptr co
 			return false;
 	}
 
-	return lhs.get() < rhs.get();
+	return lhs->value_ < rhs->value_;
 }
 
 
@@ -239,14 +240,15 @@ auto node_t<C>::merged_ordering_t::operator () (node_ptr const& lhs, node_ptr co
 //=====================================================================
 template <typename C>
 auto append(C& dest, C const& n) -> C& {
-	std::set<typename C::element_type> visited{n.begin(), n.end()};
+	typedef typename C::value_type ct;
+	std::set<ct> visited(n.begin(), n.end());
 	append_impl(visited, dest, n);
 	return dest;
 }
 
 template <typename C>
 auto append_backref(C& dest, C const& n) -> C& {
-	std::set<typename C::element_type> visited;
+	std::set<typename C::value_type> visited;
 	append_impl(visited, dest, n);
 	return dest;
 }
@@ -262,57 +264,33 @@ auto append_backref(C& dest, std::shared_ptr<node_t<N>> const& n) -> C& {
 }
 
 template <typename C>
-auto append_impl(std::set<typename C::element_type>& visited, C& dest, C const& nodes) -> void
+auto append_impl(std::set<typename C::value_type>& visited, C& dest, C const& nodes) -> void
 {
-	typedef typename C::element_type node_ptr;
+	typedef typename C::value_type node_ptr;
 
 	// if we are empty (leaf container), then just insert the nodes
 	if ( dest.empty() ) {
-		dest.assign(nodes.begin(), nodes.end());
+		dest.insert(nodes.begin(), nodes.end());
 	}
-	// if _all_ our children are nodes we have already visited, then we are fully
-	// recursive, and we should merge @nodes anyway.
-	else if ( std::includes(dest.begin(), dest.end(), visited.begin(), visited.end())  ) {
+	// if all of @dest are bypassable, then we need merge in the nodes
+	else if (std::all_of(dest.begin(), dest.end(), [](node_ptr const& y) { return y->bypassable_; })) {
 		merge(dest, nodes);
 	}
-	else if ( std::any_of(dest.begin(), dest.end(), is_bypassable) ) {
-	}
-
+	
 
 	// for each node @x we're inserting into
 	for (auto const& x : dest)
 	{
 		if (visited.find(x) != visited.end())
-				continue;
+			continue;
 		visited.insert(x);
 
 		// if x is a terminal, then simply merge in all @nodes
 		if (x->terminal()) {
-			for (auto const& y : nodes)
-				merge_into_children(x, y);
+			merge(x->children_, nodes);
 		}
 
-		// for each node @y we want to insert
-		for (auto const& y : node) {
-			// if @x is a leaf node
-			if (x->children_.empty()) {
-				// insert @y into our leaf node, and if it is a bypassable node, insert @y's children 
-				x->children_.insert(y);
-				if (y->bypassable()) {
-					for (auto const& yc : y->children_) {
-						x->children_.insert(yc);
-					}
-				}
-			}
-			else
-			{
-				if (std::any_of(x->children_.begin(), x->children_.end(), [](node_ptr const& y) { return y->bypassable_; })) {
-					merge_into_children(x, y);
-				}
-			}
-		}
-
-		append_impl(visited, x->children_, node);
+		append_impl(visited, x->children_, nodes);
 	}
 }
 
@@ -321,6 +299,33 @@ auto append_impl(std::set<typename C::element_type>& visited, C& dest, C const& 
 //=====================================================================
 // merge_into_children
 //=====================================================================
+template <typename C>
+auto merge(C& dest, C const& src) -> C&
+{
+	typedef typename C::value_type::element_type node_t;
+
+	auto srci = src.begin();
+	for (auto srci = src.begin(); srci != src.end(); ++srci)
+	{
+		// this searches for the same *instance*, not elementwise equality
+		if (dest.find(*srci) != dest.end()) {
+			continue;
+		}
+
+		// this searches for elementwise equality, and if not found, inserts
+		auto x = std::lower_bound(dest.begin(), dest.end(), *srci, node_t::merged_ordering_t());
+		if (x == dest.end() || *x != *srci) {
+			dest.insert(*srci);
+		}
+		// recursively merge children
+		else {
+			merge((*x)->children_, (*srci)->children_);
+		}
+	}
+
+	return dest;
+}
+
 template <typename C>
 auto merge_into_children(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> void
 {
@@ -349,7 +354,7 @@ auto merge_into_children(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C
 template <typename C, typename N, typename FN>
 void for_each_depth_first(std::set<std::shared_ptr<node_t<N>>>& visited, C const& root, FN fn)
 {
-	static_assert(typename C::element_type == decltype(visited)::element_type);
+	static_assert(typename C::value_type == decltype(visited)::value_type);
 
 	typedef typename node_t<N>::node_ptr node_ptr;
 
@@ -375,7 +380,7 @@ void for_each_depth_first(std::set<std::shared_ptr<node_t<N>>>& visited, C const
 template <typename C, typename FN>
 void for_each_depth_first(C const& root, FN fn)
 {
-	std::set<typename C::element_type> visited;
+	std::set<typename C::value_type> visited;
 	for_each_depth_first(visited, root, fn);
 }
 
@@ -409,7 +414,13 @@ void for_each_depth_first(C const& root, FN fn)
 //}
 
 
-
+template <typename C>
+auto interweave_nodes(C& nodes) -> void
+{
+	for (auto const& x : nodes) {
+		append(x->children_, nodes);
+	}
+}
 
 
 

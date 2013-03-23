@@ -9,6 +9,8 @@
 #include <sooty/lexing/detail/lexer_backend.hpp>
 #include <sooty/lexing/detail/command.hpp>
 //=====================================================================
+#include <initializer_list>
+//=====================================================================
 namespace sooty {
 namespace lexing {
 //=====================================================================
@@ -43,7 +45,9 @@ namespace lexing {
 		
 	private:
 		lexer_t(detail::lexer_backends_t const&);
-
+		lexer_t(detail::lexer_backend_ptr const&);
+		//lexer_t(std::initializer_list<detail::lexer_backend_ptr> const& list);
+		
 		detail::lexer_backends_t backends_;
 	};
 

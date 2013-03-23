@@ -38,7 +38,8 @@ namespace common {
 
 
 		// constructors
-		node_t();
+		template <typename... Args>
+		node_t(Args...);
 		node_t(node_t const& rhs);
 		node_t(node_t&& rhs);
 		~node_t();
@@ -64,9 +65,14 @@ namespace common {
 		static auto equal_or_clone(node_ptr const& lhs, node_ptr const& rhs) -> bool;
 		static auto share_ancestry(node_ptr const& lhs, node_ptr const& rhs) -> bool;
 		
+		template <typename... Args>
+		static node_ptr make(Args const&... args) {
+			return node_ptr(new node_t(args...));
+		}
 
 	public:
 		// members
+		N value_;
 		children_t children_;
 		std::set<node_t*> clones_;
 		std::vector<node_t*> ancestry_;
@@ -74,11 +80,13 @@ namespace common {
 		bool bypassable_;
 
 		// friends
+		#if 0
 		template <typename ExecutorT> friend struct performer_t;
 		template <typename NodePtr> friend NodePtr detail::clone_tree_impl(std::map<NodePtr, NodePtr>& visited_nodes, const NodePtr& clonee);
 		template <typename node_ptr_tm, typename accumulator_tm, typename FN> friend void accumulate_depth_first(node_ptr_tm const& root, accumulator_tm acc, FN fn);
-		template <typename node_ptr_tm> friend auto append_impl(std::set<node_ptr_tm>& visited, node_ptr_tm& x, node_ptr_tm const& n) -> void;
+		template <typename C> auto append_impl(std::set<typename C::value_type>& visited, C& dest, C const& n) -> void;
 		template <typename C> auto merge_into_children(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> void;
+		#endif
 	};
 
 
@@ -116,14 +124,15 @@ namespace common {
 	//
 	template <typename C> auto append(C& dest, C const& n) -> C&;
 	template <typename C> auto append_backref(C& dest, C const& n) -> C&;
-	template <typename C> auto append_impl(std::set<typename C::element_type>& visited, C& dest, C const& n) -> void;
+	template <typename C> auto append_impl(std::set<typename C::value_type>& visited, C& dest, C const& n) -> void;
 	template <typename C, typename N> auto append(C& dest, std::shared_ptr<node_t<N>> const& n) -> C&;
 	template <typename C, typename N> auto append_backref(C& dest, std::shared_ptr<node_t<N>> const& n) -> C&;
 	
 
 	//
-	// merge_into_children
+	// mergeing
 	//
+	template <typename C> auto merge(C& dest, C const& src) -> C&;
 	template <typename C> auto merge_into_children(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> void;
 
 
@@ -133,7 +142,8 @@ namespace common {
 	template <typename C, typename acc_tm, typename FN>
 	void accumulate_depth_first(std::shared_ptr<node_t<C>> const& root, acc_tm acc, FN fn);
 
-
+	template <typename C>
+	auto interweave_nodes(C& nodes) -> void;
 
 
 
