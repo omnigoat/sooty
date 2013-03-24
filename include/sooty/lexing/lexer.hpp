@@ -27,9 +27,9 @@ namespace lexing {
 		auto operator *  () const -> lexer_t;
 		auto operator +  () const -> lexer_t;
 		auto operator [] (callback_t const&) const -> lexer_t;
-		
-		//auto backend() const -> detail::const_lexer_backend_ptr_ref;
-		
+		auto operator [] ( void (detail::accumulator_t::*)() ) const -> lexer_t;
+
+		auto backends() const -> detail::lexer_backends_t const&;
 		
 		friend auto operator >> (lexer_t const&, lexer_t const&) -> lexer_t;
 		friend auto operator | (lexer_t const&, lexer_t const&) -> lexer_t;
@@ -39,7 +39,8 @@ namespace lexing {
 		friend auto match(char, char) -> lexer_t;
 		friend auto ignore(char) -> lexer_t;
 		friend auto ignore(char, char) -> lexer_t;
-		
+		friend auto eof() -> lexer_t;
+
 		friend auto match(std::string const&) -> lexer_t;
 		friend auto insert(size_t, channel_t const&, lexer_t const&) -> lexer_t;
 		

@@ -56,29 +56,20 @@ namespace detail {
 			if (characters_.empty()) {
 				return;
 			}
-
-			auto i = characters_.rbegin();
-
-			// skip past other whitespace
-			while (*i != '\t' && *i != '\n')
-				++i;
-
-			// count tabs
-			int tabs = 0;
-			while (*i++ == '\t')
-				++tabs;
-
 			
-			if (tabs < previous_tabs_) {
-				lexemes_.push_back( lexeme_t(141414, beginning_, characters_.end(), current_position_) );
+			if (tabs_ < previous_tabs_) {
+				for (int i = tabs_; i != previous_tabs_; ++i)
+					lexemes_.push_back( lexeme_t(141414, beginning_, characters_.end(), current_position_) );
 			}
-			else if (tabs > previous_tabs_) {
-				lexemes_.push_back( lexeme_t(151515, beginning_, characters_.end(), current_position_) );
+			else if (tabs_ > previous_tabs_) {
+				for (int i = previous_tabs_; i != tabs_; ++i)
+					lexemes_.push_back( lexeme_t(151515, beginning_, characters_.end(), current_position_) );
 			}
 
 			beginning_ = characters_.end();
 
-			previous_tabs_ = tabs;
+			previous_tabs_ = tabs_;
+			tabs_ = 0;
 		}
 
 		void reset_tabs() {

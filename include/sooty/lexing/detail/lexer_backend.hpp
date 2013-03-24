@@ -23,6 +23,7 @@ namespace detail {
 		typedef std::function< void(detail::accumulator_t&) > callback_t;
 
 		enum class action_t {
+			eof,
 			peek,
 			match,
 			combine,

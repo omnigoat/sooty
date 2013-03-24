@@ -22,33 +22,29 @@ namespace common {
 			return executor_;
 		}
 		
-		template <typename state_tm, typename input_tm, typename node_ptr_tm>
-		bool operator()(state_tm& state, input_tm& input, const node_ptr_tm& node)
+		template <typename state_tm, typename input_tm, typename C>
+		bool operator()(state_tm& state, input_tm& input, C const& nodes)
 		{
 			typedef input_tm input_t;
 			typedef input_t& input_ref;
 			
-			typedef node_ptr_tm::element_type node_t;
-			typedef typename node_t::node_ptr node_ptr;
-			typedef typename node_t::command_t command_t;
-			typedef typename node_t::commands_t commands_t;
+			typedef C::value_type node_ptr;
+			typedef node_ptr::element_type node_t;
 			typedef typename node_t::children_t children_t;
 			
-			children_t first_children;
-			first_children.insert(node);
 			
 			node_ptr parent = node_ptr();
-			children_t::const_iterator parent_child_begin = first_children.begin();
-			children_t::const_iterator parent_child_iter = first_children.begin();
-			children_t::const_iterator parent_child_end = first_children.end();
+			children_t::const_iterator parent_child_begin = nodes.begin();
+			children_t::const_iterator parent_child_iter = nodes.begin();
+			children_t::const_iterator parent_child_end = nodes.end();
 			
 			while (parent_child_iter != parent_child_end)
 			{
 				node_ptr const& current_node = *parent_child_iter;
-				commands_t const& commands = current_node->commands_;
 				children_t const& children = current_node->children_;
 				bool success = true;
 
+				#if 0
 				if (current_node->type() == node_t::type_t::placeholder)
 				{
 					ATMA_ASSERT(!current_node->ancestry_.empty());
@@ -65,42 +61,21 @@ namespace common {
 					success = this->operator ()(state, input, (*clones.begin())->shared_from_this());
 				}
 				else
+				#endif
 				{
-					// there should not be any failure commands before the first good command
-					commands_t::const_iterator i = commands.begin();
-				
-					commands_t::const_iterator ff
-						= std::find_if(commands.begin(), commands.end(), node_t::is_failure);
-				
-					commands_t::const_reverse_iterator first_failure
-						= (ff == commands.end()) ? commands.rend() : commands_t::const_reverse_iterator(ff);
-				
-				
-					// perform all commands until we fail one
-					while (i != commands.end())
-					{
-						if (!executor_(state, input, i->second))
-							break;
-					
-						i = std::find_if(i + 1, commands.end(), node_t::is_command);
-					}
-
-					success = i == commands.end();
+					success = executor_(state, input, current_node->value_);
 				}
 					
 				
-
-				if (success)
-				{
-					// continue with our children
+				// if we succeeded, continue with one of our children (hopefully)
+				if (success) {
 					parent = *parent_child_iter;
 					parent_child_begin = children.begin();
-					parent_child_iter = children.begin();
+					parent_child_iter = parent_child_begin;
 					parent_child_end = children.end();
 				}
-				else
-				{
-					// move onto our sibling
+				// if we failed, try one of our remaining siblings
+				else {
 					++parent_child_iter;
 				}
 			}
@@ -108,11 +83,10 @@ namespace common {
 			// we succeeded if we didn't exhaust our child-options, or if we're a backreference,
 			// or if we didn't even have children, or we are a terminal node
 			return
-				parent_child_iter != parent_child_end ||
-				parent->type() == node_t::type_t::backreference ||
-				std::distance(parent_child_begin, parent_child_end) == 0 ||
-				parent->terminal()
-				;
+			  parent_child_iter != parent_child_end ||
+			  std::distance(parent_child_begin, parent_child_end) == 0 ||
+			  parent->terminal()
+			  ;
 		}
 
 	private:

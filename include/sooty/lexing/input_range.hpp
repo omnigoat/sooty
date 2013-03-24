@@ -16,11 +16,13 @@ namespace lexing {
 	{
 		template <typename T>
 		input_range_t(const T& stream)
-			: begin_(stream.rdbuf()), end_()
+			: begin_(stream.rdbuf()), end_(), matched_eof_()
 		{
 		}
 		
 		
+		auto is_eof() const -> bool { return is_exhausted() && !matched_eof_ && (matched_eof_ = true); }
+
 		// whether or not the iterator is invalid
 		bool is_exhausted() const { return begin_ == end_; }
 		
@@ -40,6 +42,8 @@ namespace lexing {
 		
 	private:
 		stream_iterator_t begin_, end_;
+		mutable bool matched_eof_;
+		
 	};
 	
 	typedef input_range_t& input_range_ref;
