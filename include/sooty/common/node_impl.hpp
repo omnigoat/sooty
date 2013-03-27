@@ -1,6 +1,16 @@
-
-
-
+//=====================================================================
+//
+//
+//
+//=====================================================================
+#ifndef SOOTY_COMMON_NODE_IMPL_HPP
+#define SOOTY_COMMON_NODE_IMPL_HPP
+//=====================================================================
+namespace sooty {
+namespace common {
+//=====================================================================
+	
+	
 //
 // constructors
 //
@@ -46,6 +56,30 @@ auto node_t<N>::operator = (node_t<N> const& rhs) -> node_t<N>&
 	return *this;
 }
 
+//=====================================================================
+// clone
+//=====================================================================
+template <typename N>
+auto node_t<N>::clone() -> node_ptr
+{
+	// clone node
+	node_ptr C(new node_t(*this));
+
+	// our clone's ancestry is our ancestry with us at the front
+	C->ancestry_.reserve(1 + ancestry_.size());
+	C->ancestry_.push_back(this);
+	C->ancestry_.insert(C->ancestry_.end(), ancestry_.begin(), ancestry_.end());
+
+	// tell all our clone's ancestors about their new clone
+	for (auto const& x : C->ancestry_)
+		x->clones_.insert(C.get());
+
+	return C;
+}
+
+//=====================================================================
+// assume
+//=====================================================================
 template <typename N>
 auto node_t<N>::assume(node_t&& rhs) -> node_ptr
 {
@@ -88,106 +122,12 @@ auto node_t<N>::assume(node_t&& rhs) -> node_ptr
 	return shared_from_this();
 }
 
-template <typename N>
-auto node_t<N>::clone() -> node_ptr
-{
-	// clone node
-	node_ptr C(new node_t(*this));
-
-	// our clone's ancestry is our ancestry with us at the front
-	C->ancestry_.reserve(1 + ancestry_.size());
-	C->ancestry_.push_back(this);
-	C->ancestry_.insert(C->ancestry_.end(), ancestry_.begin(), ancestry_.end());
-
-	// tell all our clone's ancestors about their new clone
-	for (auto const& x : C->ancestry_)
-		x->clones_.insert(C.get());
-
-	return C;
-}
 
 template <typename N>
 auto node_t<N>::add_child(node_ptr const& n) -> node_ptr {
 	children_.insert(n);
 	return shared_from_this();
 }
-
-//
-//template <typename N>
-//auto node_t<N>::merge(node_ptr const& rhs) -> node_ptr
-//{
-//	node_ptr result = shared_from_this();
-//
-//	// neither @lhs nor @rhs actually had any commands
-//	// they can be merged if they're not placeholders or if they're placeholders but share ancestry
-//	if (node_t::share_ancestry(result, rhs))
-//	{
-//		children_.insert(rhs->children_.begin(), rhs->children_.end());
-//	}
-//	// @lhs and @rhs were completely merged together, we can recurse through our children
-//	else if (!combined_commands.empty() && new_lhs_commands.empty() && new_rhs_commands.empty())
-//	{
-//		children_t new_children;
-//
-//		atma::merge(
-//			children_.begin(), children_.end(),
-//			rhs->children_.begin(), rhs->children_.end(),
-//			std::inserter(new_children, new_children.end()),
-//			std::bind(&node_t<N>::merge, std::placeholders::_1, std::placeholders::_2),
-//			[&new_children](node_ptr const& n){ new_children.insert(n); },
-//			[&new_children](node_ptr const& n){ new_children.insert(n); },
-//			merged_ordering_t()
-//		);
-//
-//		children_.swap(new_children);
-//
-//		// we have children, and one of our two branches was wholly consumed. we
-//		// are therefore a terminal.
-//		if (!children_.empty())
-//			terminal_ = true;
-//	}
-//	// @rhs was completely merged into @lhs, but has commands left over. merge it into any of our children
-//	else if (!combined_commands.empty() && new_lhs_commands.empty() && !new_rhs_commands.empty())
-//	{
-//		children_t new_children;
-//		auto merge_failer = [&new_children](node_ptr const& n){ new_children.insert(n); };
-//		atma::merge(
-//			children_.begin(), children_.end(),
-//			rhs->children_.begin(), rhs->children_.end(),
-//			std::inserter(new_children, new_children.end()),
-//			std::bind(&node_t<N>::merge, std::placeholders::_1, std::ref(rhs)),
-//			merge_failer, merge_failer,
-//			merged_ordering_t()
-//		);
-//
-//		children_.swap(new_children);
-//	}
-//	// no merging took place. we're going to create a parent node and insert both
-//	// @lhs and @rhs as children, then replace ourselves with the parent, careful to
-//	// avoid cycles
-//	else if (combined_commands.empty())
-//	{
-//		if (type_ == type_t::control) {
-//			if (rhs->type_ == type_t::control) {
-//				children_.insert(rhs->children_.begin(), rhs->children_.end());
-//			}
-//			else {
-//				children_.insert(rhs);
-//			}
-//		}
-//		else {
-//			result = make();
-//			result->children_.insert(shared_from_this());
-//			result->children_.insert(rhs);
-//		}
-//	}
-//	else {
-//		ATMA_ASSERT(false && "yeah probs forgot a use-case");
-//	}
-//	
-//	return result;
-//}
-//
 
 template <typename C>
 auto node_t<C>::equal_or_clone(node_ptr const& lhs, node_ptr const& rhs) -> bool
@@ -299,7 +239,7 @@ auto append_impl(std::set<typename C::value_type>& visited, C& dest, C const& no
 
 
 //=====================================================================
-// merge_into_children
+// merging
 //=====================================================================
 template <typename C>
 auto merge(C& dest, C const& src) -> C&
@@ -353,6 +293,9 @@ auto merge_into_children(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C
 }
 
 
+//=====================================================================
+// for-each
+//=====================================================================
 template <typename C, typename N, typename FN>
 void for_each_depth_first(std::set<std::shared_ptr<node_t<N>>>& visited, C const& root, FN fn)
 {
@@ -386,6 +329,21 @@ void for_each_depth_first(C const& root, FN fn)
 	for_each_depth_first(visited, root, fn);
 }
 
+
+
+//=====================================================================
+// interweave-nodes
+//=====================================================================
+template <typename C>
+auto interweave_nodes(C& nodes) -> void
+{
+	for (auto const& x : nodes) {
+		append(x->children_, nodes);
+	}
+}
+
+
+
 //template <typename N, typename acc_tm, typename FN>
 //void accumulate_depth_first(node_t<N>::node_ptr const& root, acc_tm acc, FN fn)
 //{
@@ -416,14 +374,16 @@ void for_each_depth_first(C const& root, FN fn)
 //}
 
 
-template <typename C>
-auto interweave_nodes(C& nodes) -> void
-{
-	for (auto const& x : nodes) {
-		append(x->children_, nodes);
-	}
-}
 
+
+
+
+//=====================================================================
+} // namespace common
+} // namespace sooty
+//=====================================================================
+#endif
+//=====================================================================
 
 
 

@@ -28,10 +28,7 @@ namespace common {
 	template <typename N>
 	struct node_t : std::enable_shared_from_this<node_t<N>>
 	{
-		// node-ptr / command_t
 		typedef std::shared_ptr<node_t> node_ptr;
-		
-		// children: sort by descending number of commands
 		struct ordering_t;
 		struct merged_ordering_t;
 		typedef std::set<node_ptr, ordering_t> children_t;
@@ -52,8 +49,8 @@ namespace common {
 		// pure
 		auto terminal() const -> bool { return terminal_; }
 		auto bypassable() const -> bool { return bypassable_; }
-		auto clone() -> node_ptr;
 		auto children() -> children_t const& { return children_; }
+		auto clone() -> node_ptr;
 		
 		// mutators
 		auto add_child(node_ptr const&) -> node_ptr;
@@ -78,6 +75,7 @@ namespace common {
 		std::vector<node_t*> ancestry_;
 		bool terminal_;
 		bool bypassable_;
+		std::shared_ptr<children_t> subnodes_;
 
 		// friends
 		#if 0
@@ -130,7 +128,7 @@ namespace common {
 	
 
 	//
-	// mergeing
+	// merging
 	//
 	template <typename C> auto merge(C& dest, C const& src) -> C&;
 	template <typename C> auto merge_into_children(std::shared_ptr<node_t<C>>& x, std::shared_ptr<node_t<C>> const& node) -> void;
@@ -147,15 +145,12 @@ namespace common {
 
 
 
-	
-
-	// implementation
-	#include "node_impl.hpp"
-
-
 //=====================================================================
 } // namespace common
 } // namespace sooty
+//=====================================================================
+// implementation
+#include "node_impl.hpp"
 //=====================================================================
 #endif
 //=====================================================================

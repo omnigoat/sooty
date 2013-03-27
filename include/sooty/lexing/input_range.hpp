@@ -21,21 +21,23 @@ namespace lexing {
 		}
 		
 		
-		auto is_eof() const -> bool { return is_exhausted() && !matched_eof_ && (matched_eof_ = true); }
-
 		// whether or not the iterator is invalid
-		bool is_exhausted() const { return begin_ == end_; }
+		auto is_exhausted() const -> bool {
+			return begin_ == end_;
+		}
+		
+		auto is_eof() const -> bool {
+			return is_exhausted() && !matched_eof_ && (matched_eof_ = true); }
+
 		
 		// current value / clairvoyance
-		char cv() const {
-			//assert( !is_exhausted() );
+		auto cv() const -> char {
+			ATMA_ASSERT( !is_exhausted() );
 			return *begin_;
 		}
 		
-		
-		// move forwards!~~
-		void advance() {
-			//assert(!is_exhausted());
+		auto advance() -> void {
+			ATMA_ASSERT(!is_exhausted());
 			++begin_;
 		}
 		
